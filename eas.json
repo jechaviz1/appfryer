@@ -1,0 +1,44 @@
+{
+  "cli": {
+    "version": ">= 11.0.2"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "credentialsSource": "local",
+      "env": {
+        "GOOGLE_SERVICES_JSON": "@google-services.json"
+      }
+    },
+    "preview": {
+      "distribution": "internal",
+      "credentialsSource": "local",
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "GOOGLE_SERVICES_JSON": "@google-services.json",
+        "EXPO_PUBLIC_API_URL": "https://appfryer.com/api",
+        "EXPO_PUBLIC_URL": "https://appfryer.com"
+      }
+    },
+    "ios-simulator": {
+      "extends": "development",
+      "ios": {
+        "simulator": true
+      }
+    },
+    "production": {
+      "credentialsSource": "local",
+      "env": {
+        "GOOGLE_SERVICES_JSON": "@google-services.json",
+        "EXPO_PUBLIC_API_URL": "https://appfryer.com/api",
+        "EXPO_PUBLIC_URL": "https://appfryer.com"
+      }
+    }
+  },
+  "submit": {
+    "production": {}
+  }
+}

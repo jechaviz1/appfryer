@@ -1,0 +1,74 @@
+{
+  "expo": {
+    "name": "AppFryer",
+    "slug": "appFryer",
+    "version": "1.0.15",
+    "owner": "appfryerteam",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "appFryer",
+    "deepLinking": true,
+    "platforms": ["ios", "android", "web"],
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/images/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.appFryer.appFryer",
+      "usesAppleSignIn": true,
+      "orientation": "portrait",
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "This app requires access to the photo library. It's needed to upload user's profile picture and photos and videos of recipes.",
+        "LSApplicationQueriesSchemes": "itms-apps",
+        "UIDeviceFamily": [1],
+        "UISupportedInterfaceOrientations~ipad": [
+          "UIInterfaceOrientationPortrait",
+          "UIInterfaceOrientationPortraitUpsideDown"
+        ],
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "versionCode": 17,
+      "package": "com.appFryer.appFryer",
+      "googleServicesFile": "./secrets/google-services.json",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/icon.png",
+        "backgroundColor": "#ffffff"
+      }
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/images/favicon.png"
+    },
+    "plugins": [
+      "expo-apple-authentication",
+      "expo-dev-client",
+      "expo-router",
+      "expo-secure-store",
+      "expo-font",
+      "expo-build-properties"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "5b40e441-8fd7-4b98-b607-8ca178ac4447"
+      }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/5b40e441-8fd7-4b98-b607-8ca178ac4447"
+    }
+  }
+}
