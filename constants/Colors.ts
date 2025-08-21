@@ -8,9 +8,11 @@ import { Appearance } from 'react-native'
 const tintColorLight = '#0a7ea4'
 const tintColorDark = '#fff'
 const mainColor = '#c3803a'
+const greyTextColor = '#6C7278'
 
 export const Colors = {
     mainColor,
+    greyTextColor,
     mainColorLight: '#c3803a1a',
     lightGrey: '#e9e9e9',
     neutralGrey: '#717171',
@@ -25,6 +27,16 @@ export const Colors = {
     switchTrack: {
         false: '#767577',
         true: mainColor,
+    },
+    // Auth common colors
+    auth: {
+        backgroundOverlay: 'rgba(79, 66, 64, 0.8)',
+        inputBorder: 'rgba(237, 241, 243, 1)',
+        inputShadow: 'rgba(228, 229, 231, 0.24)',
+        dividerLine: '#e9ecef',
+        socialButtonBorder: '#e9ecef',
+        socialButtonText: 'rgba(27, 26, 29, 1)',
+        formShadow: '#000',
     },
     light: {
         text: '#11181c',

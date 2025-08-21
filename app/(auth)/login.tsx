@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Platform, Pressable, StyleSheet } from 'react-native'
+import { Platform, Pressable, StyleSheet, ImageBackground, Image } from 'react-native'
 import { useRouter } from 'expo-router'
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view"
 import AsyncStorage from '@react-native-async-storage/async-storage'
@@ -41,6 +41,9 @@ export default function LoginScreen() {
 
     const [loginError, setLoginError] = useState<string>('')
 
+    const googleIcon = require('@/assets/icons/login-google.png')
+    const facebookIcon = require('@/assets/icons/login-facebook.png')
+
     useEffect(() => {
         AsyncStorage.getItem('settings').then(settingsData => {
             if (settingsData) {
@@ -81,11 +84,6 @@ export default function LoginScreen() {
         setPasswordError('')
         return true
     }, [password])
-
-    const envelope = require('@/assets/icons/login-envelope.png')
-    const lockOn = require('@/assets/icons/login-lock-on.png')
-    // const googleIcon = require('@/assets/icons/login-google.png')
-    // const facebookIcon = require('@/assets/icons/login-facebook.png')
 
     const tryToLogin = () => {
         if (!onBlurEmail() || !onBlurPassword()) {
@@ -198,37 +196,50 @@ export default function LoginScreen() {
     }
 
     return (
-        <View style={theme.container}>
-            {showLanguages && <Languages
-                isVisible={showLanguages}
-                onHide={() => setShowLanguages(false)}
-                languages={languages}
-            />}
-            { showPreferences && <Preferences 
-                isVisible={showPreferences} 
-                onHide={() => {
-                    setShowPreferences(false)
-                    router.push('/')
-                }}
-            /> }
-            <View style={theme.statusBarHeight} />
-            <KeyboardAwareScrollView keyboardDismissMode='on-drag'>
-                <View style={[theme.mainContainer, theme.authContainer]}>
-                    <View style={theme.titleContainer}>
-                        <Text type="title" style={theme.appNameText}>AppFryer</Text>
+        <KeyboardAwareScrollView keyboardDismissMode='on-drag' style={theme.authScrollView}>
+            <ImageBackground 
+                source={require('@/assets/images/login-bg.jpg')} 
+                style={theme.authScreenContainer}
+                resizeMode="cover"
+            >
+                <View style={theme.authBackgroundOverlay} />
+                {showLanguages && <Languages
+                    isVisible={showLanguages}
+                    onHide={() => setShowLanguages(false)}
+                    languages={languages}
+                />}
+                { showPreferences && <Preferences 
+                    isVisible={showPreferences} 
+                    onHide={() => {
+                        setShowPreferences(false)
+                        router.push('/')
+                    }}
+                /> }
+                <View style={theme.statusBarHeight} />
+                <View style={theme.authMainContainer}>
+                    {/* App Logo */}
+                    <View style={theme.authLogoContainer}>
+                        <Image 
+                            source={require('@/assets/images/logo.png')} 
+                            style={theme.authLogoImage}
+                            resizeMode="contain"
+                        />
                     </View>
 
-                    <View style={{flex: 1}}>
+                    {/* Title Section */}
+                    <View style={theme.authTitleSection}>
                         <Text style={theme.authTitle}>
                             {t('Login to your')}{'\n'}{t('account')}
                         </Text>
-                        <Text style={{ paddingTop: 10, paddingBottom: 20 }}>
+                        <Text style={theme.authWelcomeText}>
                             {t('Welcome back to AppFryer!')}
                         </Text>
+                    </View>
 
-                        <View style={s.loginFieldsContainer}>
+                    {/* Form Section */}
+                    <View style={theme.authFormSection}>
+                        <View>
                             <TextInput
-                                startIcon={envelope}
                                 autoCorrect={false}
                                 inputMode='email'
                                 keyboardType='email-address'
@@ -236,6 +247,7 @@ export default function LoginScreen() {
                                 placeholder={t('Email')}
                                 textContentType='emailAddress'
                                 value={email}
+                                styleContainer={theme.authInputContainer}
                                 onChangeText={text => {
                                     setEmail(text)
                                     setEmailError('')
@@ -243,14 +255,15 @@ export default function LoginScreen() {
                                 }}
                                 onBlur={onBlurEmail}
                             />
-                            {emailError !== '' && <Text type='error'>{emailError}</Text>}
+                            {emailError !== '' && <Text type='error' style={theme.authErrorText}>{emailError}</Text>}
+                            
                             <TextInput
-                                startIcon={lockOn}
                                 autoCapitalize='none'
                                 placeholder={t('Password')}
                                 textContentType='password'
                                 value={password}
                                 secureTextEntry
+                                styleContainer={theme.authInputContainer}
                                 onChangeText={text => {
                                     setPassword(text)
                                     setPasswordError('')
@@ -258,100 +271,101 @@ export default function LoginScreen() {
                                 }}
                                 onBlur={onBlurPassword}
                             />
-                            {passwordError !== '' && <Text type='error'>{passwordError}</Text>}
+                            {passwordError !== '' && <Text type='error' style={theme.authErrorText}>{passwordError}</Text>}
                         </View>
                         
-                        <View style={s.loginAdditionalActions}>
+                        <View style={s.rememberForgotContainer}>
                             <Checkbox
                                 type='square'
                                 text={t('Remember me')}
                                 onPress={() => setRememberMe(!rememberMe)}
                                 checked={rememberMe}
+                                style={theme.authCheckbox}
                             />
                             <Pressable onPress={() => router.push('/(auth)/forgot-password')}>
-                                <Text type='link' style={{ fontFamily: 'DMSans-Medium' }}>{t('Forgot Password?')}</Text>
+                                <Text type='link' style={s.forgotPasswordText}>{t('Forgot Password?')}</Text>
                             </Pressable>
                         </View>
 
-                        { Platform.OS === 'ios' && <View>
-                            <View style={s.loginOrDivider}>
-                                <View style={{ height: 1, flex: 1, backgroundColor: Colors.lightGrey }} />
-                                <Text style={{ paddingHorizontal: 12, color: isLight() ? Colors.grey : Colors.lightGrey }}>{t('or')}</Text>
-                                <View style={{ height: 1, flex: 1, backgroundColor: Colors.lightGrey }} />
-                            </View>
+                        {loginError !== '' && <Text style={theme.authErrorText} type='error'>{loginError}</Text>}
+                        
+                        <Button 
+                            disabled={isSentReq} 
+                            text={t('Login')} 
+                            onPress={tryToLogin}
+                            style={theme.authPrimaryButton}
+                        />
 
-                            <View style={s.appleLoginWrap}>
+                        {/* Divider */}
+                        <View style={theme.authDividerContainer}>
+                            <View style={theme.authDividerLine} />
+                            <View style={theme.authDividerCircle} />
+                            <View style={theme.authDividerLine} />
+                        </View>
+
+                        {/* Social Login Buttons */}
+                        <View style={theme.authSocialButtonsContainer}>
+                            <Pressable onPress={() => router.push('/(auth)/signup')}  style={theme.authSocialButton}>
+                                <Image 
+                                    source={googleIcon} 
+                                    style={theme.authSocialIcon}
+                                />
+                                <Text style={theme.authSocialButtonText}>{t('Sign In with Google')}</Text>
+                            </Pressable>
+                            <Pressable onPress={() => router.push('/(auth)/signup')}  style={theme.authSocialButton}>
+                                <Image 
+                                    source={facebookIcon} 
+                                    style={theme.authSocialIcon}
+                                />
+                                <Text style={theme.authSocialButtonText}>{t('Sign In with Facebook')}</Text>
+                            </Pressable>
+                        </View>
+
+                        { Platform.OS === 'ios' && (
+                            <View style={s.appleLoginContainer}>
                                 <AppleAuth.AppleAuthenticationButton
                                     buttonType={AppleAuth.AppleAuthenticationButtonType.SIGN_IN}
                                     buttonStyle={AppleAuth.AppleAuthenticationButtonStyle.WHITE_OUTLINE}
-                                    cornerRadius={5}
-                                    style={{
-                                        width: 200,
-                                        height: 44,
-                                    }}
+                                    cornerRadius={10}
+                                    style={s.appleButton}
                                     onPress={() => onAppleButtonPress()}
                                 />
                             </View>
-                        </View>}
+                        )}
 
-                        {/* <View style={[
-                            s.loginAdditionalActions,
-                            { gap: 16, marginBottom: 10 },
-                        ]}>
-                            <IconButton icon={googleIcon} onPress={() => router.push('/(auth)/signup')} />
-                            <IconButton icon={facebookIcon} onPress={() => router.push('/(auth)/signup')} />
-                        </View> */}
-                    </View>
-
-                    <View style={s.bottomPart}>
-                        {loginError !== '' && <Text style={{ alignSelf: 'center', marginBottom: 16 }} type='error'>{loginError}</Text>}
-                        <Button disabled={isSentReq} text={t('Login')} onPress={tryToLogin} />
-                        <View style={s.signupContainer}>
-                            <Text>{t("Don't have an account yet?")}</Text>
-                            <Text type='link' onPress={() => router.push('/(auth)/signup')}>{t('Sign Up')}</Text>
+                        {/* Sign Up Link */}
+                        <View style={theme.authLinkContainer}>
+                            <Text style={theme.authSecondaryText}>{t('Don\'t have an account yet?')} </Text>
+                            <Text type='link' onPress={() => router.push('/(auth)/signup')} style={theme.authLinkText}>{t('Sign Up')}</Text>
                         </View>
-
-                        <Pressable style={{ justifyContent: 'center', alignItems: 'center' }} onPress={() => setShowLanguages(true)}>
-                            <Text type='link'>{t('Change language')}</Text>
-                        </Pressable>
                     </View>
                 </View>
-            </KeyboardAwareScrollView>
-        </View>
+            </ImageBackground>
+        </KeyboardAwareScrollView>
     )
 }
 
 const s = StyleSheet.create({
-    loginFieldsContainer: {
-        flexDirection: 'column',
-        gap: 12,
-        marginBottom: 16,
-    },
-    appleLoginWrap: {
-        alignItems: 'center',
-    },
-    loginAdditionalActions: {
+    rememberForgotContainer: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
     },
-    loginOrDivider: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: 16,
+    forgotPasswordText: {
+        color: Colors.mainColor,
+        fontFamily: 'Poppins-SemiBold',
+        fontWeight: '600',
+        fontSize: 14,
+        lineHeight: 19.6, // 140% of 14px
+        letterSpacing: -0.14, // -1% of 14px
+        textAlign: 'right',
     },
-    bottomPart: {
-        flex: 1,
-        alignSelf: 'flex-end',
-        marginTop: 12,
+    appleLoginContainer: {
+        alignItems: 'center',
+        marginBottom: 20,
+    },
+    appleButton: {
         width: '100%',
-    },
-    signupContainer: {
-        marginTop: 16,
-        flexDirection: 'row',
-        justifyContent: 'center',
-        alignItems: 'center',
-        gap: 4,
+        height: 56,
     },
 })

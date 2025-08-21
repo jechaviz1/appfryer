@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Pressable, StyleSheet } from 'react-native'
+import { Pressable, StyleSheet, ImageBackground, Image } from 'react-native'
 import { useRouter } from 'expo-router'
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view"
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useTranslation } from 'react-i18next'
 
-import { BackButton, Button, Checkbox, IconButton, Text, TextInput, View } from "@/components/base/BaseComponents"
+import { Button, Checkbox, Text, TextInput, View } from "@/components/base/BaseComponents"
 import Languages from '@/components/modals/Languages'
 import Preferences from '@/components/modals/Preferences'
 import { useAuth } from '@/contexts/authContext'
@@ -38,9 +38,6 @@ export default function SignupScreen() {
     const [isSentReq, setSentReq] = useState<boolean>(false)
     const [registerError, setRegisterError] = useState<string>('')
 
-    const person = require('@/assets/icons/login-person.png')
-    const envelope = require('@/assets/icons/login-envelope.png')
-    const lockOn = require('@/assets/icons/login-lock-on.png')
     const googleIcon = require('@/assets/icons/login-google.png')
     const facebookIcon = require('@/assets/icons/login-facebook.png')
 
@@ -124,20 +121,18 @@ export default function SignupScreen() {
     }, [name, email, password, agreeTerms])
 
     return (
-        <View style={theme.container}>
-
-            {showLanguages && <Languages
-                isVisible={showLanguages}
-                onHide={() => setShowLanguages(false)}
-                languages={languages}
-            />}
-
-            <View style={theme.statusBarHeight} />
-            <KeyboardAwareScrollView keyboardDismissMode='on-drag'>
-            <View style={[theme.mainContainer, theme.authContainer]}>
-                <View style={{ position: 'absolute', top: -18, left: 0, zIndex: 100 }}>
-                    <BackButton />
-                </View>
+        <KeyboardAwareScrollView keyboardDismissMode='on-drag' style={theme.authScrollView}>
+            <ImageBackground 
+                source={require('@/assets/images/signup-bg.jpg')} 
+                style={theme.authScreenContainer}
+                resizeMode="cover"
+            >
+                <View style={theme.authBackgroundOverlay} />
+                {showLanguages && <Languages
+                    isVisible={showLanguages}
+                    onHide={() => setShowLanguages(false)}
+                    languages={languages}
+                />}
                 { showPreferences && <Preferences 
                     isVisible={showPreferences} 
                     onHide={() => {
@@ -145,23 +140,31 @@ export default function SignupScreen() {
                         router.push('/')
                     }}
                 /> }
-                <View style={[theme.mainContainer, theme.authContainer]}>
-                    <View>
-                        <View style={theme.titleContainer}>
-                            <Text type="title" style={theme.appNameText}>AppFryer</Text>
-                        </View>
+                <View style={theme.statusBarHeight} />
+                <View style={theme.authMainContainer}>
+                    {/* App Logo */}
+                    <View style={theme.authLogoContainer}>
+                        <Image 
+                            source={require('@/assets/images/logo.png')} 
+                            style={theme.authLogoImage}
+                            resizeMode="contain"
+                        />
+                    </View>
 
+                    {/* Title Section */}
+                    <View style={theme.authTitleSection}>
+                        <Text style={theme.authTitle}>
+                            {t('Create your')}{'\n'}{t('account')}
+                        </Text>
+                        <Text style={theme.authWelcomeText}>
+                            {t('Welcome to AppFryer!')}
+                        </Text>
+                    </View>
+
+                    {/* Form Section */}
+                    <View style={theme.authFormSection}>
                         <View>
-                            <Text style={theme.authTitle}>
-                                {t('Create your')}{'\n'}{t('account')}
-                            </Text>
-                            <Text style={{ paddingTop: 10, paddingBottom: 20 }}>
-                                {t('Welcome to AppFryer!')}
-                            </Text>
-                        </View>
-                        <View style={s.loginFieldsContainer}>
                             <TextInput
-                                startIcon={person}
                                 autoCorrect={false}
                                 inputMode='text'
                                 maxLength={30}
@@ -169,6 +172,7 @@ export default function SignupScreen() {
                                 placeholder={t('Name')}
                                 textContentType='name'
                                 value={name}
+                                styleContainer={theme.authInputContainer}
                                 onChangeText={text => {
                                     setName(text)
                                     setNameError('')
@@ -176,9 +180,9 @@ export default function SignupScreen() {
                                 }}
                                 onBlur={onBlurName}
                             />
-                            {nameError !== '' && <Text type='error'>{t(nameError)}</Text>}
+                            {nameError !== '' && <Text type='error' style={theme.authErrorText}>{t(nameError)}</Text>}
+                            
                             <TextInput
-                                startIcon={envelope}
                                 autoCorrect={false}
                                 inputMode='email'
                                 keyboardType='email-address'
@@ -186,6 +190,7 @@ export default function SignupScreen() {
                                 placeholder={t('Email')}
                                 textContentType='emailAddress'
                                 value={email}
+                                styleContainer={theme.authInputContainer}
                                 onChangeText={text => {
                                     setEmail(text)
                                     setEmailError('')
@@ -193,14 +198,15 @@ export default function SignupScreen() {
                                 }}
                                 onBlur={onBlurEmail}
                             />
-                            {emailError !== '' && <Text type='error'>{t(emailError)}</Text>}
+                            {emailError !== '' && <Text type='error' style={theme.authErrorText}>{t(emailError)}</Text>}
+                            
                             <TextInput
-                                startIcon={lockOn}
                                 autoCapitalize='none'
                                 placeholder={t('Password')}
                                 textContentType='password'
                                 value={password}
                                 secureTextEntry
+                                styleContainer={theme.authInputContainer}
                                 onChangeText={text => {
                                     setPassword(text)
                                     setPasswordError('')
@@ -208,23 +214,38 @@ export default function SignupScreen() {
                                 }}
                                 onBlur={onBlurPassword}
                             />
-                            {passwordError !== '' && <Text type='error'>{t(passwordError)}</Text>}
+                            {passwordError !== '' && <Text type='error' style={theme.authErrorText}>{t(passwordError)}</Text>}
                         </View>
 
-                        {/* <View style={s.loginOrDivider}>
-                            <View style={{ height: 1, flex: 1, backgroundColor: Colors.lightGrey }} />
-                            <Text style={{ paddingHorizontal: 12, color: Colors.grey }}>{t('or')}</Text>
-                            <View style={{ height: 1, flex: 1, backgroundColor: Colors.lightGrey }} />
+                        {registerError !== '' && <Text style={theme.authErrorText} type='error'>{t(registerError)}</Text>}
+
+                        {/* Divider */}
+                        <View style={theme.authDividerContainer}>
+                            <View style={theme.authDividerLine} />
+                            <View style={theme.authDividerCircle} />
+                            <View style={theme.authDividerLine} />
                         </View>
 
-                        <View style={[
-                            s.loginAdditionalActions,
-                            { gap: 16, marginBottom: 10 },
-                        ]}>
-                            <IconButton icon={googleIcon} onPress={() => router.replace('/(auth)/signup')} />
-                            <IconButton icon={facebookIcon} onPress={() => router.replace('/(auth)/signup')} />
-                        </View> */}
-                        <View>
+                        {/* Social Login Buttons */}
+                        <View style={theme.authSocialButtonsContainer}>
+                            <Pressable style={theme.authSocialButton}>
+                                <Image 
+                                    source={googleIcon} 
+                                    style={theme.authSocialIcon}
+                                />
+                                <Text style={theme.authSocialButtonText}>{t('Sign Up with Google')}</Text>
+                            </Pressable>
+                            <Pressable style={theme.authSocialButton}>
+                                <Image 
+                                    source={facebookIcon} 
+                                    style={theme.authSocialIcon}
+                                />
+                                <Text style={theme.authSocialButtonText}>{t('Sign Up with Facebook')}</Text>
+                            </Pressable>
+                        </View>
+
+                        {/* Terms and Conditions */}
+                        <View style={s.termsContainer}>
                             <Checkbox
                                 type='square'
                                 checked={agreeTerms}
@@ -232,46 +253,61 @@ export default function SignupScreen() {
                                     setAgreeTerms(!agreeTerms)
                                     setAgreeTermsError(false)
                                 }}
-                            >
-                                <Text style={{ color: isLight() ? Colors.grey : Colors.lightGrey }}>{t('I agree to the')}</Text>
+                            />
+                            <View style={s.termsTextContainer}>
+                                <Text style={s.termsText}>{t('I agree to the')} </Text>
                                 <Pressable onPress={() => router.push({pathname: '/(pages)/static-page', params: {name: 'terms'}})}>
-                                    <Text type='link' style={{ fontFamily: 'DMSans-Medium' }}>{t('Terms and Conditions')}</Text>
+                                    <Text style={s.termsLink}>{t('Terms and Conditions')}</Text>
                                 </Pressable>
-                            </Checkbox>
-                            {agreeTermsError && <Text type='error'>{t('Please, confirm that you agree to the Terms and Conditions')}</Text>}
+                            </View>
+                        </View>
+                        {agreeTermsError && <Text type='error' style={theme.authErrorText}>{t('Please, confirm that you agree to the Terms and Conditions')}</Text>}
+                        
+                        <Button 
+                            disabled={isSentReq} 
+                            text={t('Sign Up')} 
+                            onPress={onSubmit}
+                            style={theme.authPrimaryButton}
+                        />
+
+                        {/* Login Link */}
+                        <View style={theme.authLinkContainer}>
+                            <Text style={theme.authSecondaryText}>{t('Already have an account?')} </Text>
+                            <Text type='link' onPress={() => router.push('/(auth)/login')} style={theme.authLinkText}>{t('Login')}</Text>
                         </View>
                     </View>
-                    <View style={{ marginBottom: 20 }}>
-                        {registerError && <Text style={{ alignSelf: 'center', marginBottom: 16 }} type='error'>{t(registerError)}</Text>}
-                        <Button disabled={isSentReq} text={t('Sign Up')} onPress={onSubmit} />
-
-                        <Pressable style={{ marginTop: 20, justifyContent: 'center', alignItems: 'center' }} onPress={() => setShowLanguages(true)}>
-                            <Text type='link'>{t('Change language')}</Text>
-                        </Pressable>
-                    </View>
-
                 </View>
-            </View>
-            </KeyboardAwareScrollView>
-        </View>
+            </ImageBackground>
+        </KeyboardAwareScrollView>
     )
 }
 
 const s = StyleSheet.create({
-    loginFieldsContainer: {
-        flexDirection: 'column',
-        gap: 12,
-        marginBottom: 16,
-    },
-    loginAdditionalActions: {
+    termsContainer: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
         alignItems: 'center',
+        justifyContent: 'center',
     },
-    loginOrDivider: {
+    termsTextContainer: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
+        flexWrap: 'wrap',
         alignItems: 'center',
-        marginBottom: 16,
+        marginLeft: 8,
+    },
+    termsText: {
+        fontSize: 14,
+        fontFamily: 'Poppins-SemiBold',
+        fontWeight: '500',
+        color: Colors.greyTextColor,
+        lineHeight: 19.6,
+        letterSpacing: -0.14,
+    },
+    termsLink: {
+        fontSize: 14,
+        fontFamily: 'Poppins-SemiBold',
+        fontWeight: '600',
+        color: Colors.mainColor,
+        lineHeight: 19.6,
+        letterSpacing: -0.14,
     },
 })

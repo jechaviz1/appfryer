@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { Image, Platform, View, StyleSheet } from 'react-native'
+import { Image, Platform, View, StyleSheet, Pressable } from 'react-native'
 import { Redirect, router, Tabs } from 'expo-router'
 import Modal from "react-native-modal"
 import Constants from 'expo-constants'
@@ -37,6 +37,12 @@ export default function TabLayout() {
     const notificationOnTapListener = useRef<Notifications.Subscription>()
 
     async function registerForPushNotificationsAsync() {
+        // Skip push notifications in development mode
+        if (__DEV__) {
+            console.log('Skipping push notification setup in development mode')
+            return null
+        }
+
         let token
         const {status: existingStatus} = await Notifications.getPermissionsAsync()
         let finalStatus = existingStatus
@@ -46,8 +52,8 @@ export default function TabLayout() {
             finalStatus = status
         }
         if (finalStatus !== 'granted') {
-            alert('Failed to get push token for push notification!')
-            return
+            console.log('Permission not granted for push notifications')
+            return null
         }
 
         try {
@@ -58,10 +64,10 @@ export default function TabLayout() {
             console.log('getExpoPushTokenAsync:', token)
             return token
         } catch (error) {
-            alert('Failed to get token:\n' + JSON.stringify(error));
+            console.log('Failed to get push notification token:', error)
+            // Don't show alert, just log the error and continue
+            return null
         }
-
-        return
     }
 
     Notifications.setNotificationHandler({
@@ -106,6 +112,7 @@ export default function TabLayout() {
                     registerForPushNotificationsAsync()
                         .then(notificationToken => {
                             if (!notificationToken) {
+                                console.log('No notification token received, skipping notification setup')
                                 return
                             }
                             const settingsUpd = { ...settings, notificationToken }
@@ -117,9 +124,16 @@ export default function TabLayout() {
                                 data: {[osField]: notificationToken},
                                 token: userObj?.token
                             })
-                                .catch(logError)
+                                .then(() => console.log('Notification token sent to server'))
+                                .catch(error => {
+                                    console.log('Failed to send notification token to server:', error)
+                                    // Don't block the app if notification setup fails
+                                })
                         })
-                        .catch(logError)
+                        .catch(error => {
+                            console.log('Notification registration failed:', error)
+                            // Don't block the app if notification setup fails
+                        })
                 }
 
                 // set up listener when app is foreground, background or killed
@@ -203,82 +217,98 @@ export default function TabLayout() {
                     )}
                 </View>
             </Modal>
-        <Tabs
-            screenOptions={{
-                tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-                headerShown: false,
-                tabBarStyle: s.tabBar,
-            }}
-        >
-            <Tabs.Screen
-                name="index"
-                options={{
-                    title: "",
-                    tabBarIcon: ({ focused }) => (
-                        <Image
-                            source={focused ? TabBarIcons.HomeActiveIcon : TabBarIcons.HomeIcon}
-                            style={s.iconSize}
-                        />
-                    ),
+            <Tabs
+                screenOptions={{
+                    tabBarActiveTintColor: Colors.mainColor,
+                    tabBarInactiveTintColor: '#6C7278',
+                    headerShown: false,
+                    tabBarStyle: s.tabBar,
+                    tabBarLabelStyle: s.tabBarLabel,
                 }}
-            />
-            <Tabs.Screen
-                name="explore"
-                options={{
-                    title: "",
-                    tabBarIcon: ({ focused }) => (
-                        <Image
-                            source={focused ? TabBarIcons.SearchActiveIcon : TabBarIcons.SearchIcon}
-                            style={s.iconSize}
-                        />
-                    ),
-                }}
-            />
-            <Tabs.Screen
-                name="news"
-                options={{
-                    title: "",
-                    tabBarIcon: ({ focused }) => (
-                        <Image
-                            source={focused ? TabBarIcons.NewsActiveIcon : TabBarIcons.NewsIcon}
-                            style={s.iconSize}
-                        />
-                    ),
-                }}
-            />
-            <Tabs.Screen
-                name="my-space"
-                options={{
-                    title: "",
-                    tabBarIcon: ({ focused }) => (
-                        <Image
-                            source={focused ? TabBarIcons.MySpaceActiveIcon : TabBarIcons.MySpaceIcon}
-                            style={s.iconSize}
-                        />
-                    ),
-                }}
-            />
-            <Tabs.Screen
-                name="profile"
-                options={{
-                    title: "",
-                    tabBarIcon: ({ focused }) => (
-                        <Image
-                            source={focused ? TabBarIcons.PersonActiveIcon : TabBarIcons.PersonIcon}
-                            style={s.iconSize}
-                        />
-                    ),
-                }}
-            />
-        </Tabs>
+            >
+                <Tabs.Screen
+                    name="index"
+                    options={{
+                        title: t('Home'),
+                        tabBarIcon: ({ focused }) => (
+                            <View style={s.iconContainer}>
+                                <Image
+                                    source={focused ? TabBarIcons.HomeActiveIcon : TabBarIcons.HomeIcon}
+                                    style={[s.iconSize, { tintColor: focused ? Colors.mainColor : '#6C7278' }]}
+                                />
+                            </View>
+                        ),
+                    }}
+                />
+                <Tabs.Screen
+                    name="explore"
+                    options={{
+                        title: t('Explore'),
+                        tabBarIcon: ({ focused }) => (
+                            <View style={s.iconContainer}>
+                                <Image
+                                    source={focused ? TabBarIcons.SearchActiveIcon : TabBarIcons.SearchIcon}
+                                    style={[s.iconSize, { tintColor: focused ? Colors.mainColor : '#6C7278' }]}
+                                />
+                            </View>
+                        ),
+                    }}
+                />
+                <Tabs.Screen
+                    name="create"
+                    options={{
+                        title: "",
+                        tabBarIcon: ({ focused }) => (
+                            <View style={s.plusButtonContainer}>
+                                <Pressable style={s.plusButton}>
+                                    <Image
+                                        source={TabBarIcons.PlusIcon}
+                                        style={[s.plusIconSize]}
+                                    />
+                                </Pressable>
+                            </View>
+                        ),
+                    }}
+                />
+                <Tabs.Screen
+                    name="my-space"
+                    options={{
+                        title: t('My Space'),
+                        tabBarIcon: ({ focused }) => (
+                            <View style={s.iconContainer}>
+                                <Image
+                                    source={focused ? TabBarIcons.BookActiveIcon : TabBarIcons.BookIcon}
+                                    style={[s.iconSize, { tintColor: focused ? Colors.mainColor : '#6C7278' }]}
+                                />
+                            </View>
+                        ),
+                    }}
+                />
+                <Tabs.Screen
+                    name="profile"
+                    options={{
+                        title: t('Profile'),
+                        tabBarIcon: ({ focused }) => (
+                            <View style={s.iconContainer}>
+                                <Image
+                                    source={focused ? TabBarIcons.UserActiveIcon : TabBarIcons.UserIcon}
+                                    style={[s.iconSize, { tintColor: focused ? Colors.mainColor : '#6C7278' }]}
+                                />
+                            </View>
+                        ),
+                    }}
+                />
+            </Tabs>
         </View>
     )
 }
 
 const s = StyleSheet.create({
     tabBar: {
-        height: 86,
-        paddingBottom: 0,
+        height: 74,
+        paddingTop: 14,
+        paddingBottom: 14,
+        backgroundColor: '#FFFFFF',
         shadowColor: "#000",
         shadowOffset: {
             width: 1,
@@ -288,17 +318,34 @@ const s = StyleSheet.create({
         shadowRadius: 4,
         elevation: 10,
     },
-    plusIconWrapper: {
-        backgroundColor: '#C3803A',
-        borderRadius: 100,
-        paddingTop: 6,
-        position: 'relative',
-        width: 47,
-        height: 47,
+    tabBarLabel: {
+        fontFamily: 'Poppins',
+        fontWeight: '500',
+        fontSize: 12,
+    },
+    iconContainer: {
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    plusButtonContainer: {
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    plusButton: {
+        borderRadius: 22,
+        width: 46,
+        height: 46,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginTop: 12,
     },
     iconSize: {
-        width: 22,
-        height: 22,
+        width: 24,
+        height: 24,
+    },
+    plusIconSize: {
+        width: 46,
+        height: 46,
     },
     modal: {
         justifyContent: 'flex-start',

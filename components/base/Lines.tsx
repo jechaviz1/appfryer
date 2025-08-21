@@ -35,7 +35,7 @@ const s = StyleSheet.create({
         borderWidth: 1,
     },
     lineInactive: {
-        width: 12,
+        width: 18,
         borderColor: Colors.lightGrey,
         backgroundColor: Colors.lightGrey,
     },
