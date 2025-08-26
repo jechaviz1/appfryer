@@ -14,9 +14,10 @@ import { get, post } from '@/services/apiRequests'
 import { paddings, theme, getBgColor, isLight } from "@/constants/Theme"
 import { useSettings } from "@/contexts/settingsContext"
 import { useAuth } from "@/contexts/authContext"
-import { Text, View, ChoiceItem, Button, Lines } from "@/components/base/BaseComponents"
+import { Text, View, Button } from "@/components/base/BaseComponents"
 import ImageLibrary from "@/components/ImageLibrary"
 import IPrefItem from "@/interfaces/PrefItem"
+import { Colors } from "@/constants/Colors"
 
 interface IPreferences {
     isVisible: boolean
@@ -31,7 +32,6 @@ export default function Preferences({ onHide, isVisible }: IPreferences) {
     const [loaded, setLoaded] = useState<boolean>(false)
     const [preferences, setPreferences] = useState<any>([])
     const [data, setData] = useState<ISlide[]> ([])
-    // const [visibleSlides, setVisibleSlides] = useState<boolean>(true)
     const [currentSlide, setCurrentSlide] = useState<number>(0)
     const [isButtonDisabled, setButtonDisabled] = useState<boolean>(false)
     const [errorOnConfirm, setErrorOnConfirm] = useState<string|null>(null)
@@ -85,7 +85,6 @@ export default function Preferences({ onHide, isVisible }: IPreferences) {
 
         return [interests, intolerances, diets]
     }
-
 
     // if we already have the preferences, use them,
     // otherwise preferences can be fetched only with token
@@ -224,7 +223,6 @@ export default function Preferences({ onHide, isVisible }: IPreferences) {
             }
         }
 
-
         setButtonDisabled(true)
         post({
             url: '/profile/update',
@@ -245,8 +243,8 @@ export default function Preferences({ onHide, isVisible }: IPreferences) {
                 setErrorOnConfirm(e.response.data.message)
                 setButtonDisabled(false)
             })
-
     }
+
     const showPrevSlide = () => setCurrentSlide(currentSlide - 1)
 
     useEffect(() => {
@@ -263,61 +261,31 @@ export default function Preferences({ onHide, isVisible }: IPreferences) {
         setData(dataTmp)
     }
 
-    const toggleItem = (slide: number,index: number) => {
+    const toggleItem = (slide: number, index: number) => {
         const dataTmp = [...data]
         dataTmp[slide].items[index].checked = !dataTmp[slide].items[index].checked
         setData(dataTmp)
     }
 
-    const renderItem = (slide: { item: ISlide, index: number }) => {
+    const renderInterestCard = (item: IPrefItem, index: number) => {
+        const isSelected = item.checked ?? false
+        
         return (
-            <View style={[ s.main, { width: window.width - paddings * 2 }]}>
-                <Text type="subtitle" style={ s.subtitle }>{slide.item.title}</Text>
-
-                <FlatList
-                    data={slide.item.items}
-                    renderItem={
-                        ({ item, index }) => <ChoiceItem
-                            id={item.id}
-                            img={item.icon}
-                            text={item.title}
-                            checked={item.checked ?? false}
-                            onPress={() => toggleItem(slide.index, index)}
-                            style={{ margin: 6 }}
-                        />
-                    }
-                    style={{ marginTop: 20, width: '100%',  }}
-                />
-
-                { slide.item.additionalItems && !slide.item?.fullList && (
-                    <Pressable
-                        onPress={() => showFullListForSlide(slide.index)}
-                        style={{ marginTop: 20 }}
-                    >
-                        <Text type='link' style={{ textAlign: 'left' }}>{t('See more')}</Text>
-                    </Pressable>
-                ) }
-
-                <View style={{ marginTop: 40, marginBottom: 20 }}>
-                    <Lines count={data.length} current={slide.index} />
-                </View>
-
-                {errorOnConfirm &&
-                    <Text type="error" style={{ textAlign: 'center', margin: 10 }}>{errorOnConfirm}</Text>
-                }
-                <Button
-                    disabled={isButtonDisabled}
-                    size="medium"
-                    text={t('Confirm')}
-                    onPress={confirmSlide}
-                    style={{ marginTop: 20, paddingLeft: 50, paddingRight: 50 }}
-                />
-            </View>
+            <Pressable 
+                key={item.id}
+                onPress={() => toggleItem(currentSlide, index)}
+                style={[
+                    s.interestCard,
+                    isSelected && s.interestCardSelected
+                ]}
+            >
+                <Image source={item.icon} style={s.interestCardImage} />
+                <Text style={s.interestCardText}>{item.title}</Text>
+            </Pressable>
         )
     }
 
-    const backIconLight = require('@/assets/icons/arrow-left.png')
-    const backIconDark = require('@/assets/icons/arrow-left-light.png')
+    const backIcon = require('@/assets/icons/back.png')
 
     return !loaded ? null : (
         <Modal
@@ -325,65 +293,229 @@ export default function Preferences({ onHide, isVisible }: IPreferences) {
             isVisible={isVisible}
             style={[theme.modal, {backgroundColor: getBgColor()}]}
         >
-            <View style={{
-                flexDirection: 'row',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-            }}>
-                { currentSlide !== 0 ? <Pressable onPress={showPrevSlide} style={{ alignSelf: 'flex-start' }}>
-                    <Image
-                        source={isLight() ? backIconLight : backIconDark}
-                        style={{ width: 16, height: 16, marginTop: 10 }}
-                    />
-                </Pressable> : <View /> }
-                <Pressable onPress={onHide}>
-                    <Text type="link">{t('Skip')}</Text>
-                </Pressable>
+            {/* Header */}
+            <View style={s.header}>
+                <View style={s.headerTop}>
+                    <View style={s.headerLeft}>
+                        {currentSlide !== 0 ? (
+                            <Pressable onPress={showPrevSlide} style={s.backButton}>
+                                <Image
+                                    source={backIcon}
+                                    style={s.backButtonIcon}
+                                />
+                            </Pressable>
+                        ) : (
+                            <View style={s.backButtonPlaceholder} />
+                        )}
+                    </View>
+                    
+                    <View style={s.progressContainer}>
+                        <View style={s.progressBar}>
+                            <View 
+                                style={[
+                                    s.progressFill, 
+                                    { width: `${((currentSlide + 1) / data.length) * 100}%` }
+                                ]} 
+                            />
+                        </View>
+                        <Text style={s.progressText}>{currentSlide + 1}/{data.length}</Text>
+                    </View>
+                    
+                    <View style={s.headerRight} />
+                </View>
             </View>
-            <FlatList
-                ref={sliderRef}
-                data={data}
-                renderItem={renderItem}
-                initialScrollIndex={currentSlide}
-                horizontal
-                style={s.flatList}
-                pagingEnabled
-                scrollEnabled={false}
-                showsHorizontalScrollIndicator={false}
-            />
+
+            {/* Content */}
+            <View style={s.content}>
+                <Text style={s.title}>{data[currentSlide]?.title}</Text>
+                
+                <FlatList
+                    data={data[currentSlide]?.items || []}
+                    renderItem={({ item, index }) => renderInterestCard(item, index)}
+                    keyExtractor={(item) => item.id.toString()}
+                    style={s.interestList}
+                    showsVerticalScrollIndicator={false}
+                />
+
+                {data[currentSlide]?.additionalItems && !data[currentSlide]?.fullList && (
+                    <Pressable
+                        onPress={() => showFullListForSlide(currentSlide)}
+                        style={s.seeMoreButton}
+                    >
+                        <Text style={s.seeMoreText}>{t('See more')}</Text>
+                    </Pressable>
+                )}
+
+                {errorOnConfirm && (
+                    <Text style={s.errorText}>{errorOnConfirm}</Text>
+                )}
+            </View>
+
+            {/* Footer */}
+            <View style={s.footer}>
+                <View style={s.footerButtons}>
+                    <Pressable onPress={onHide} style={s.skipButton}>
+                        <Text style={s.skipText}>{t('Skip')}</Text>
+                    </Pressable>
+                    <Pressable 
+                        onPress={confirmSlide} 
+                        disabled={isButtonDisabled}
+                        style={[s.confirmButton, isButtonDisabled && s.confirmButtonDisabled]}
+                    >
+                        <Text style={[s.confirmText, isButtonDisabled && s.confirmTextDisabled]}>
+                            {t('Confirm')}
+                        </Text>
+                    </Pressable>
+                </View>
+            </View>
         </Modal>
     )
 }
 
 const s = StyleSheet.create({
-    modalView: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
+    header: {
+        paddingHorizontal: paddings,
     },
-    main: {
-        flexDirection: 'column',
-        // justifyContent: 'space-between',
-        alignItems: 'center',
-    },
-    flatList: {
-        flex: 1,
+    headerTop: {
         flexDirection: 'row',
-        marginTop: 40,
-    },
-    image: {
-        marginBottom: 60,
-    },
-    subtitle: {
-        fontSize: 25,
-        textAlign: 'center',
-        marginBottom: 20,
-    }, 
-    navButtons: {
-        flexDirection: 'column',
-        flex: 1,
-        marginTop: 40,
-        width: '100%',
         alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: 20,
+    },
+    headerLeft: {
+        width: 70,
+        alignItems: 'flex-start',
+    },
+    headerRight: {
+        width: 70,
+    },
+    backButton: {
+        width: 44,
+        height: 44,
+        borderRadius: 20,
+        backgroundColor: '#F5F5DC',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    backButtonPlaceholder: {
+        width: 44,
+        height: 44,
+    },
+    backButtonIcon: {
+        width: 44,
+        height: 44,
+    },
+    progressContainer: {
+        flex: 1,
+        alignItems: 'center',
+        marginTop: 20,
+    },
+    progressBar: {
+        width: '100%',
+        height: 4,
+        backgroundColor: '#E5E5E5',
+        borderRadius: 2,
+        marginBottom: 8,
+    },
+    progressFill: {
+        height: '100%',
+        backgroundColor: '#C3803A',
+        borderRadius: 2,
+    },
+    progressText: {
+        fontSize: 14,
+        color: '#6C7278',
+        fontFamily: 'DMSans',
+    },
+    content: {
+        flex: 1,
+        paddingHorizontal: paddings,
+        paddingTop: 20,
+    },
+    title: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        color: '#1B1A1D',
+        textAlign: 'center',
+        marginBottom: 52,
+        fontFamily: 'Poppins-Bold',
+    },
+    interestList: {
+        flex: 1,
+    },
+    interestCard: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#F9F9F9',
+        borderRadius: 10,
+        padding: 16,
+        marginBottom: 19,
+        borderWidth: 1,
+        borderColor: '#EFF0F6',
+    },
+    interestCardSelected: {
+        backgroundColor: '#F6ECE2',
+        borderColor: '#C28040',
+    },
+    interestCardImage: {
+        width: 40,
+        height: 40,
+        marginRight: 16,
+    },
+    interestCardText: {
+        flex: 1,
+        fontSize: 16,
+        color: '#6C7278',
+        fontFamily: 'Poppins-Medium',
+    },
+    seeMoreButton: {
+        marginTop: 20,
+        alignSelf: 'flex-start',
+    },
+    seeMoreText: {
+        fontSize: 16,
+        color: '#C3803A',
+        fontFamily: 'Poppins-Medium',
+        textDecorationLine: 'underline',
+    },
+    errorText: {
+        fontSize: 14,
+        color: '#FF2020',
+        textAlign: 'center',
+        marginTop: 10,
+        fontFamily: 'Poppins-Medium',
+    },
+    footer: {
+        paddingHorizontal: paddings,
+        paddingBottom: 20,
+    },
+    footerButtons: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+    confirmButton: {
+        paddingVertical: 8,
+    },
+    confirmButtonDisabled: {
+        opacity: 0.5,
+    },
+    confirmText: {
+        fontSize: 16,
+        color: Colors.mainColor,
+        fontFamily: 'Poppins-Medium',
+        textTransform: 'uppercase',
+    },
+    confirmTextDisabled: {
+        color: '#9BA1A6',
+    },
+    skipButton: {
+        paddingVertical: 8,
+    },
+    skipText: {
+        fontSize: 16,
+        color: '#6C7278',
+        fontFamily: 'Poppins-Medium',
+        textTransform: 'uppercase',
     },
 })

@@ -147,13 +147,13 @@ export const theme = StyleSheet.create({
 
     // Modals
     modal: {
-        borderRadius: 20,
+        // borderRadius: 20,
         width: '100%',
         marginHorizontal: 0,
         marginVertical: 0,
         paddingTop: Constants.statusBarHeight,
         padding: paddings,
-        paddingBottom: 32,
+        paddingBottom: 27,
     },
     modalTopbarWrap: {
         gap: 16,
