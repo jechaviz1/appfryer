@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Dimensions, Image, Pressable, StyleSheet } from 'react-native'
+import { Dimensions, FlatList, Image, Pressable, StyleSheet } from 'react-native'
 import { LinearGradient } from 'expo-linear-gradient'
 import { useRouter } from 'expo-router'
 import AsyncStorage from '@react-native-async-storage/async-storage'
@@ -20,10 +20,18 @@ interface CategoryProps {
 
 function Category({category, onPress}: CategoryProps) {
     return (
-        <Pressable style={s.category} onPress={onPress}>
-            <Image source={{uri: category.photo}} style={s.categoryImage} />
-            <LinearGradient colors={['#00000000', '#000000b2']} style={s.categoryGradient} />
-            <Text style={[theme.bold, s.categoryTitle]}>{category.title}</Text>
+        <Pressable 
+            style={s.categoryItem}
+            onPress={onPress}
+        >
+            {category.icon && category.icon.trim() !== '' ? (
+                <Image source={{uri: category.icon}} style={s.categoryIcon} />
+            ) : (
+                <View style={[s.categoryIcon, s.placeholderIcon]} />
+            )}
+            <Text style={s.categoryText}>
+                {category.title}
+            </Text>
         </Pressable>
     )
 }
@@ -66,17 +74,24 @@ export default function Categories({style}: {style?: any}) {
         })
     }, [])
 
+    const renderCategoryItem = ({ item }: { item: ICategory }) => (
+        <Category
+            key={item.id}
+            category={item}
+            onPress={() => router.push({pathname: '/(pages)/feed', params: {title: item.title, filterCategories: item.id}})}
+        />
+    )
+
     return (
         <View style={[style, s.container]}>
-            <Text type="caption" style={{ marginBottom: 12 }}>{t('Categories')}</Text>
-
-            <View style={[s.categories, {}]}>
-                {categories.map((category) => <Category
-                    key={category.id}
-                    category={category}
-                    onPress={() => router.push({pathname: '/(pages)/feed', params: {title: category.title, filterCategories: category.id}})}
-                />)}
-            </View>
+            <FlatList
+                data={categories}
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                renderItem={renderCategoryItem}
+                keyExtractor={(item) => item.id.toString()}
+                contentContainerStyle={s.categories}
+            />
         </View>
     )
 }
@@ -87,9 +102,37 @@ const s = StyleSheet.create({
     },
     categories: {
         flexDirection: 'row',
-        flexWrap: 'wrap',
-        gap: 12,
-
+        gap: 15,
+    },
+    categoryItem: {
+        alignItems: 'center',
+        backgroundColor: '#FCEEE1',
+        borderRadius: 10,
+        paddingHorizontal: 5,
+        paddingVertical: 10,
+        minWidth: 83,
+    },
+    categoryItemSelected: {
+        backgroundColor: Colors.mainColor,
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+        elevation: 4,
+    },
+    categoryIcon: {
+        width: 32,
+        height: 32,
+        marginBottom: 8,
+        borderRadius: 16,
+    },
+    categoryText: {
+        fontSize: 16,
+        color: '#4F4240',
+        fontFamily: 'Poppins-Medium',
+        textAlign: 'center',
+        lineHeight: 18,
+    },
+    categoryTextSelected: {
+        color: Colors.white,
     },
     category: {
         width: '48%',
@@ -114,5 +157,8 @@ const s = StyleSheet.create({
         bottom: 12,
         left: 12,
         color: Colors.white,
+    },
+    placeholderIcon: {
+        backgroundColor: '#E0E0E0', // A neutral color for the placeholder
     },
 })

@@ -6,11 +6,11 @@ export const paddings = 15
 
 export const isLight = () => Appearance.getColorScheme() === 'light'
 export function getBgColor() {
-    return isLight() ? Colors.white : Colors.dark.background
+    return isLight() ? Colors.mainBGColor : Colors.dark.background
 }
 
-// const bottomMargin = 46
-const bottomMargin = 0
+const bottomMargin = 46
+// const bottomMargin = 0
 
 export const theme = StyleSheet.create({
     statusBarHeight: {
@@ -19,12 +19,14 @@ export const theme = StyleSheet.create({
     container: {
         marginBottom: bottomMargin,
         minHeight: '100%',
+        backgroundColor: getBgColor(),
     },
     mainContainer: {
         paddingHorizontal: paddings,
         paddingTop: 0,
         paddingBottom: bottomMargin + Constants.statusBarHeight,
         minHeight: '100%',
+        backgroundColor: getBgColor(),
     },
     authContainer: {
         height: '100%',

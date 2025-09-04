@@ -1,12 +1,14 @@
-import { useCallback, useEffect, useState } from 'react'
-import { Image, Pressable, StyleSheet } from 'react-native'
+import { useCallback, useEffect, useState, useRef } from 'react'
+import { Image, Pressable, StyleSheet, FlatList, Dimensions } from 'react-native'
 import { useFocusEffect } from '@react-navigation/native'
 import { useTranslation } from 'react-i18next'
+import { LinearGradient } from 'expo-linear-gradient'
 
-import { Button, ScrollView, Text, View } from "@/components/base/BaseComponents"
+import { Button, ScrollView, Text, View, TextInput } from "@/components/base/BaseComponents"
 import Notifications from '@/components/modals/Notifications'
 import Stories from '@/components/Stories'
-import { theme, isLight } from '@/constants/Theme'
+import Categories from '@/components/Categories'
+import { theme, isLight, getBgColor } from '@/constants/Theme'
 import { useAuth } from '@/contexts/authContext'
 import { useSearchFilters } from '@/contexts/searchFiltersContext'
 import { useAppState } from '@/contexts/appStateContext'
@@ -15,6 +17,8 @@ import { logError } from '@/services/utils'
 import IRecipe from '@/interfaces/Recipe'
 import { Colors } from '@/constants/Colors'
 import { useRouter } from 'expo-router'
+import { t } from 'i18next'
+import { MediaType } from '@/interfaces/Media'
 
 const storiesFake = [
     { id: 1, image: 'https://picsum.photos/200', name: 'Shiovan', link: 'https://videos.pexels.com/video-files/7929005/7929005-hd_1080_1920_24fps.mp4' },
@@ -25,6 +29,20 @@ const storiesFake = [
     { id: 6, image: 'https://picsum.photos/200', name: 'Miguel', viewed: true, link: 'https://videos.pexels.com/video-files/7929021/7929021-hd_1080_1920_24fps.mp4' },
 ]
 
+
+
+const weeklyDays = [
+    { id: 1, day: t('Sun'), date: '23', selected: false },
+    { id: 2, day: t('Mon'), date: '24', selected: false },
+    { id: 3, day: t('Tue'), date: '25', selected: true },
+    { id: 4, day: t('Wed'), date: '26', selected: false },
+    { id: 5, day: t('Thu'), date: '27', selected: false },
+    { id: 6, day: t('Fri'), date: '28', selected: false },
+    { id: 7, day: t('Sat'), date: '29', selected: false },
+]
+
+
+
 export default function HomeScreen() {
     const router = useRouter()
     const { t } = useTranslation()
@@ -34,7 +52,68 @@ export default function HomeScreen() {
 
     const [avatar, setAvatar] = useState<any>()
     const [showNotifications, setShowNotifications] = useState<boolean>(false)
+    const [searchText, setSearchText] = useState<string>('')
+    const [recipesForYou, setRecipesForYou] = useState<any[]>([])
+    const [recipesOfMonth, setRecipesOfMonth] = useState<any[]>([])
+    const [recommendationsSlideIndex, setRecommendationsSlideIndex] = useState<number>(0)
+    const [trendingSlideIndex, setTrendingSlideIndex] = useState<number>(0)
 
+    const recommendationsFlatListRef = useRef<FlatList>(null)
+    const trendingFlatListRef = useRef<FlatList>(null)
+
+    const modifyRecipesForCards = useCallback((recipes: IRecipe[]) => {
+        return recipes.map((r: IRecipe) => {
+            const img = r.medias.find(media => media.type == MediaType.IMAGE)
+            return {
+                id: r.id,
+                title: r.title,
+                image: img?.url || '',
+                profileName: r.userFullname,
+                category: r.categoryName,
+                likes: r.cntLikes,
+                comments: r.cntComments,
+                timeAgo: t('35 minutes ago'), // This could be calculated from createdAt
+                bookmarked: r.isSaved
+            }
+        })
+    }, [])
+
+    const fetchRecipes = useCallback((type: string, setRecipes: (recipes: any[]) => void) => {
+        if (!user?.token) return
+        
+        post({
+            url: '/feed',
+            data: { type },
+            token: user.token
+        })
+            .then((recipes: IRecipe[]) => {
+                setRecipes(modifyRecipesForCards(recipes))
+            })
+            .catch((error) => {
+                logError(error)
+                setRecipes([])
+            })
+    }, [user?.token, modifyRecipesForCards])
+
+    const window = Dimensions.get('window')
+    
+    useEffect(() => {
+        if (user?.token) {
+            fetchRecipes('recipesForYou', setRecipesForYou)
+            fetchRecipes('recipesOfMonth', setRecipesOfMonth)
+        } else {
+            setRecipesForYou([])
+            setRecipesOfMonth([])
+        }
+    }, [user?.token, fetchRecipes])
+
+    useFocusEffect(useCallback(() => {
+        if (user?.token) {
+            fetchRecipes('recipesForYou', setRecipesForYou)
+            fetchRecipes('recipesOfMonth', setRecipesOfMonth)
+        }
+    }, [user?.token, fetchRecipes]))
+    
     const [tabs] = useState([
         {title: 'New', icon: require('@/assets/icons/lightning.png'), type: 'new'},
         {title: 'Trend', icon: require('@/assets/icons/fire.png'), type: 'trend'},
@@ -59,78 +138,327 @@ export default function HomeScreen() {
 
     const bellIcon = isLight() ? require('@/assets/icons/bell-black.png') : require('@/assets/icons/bell-white.png')
 
+    const renderRecipeCard = ({ item }: { item: any }) => {
+        // Handle both API data and mock data structures
+        const isApiData = 'profileName' in item && !('category' in item)
+        
+        return (
+            <Pressable 
+                style={[s.recipeCard, { width: window.width - 36 }]}
+                onPress={() => {
+                    // Navigate to recipe detail page
+                    router.push(`/(pages)/recipe/${item.id}`)
+                }}
+            >
+                {item.image && item.image.trim() !== '' ? (
+                    <Image source={{ uri: item.image }} style={s.recipeImage} />
+                ) : (
+                    <View style={[s.recipeImage, s.placeholderImage]} />
+                )}
+                <LinearGradient
+                    colors={["#000000", "rgba(217, 217, 217, 0)"]}
+                    locations={[0.04, 1]}       // 4.07% and 100%
+                    start={{ x: 0.5, y: 0 }}    // top center
+                    end={{ x: 0.5, y: 1 }}      // bottom center
+                    style={s.recipeCardHeader}
+                >
+                    <View style={s.recipeCardUser}>
+                        <Image source={require('@/assets/icons/person-round.png')} style={s.userIcon} />
+                        <View style={s.recipeCardUserInfo}>
+                            <Text style={s.recipeUserName}>{item.profileName}</Text>
+                            <Text style={s.userCategory}>
+                                {isApiData ? t('Recipe') : (item.category || t('Recipe'))}
+                            </Text>
+                        </View>
+                    </View>
+                </LinearGradient>
+                <View style={s.recipeCardFooter}>
+                    <View style={s.footerSection}>
+                        <View style={s.engagementMetrics}>
+                            <Pressable 
+                                style={s.metricItem}
+                                onPress={() => {
+                                    console.log('Like toggled for recipe:', item.id)
+                                }}
+                            >
+                                <Image source={require('@/assets/icons/liked.png')} style={s.metricIcon} />
+                                <Text style={s.metricText}>
+                                    {isApiData ? '0' : (item.likes || '0')}
+                                </Text>
+                            </Pressable>
+                            <Pressable 
+                                style={s.metricItem}
+                                onPress={() => {
+                                    console.log('Comment pressed for recipe:', item.id)
+                                }}
+                            >
+                                <Image source={require('@/assets/icons/chat-box.png')} style={s.metricIcon} />
+                                <Text style={s.metricText}>
+                                    {isApiData ? '0' : (item.comments || '0')}
+                                </Text>
+                            </Pressable>
+                        </View>
+                    </View>
+                    <View style={s.footerSection}>
+                        <View style={s.paginationDots}>
+                            <View style={[s.dot, s.dotActive]} />
+                            <View style={[s.dot, s.dotInactive]} />
+                            <View style={[s.dot, s.dotInactive]} />
+                        </View>
+                    </View>
+                    <View style={s.footerSection}>
+                        <Pressable 
+                            style={s.bookmarkBtn}
+                            onPress={() => {
+                                console.log('Bookmark toggled for recipe:', item.id)
+                            }}
+                        >
+                            <Image source={require('@/assets/icons/ribbon.png')} style={s.bookmarkIcon} />
+                        </Pressable>
+                    </View>
+                </View>
+                
+                <Text style={s.recipeTitle}>{item.title}</Text>
+                <Text style={s.recipeTime}>
+                    {isApiData ? t('Just published') : (item.timeAgo || t('Just published'))}
+                </Text>
+            </Pressable>
+        )
+    }
+
+    const renderDayItem = ({ item }: { item: any }) => (
+        <Pressable 
+            style={[s.dayItem, item.selected && s.dayItemSelected]}
+            onPress={() => console.log('Day selected:', item.day)}
+        >
+            <Text style={[s.dayText, item.selected && s.dayTextSelected]}>{item.day}</Text>
+            <Text style={[s.dateText, item.selected && s.dateTextSelected]}>{item.date}</Text>
+        </Pressable>
+    )
+
     return (
         <View style={theme.container}>
             <View style={theme.statusBarHeight} />
             <ScrollView style={theme.mainContainer}>
                 <Notifications isVisible={showNotifications} onHide={() => setShowNotifications(false)} />
 
-                <View style={s.topSide}>
-                    <View style={s.welcomeBack}>
-                        { avatar && <Image source={avatar} style={s.avatar} /> }
-                        <View style={{ flex: 1 }}>
-                            <Text style={{ color: isLight() ? Colors.grey : Colors.lightGrey }}>{t('Welcome back,')}</Text>
-                            <Text type="defaultSemiBold" style={{ fontSize: 15 }}>{user?.fullname}</Text>
+                {/* Header Section */}
+                <View style={s.header}>
+                    <View style={s.greetingSection}>
+                        <Text style={[s.greeting, { color: isLight() ? Colors.grey : Colors.lightGrey }]}>{t('Hello,')}</Text>
+                        <Text style={s.userName}>{user?.fullname || t('User')}</Text>
+                    </View>
+                    <Pressable onPress={() => {
+                        setShowNotifications(true)
+                        setAppState({ ...appState, isNewNotifications: false })
+                    }}>
+                        <Image source={avatar} style={s.profileImage} />
+                        { appState.isNewNotifications && <View style={s.notificationMarker} />}
+                    </Pressable>
+                </View>
+
+                {/* Search Bar */}
+                <View style={s.searchSection}>
+                    <View style={s.searchContainer}>
+                        <Image source={require('@/assets/icons/search.png')} style={s.searchIcon} />
+                        <TextInput
+                            styleContainer={s.searchInput}
+                            styleTextInput={s.searchTextInput}
+                            placeholder={t('Search recipes')}
+                            value={searchText}
+                            onChangeText={setSearchText}
+                            placeholderTextColor={Colors.grey}
+                        />
+                    </View>
+                    <Pressable style={s.filterButton}>
+                        <Image source={require('@/assets/icons/filter-dark.png')} style={s.filterIcon} />
+                    </Pressable>
+                </View>
+
+                {/* Categories */}
+                <Categories style={s.categoriesSection} />
+
+                {/* Hero Banner */}
+                <Pressable style={s.heroBanner} onPress={() => router.navigate('/(pages)/quiz')}>
+                    <Image
+                        source={require('@/assets/images/quiz-banner.png')}
+                        style={s.heroBannerImage}
+                        resizeMode="cover"
+                    />
+                    <View style={s.heroBannerOverlay}>
+                        <View style={s.heroBannerContent}>
+                            <View style={s.heroLeftSection}>
+                                <Image 
+                                    source={require('@/assets/images/quiz-person.png')} 
+                                    style={s.heroPersonImage}
+                                    resizeMode="contain"
+                                />
+                            </View>
+                            <View style={s.heroRightSection}>
+                                <View style={s.heroIconContainer}>
+                                    <Image 
+                                        source={require('@/assets/images/quiz-icon.png')} 
+                                        style={s.heroBowlIcon}
+                                        resizeMode="contain"
+                                    />
+                                </View>
+                                <Text type="subtitle" style={s.heroText}>{t('What would you like to eat?')}</Text>
+                            </View>
                         </View>
-                        <Pressable onPress={() => {
-                            setShowNotifications(true)
-                            setAppState({ ...appState, isNewNotifications: false })
-                        }}>
-                            <Image source={bellIcon} style={s.notificationIcon} />
-                             { appState.isNewNotifications && <View style={[s.notificationMarker, { borderColor: isLight() ? Colors.white : Colors.black}]} />}
+                    </View>
+                </Pressable>
+
+                {/* Recommendations Section */}
+                <View style={s.section}>
+                    <View style={s.sectionHeader}>
+                        <Text style={s.sectionTitle}>{t('Recommendations for you')}</Text>
+                        <Pressable>
+                            <Text style={s.seeAllText}>{t('See all')}</Text>
                         </Pressable>
                     </View>
-                    {/* <Stories storiesArray={storiesFake} /> */}
-
-                    {/* Quiz banner */}
-                    <Pressable style={s.quizBanner} onPress={() => router.navigate('/(pages)/quiz')}>
-                        <Image
-                            source={require('@/assets/images/quiz-banner.png')}
-                            style={s.quizBannerImg}
-                            resizeMode="contain"
-                        />
-                        <Text type="subtitle" style={s.quizBannerText}>{t('What would you like to eat?')}</Text>
-                        <Button
-                            text={t('Try out')}
-                            onPress={() => router.navigate('/(pages)/quiz')}
-                            style={s.quizBannerBtn}
-                            isWide={false}
-                            size="small"
-                            textStyle={[theme.bold, s.quizBannerBtnText]}
-                        />
-                    </Pressable>
-
-                    <Button
-                        text={t('Browse all recipes')}
-                        onPress={() => router.navigate('/(tabs)/news')}
-                        style={s.browseAllBtn}
-                    />
-
+                    {recipesForYou.length === 0 ? (
+                        <View style={s.emptyState}>
+                            <Text style={s.emptyStateText}>
+                                {user?.token ? t('Loading recommendations...') : t('Please sign in to see recommendations')}
+                            </Text>
+                        </View>
+                    ) : (
+                        <>
+                            <FlatList
+                                ref={recommendationsFlatListRef}
+                                data={recipesForYou}
+                                horizontal
+                                showsHorizontalScrollIndicator={false}
+                                renderItem={renderRecipeCard}
+                                keyExtractor={(item) => item.id.toString()}
+                                contentContainerStyle={s.recipesList}
+                                pagingEnabled={true}
+                                onMomentumScrollEnd={(event) => {
+                                    const slideIndex = Math.round(event.nativeEvent.contentOffset.x / (window.width - 36))
+                                    setRecommendationsSlideIndex(slideIndex)
+                                }}
+                            />
+                            {recipesForYou.length > 1 && (
+                                <View style={s.slidePaginationDots}>
+                                    {recipesForYou.map((_, index) => (
+                                        <Pressable 
+                                            key={index}
+                                            style={[s.slideDot, recommendationsSlideIndex === index ? s.dotActive : s.dotInactive]}
+                                            onPress={() => {
+                                                setRecommendationsSlideIndex(index)
+                                                recommendationsFlatListRef.current?.scrollToIndex({ index, animated: true })
+                                            }}
+                                        />
+                                    ))}
+                                </View>
+                            )}
+                        </>
+                    )}
                 </View>
                 
+                {/* Weekly Plan Section */}
+                <View style={s.section}>
+                    <View style={s.sectionHeader}>
+                        <Text style={s.sectionTitle}>{t('Weekly plan')}</Text>
+                        <Pressable>
+                            <Text style={s.seeAllText}>{t('See all')}</Text>
+                        </Pressable>
+                    </View>
+                    <FlatList
+                        data={weeklyDays}
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        renderItem={renderDayItem}
+                        keyExtractor={(item) => item.id.toString()}
+                        contentContainerStyle={s.daysList}
+                    />
+                </View>
+
+                {/* Trending Recipes Section */}
+                <View style={s.section}>
+                    <View style={s.sectionHeader}>
+                        <Text style={s.sectionTitle}>{t('Trending recipes')}</Text>
+                        <Pressable>
+                            <Text style={s.seeAllText}>{t('See all')}</Text>
+                        </Pressable>
+                    </View>
+                    {recipesOfMonth.length === 0 ? (
+                        <View style={s.emptyState}>
+                            <Text style={s.emptyStateText}>
+                                {user?.token ? t('Loading trending recipes...') : t('Please sign in to see trending recipes')}
+                            </Text>
+                        </View>
+                    ) : (
+                        <>
+                            <FlatList
+                                ref={trendingFlatListRef}
+                                data={recipesOfMonth}
+                                horizontal
+                                showsHorizontalScrollIndicator={false}
+                                renderItem={renderRecipeCard}
+                                keyExtractor={(item) => item.id.toString()}
+                                contentContainerStyle={s.recipesList}
+                                pagingEnabled={true}
+                                onMomentumScrollEnd={(event) => {
+                                    const slideIndex = Math.round(event.nativeEvent.contentOffset.x / (window.width - 36))
+                                    setTrendingSlideIndex(slideIndex)
+                                }}
+                            />
+                            {recipesOfMonth.length > 1 && (
+                                <View style={s.slidePaginationDots}>
+                                    {recipesOfMonth.map((_, index) => (
+                                        <Pressable 
+                                            key={index}
+                                            style={[s.slideDot, trendingSlideIndex === index ? s.dotActive : s.dotInactive]}
+                                            onPress={() => {
+                                                setTrendingSlideIndex(index)
+                                                trendingFlatListRef.current?.scrollToIndex({ index, animated: true })
+                                            }}
+                                        />
+                                    ))}
+                                </View>
+                            )}
+                        </>
+                    )}
+                </View>
             </ScrollView>
         </View>
     )
 }
 
 const s = StyleSheet.create({
-    topSide: {
-        gap: 20,
-    },
-    welcomeBack: {
+    // Header Section
+    header: {
         flexDirection: 'row',
-        gap: 10,
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 20,
+        backgroundColor: getBgColor(),
     },
-    avatar: {
-        width: 47,
-        height: 47,
-        borderRadius: 999,
+    greetingSection: {
+        flex: 1,
+        backgroundColor: getBgColor(),
     },
-    notificationIcon: {
-        width: 21,
-        height: 21,
-        marginTop: 4,
-        marginRight: 2,
+    greeting: {
+        fontSize: 15,
+        lineHeight: 22,
+        color: Colors.grey,
+        fontFamily: 'Poppins',
+        marginBottom: 8,
+    },
+    userName: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        color: Colors.black,
+        fontFamily: 'Poppins-SemiBold',
+        lineHeight: 20,
+    },
+    profileImage: {
+        width: 56,
+        height: 56,
+        borderRadius: 28,
+        borderWidth: 1,
+        borderColor: Colors.mainColor,
     },
     notificationMarker: {
         position: 'absolute',
@@ -139,40 +467,359 @@ const s = StyleSheet.create({
         width: 12,
         height: 12,
         borderWidth: 2,
-        borderRadius: 999,
+        borderRadius: 6,
         backgroundColor: 'red',
-    },
-    // Quiz
-    quizBanner: {
-        position: 'relative',
-        alignContent: 'center',
-        justifyContent: 'center',
-        marginTop: 20,
-        minHeight: 162,
-        maxHeight: 182,
-    },
-    quizBannerImg: {
-        width: '100%',
-    },
-    quizBannerText: {
-        color: Colors.white,
-        position: 'absolute',
-        top: 32,
-        left: 16,
-        width: '50%',
-    },
-    quizBannerBtn: {
-        position: 'absolute',
-        bottom: 22,
-        left: 16,
-        backgroundColor: Colors.white,
-        paddingHorizontal: 18,
-    },
-    quizBannerBtnText: {
-        color: Colors.mainColor,
+        borderColor: Colors.white,
     },
 
-    browseAllBtn: {
-        marginTop: 20,
+    // Search Section
+    searchSection: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 12,
+        marginBottom: 20,
+        borderRadius: 16,
+    },
+    searchContainer: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        borderRadius: 16,
+        paddingHorizontal: 16,
+    },
+    searchIcon: {
+        width: 18,
+        height: 18,
+        tintColor: '#8a8a8a',
+    },
+    searchInput: {
+        flex: 1,
+        color: Colors.black,
+        borderWidth: 0,
+        paddingHorizontal: 10,
+        height: 42,
+    },
+    searchTextInput: {
+        fontSize: 16,
+        fontFamily: 'Poppins',
+        color: Colors.greyTextColor,
+    },
+    filterButton: {
+        width: 32,
+        height: 32,
+        backgroundColor: '#F6ECE2',
+        borderRadius: 16,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginRight: 10,
+    },
+    filterIcon: {
+        width: 20,
+        height: 20,
+        tintColor: '#8a8a8a',
+    },
+
+    // Categories Section
+    categoriesSection: {
+        marginBottom: 24,
+        backgroundColor: getBgColor(),
+    },
+    emptyState: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 40,
+    },
+    emptyStateText: {
+        fontSize: 16,
+        color: Colors.grey,
+        fontFamily: 'Poppins-Medium',
+        textAlign: 'center',
+    },
+
+    // Hero Banner
+    heroBanner: {
+        position: 'relative',
+        height: 116,
+        borderRadius: 10,
+        marginBottom: 24,
+        overflow: 'hidden',
+    },
+    heroBannerImage: {
+        width: '100%',
+        height: '100%',
+    },
+    heroBannerOverlay: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'transparent',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    heroBannerContent: {
+        flexDirection: 'row',
+        paddingHorizontal: 24,
+        backgroundColor: 'transparent',
+    },
+    heroLeftSection: {
+        flex: 1,
+        alignItems: 'flex-start',
+        justifyContent: 'center',
+        paddingRight: 16,
+        backgroundColor: 'transparent',
+    },
+    heroPersonImage: {
+        width: 130,
+        height: 150,
+        position: 'absolute',
+    },
+    heroRightSection: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: 'transparent',
+    },
+    heroIconContainer: {
+        backgroundColor: 'transparent',
+    },
+    heroBowlIcon: {
+        width: 32,
+        height: 32,
+        resizeMode: 'contain',
+    },
+    heroText: {
+        fontSize: 20,
+        color: Colors.white,
+        fontFamily: 'Poppins-Bold',
+        lineHeight: 22,
+        textAlign: 'center',
+        fontWeight: 'bold',
+    },
+    heroIcon: {
+        width: 24,
+        height: 24,
+        marginBottom: 8,
+    },
+
+    // Section Styles
+    section: {
+        marginBottom: 24,
+        backgroundColor: getBgColor(),
+    },
+    sectionHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 16,
+        backgroundColor: getBgColor(),
+    },
+    sectionTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: Colors.black,
+        fontFamily: 'Poppins-Bold',
+        backgroundColor: getBgColor(),
+    },
+    seeAllText: {
+        fontSize: 14,
+        color: Colors.mainColor,
+        fontFamily: 'Poppins-Medium',
+        backgroundColor: getBgColor(),
+    },
+
+    // Recipe Cards
+    recipesList: {},
+    recipeCard: {
+        backgroundColor: Colors.white,
+        borderRadius: 14,
+        overflow: 'hidden',
+        position: 'relative',
+        marginHorizontal: 3,
+    },
+    recipeCardHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        paddingHorizontal: 16,
+        paddingTop: 16,
+        paddingBottom: 12,
+        position: 'absolute',
+        width: '100%',
+        zIndex: 2,
+        height: 160,
+    },
+    recipeCardHeaderOverlay: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        height: 100,
+        backgroundColor: 'linear-gradient(180deg, #000000 4.07%, rgba(217, 217, 217, 0) 100%)',
+        zIndex: 1,
+    },
+    recipeCardUser: {
+        flexDirection: 'row',
+        gap: 10,
+        backgroundColor: 'transparent',
+    },
+    recipeCardUserInfo: {
+        backgroundColor: 'transparent',
+    },
+    userIcon: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        tintColor: Colors.white,
+    },
+    recipeUserName: {
+        fontSize: 16,
+        lineHeight: 22,
+        color: Colors.white,
+        fontFamily: 'Poppins-SemiBold',
+        backgroundColor: 'transparent',
+    },
+    userCategory: {
+        fontSize: 13,
+        lineHeight: 17,
+        color: Colors.white,
+        fontFamily: 'Poppins',
+        backgroundColor: 'transparent',
+    },
+    bookmarkBtn: {
+        flexDirection: 'row',
+        padding: 6,
+        justifyContent: 'flex-end',
+    },
+    bookmarkIcon: {
+        width: 24,
+        height: 24,
+        tintColor: '#8a8a8a',
+    },
+    recipeImage: {
+        width: '100%',
+        height: 450,
+        backgroundColor: '#f5f5f5',
+    },
+    placeholderImage: {
+        backgroundColor: '#E0E0E0',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    recipeCardFooter: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+        backgroundColor: Colors.white,
+    },
+    footerSection: {
+        flex: 1,
+        justifyContent: 'center',
+        width: '33.33%',
+    },
+    engagementMetrics: {
+        flexDirection: 'row',
+        gap: 16,
+        alignItems: 'center',
+        justifyContent: 'flex-start',
+    },
+    metricItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
+    },
+    metricIcon: {
+        width: 24,
+        height: 24,
+    },
+    metricText: {
+        fontSize: 14,
+        lineHeight: 18,
+        color: '#919191',
+        fontFamily: 'Poppins',
+    },
+    slidePaginationDots: {
+        flexDirection: 'row',
+        gap: 4,
+        backgroundColor: getBgColor(),
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: 40,
+        marginBottom: 16,
+    },
+    slideDot: {
+        width: 14,
+        height: 14,
+        borderRadius: 7,
+    },
+    paginationDots: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        gap: 4,
+    },
+    dot: {
+        width: 8,
+        height: 8,
+        borderRadius: 4,
+    },
+    dotActive: {
+        backgroundColor: Colors.mainColor,
+    },
+    dotInactive: {
+        backgroundColor: '#e0e0e0',
+    },
+    recipeTitle: {
+        fontSize: 16,
+        color: Colors.black,
+        marginBottom: 6,
+        fontFamily: 'Poppins',
+        paddingHorizontal: 16,
+        lineHeight: 22,
+    },
+    recipeTime: {
+        fontSize: 13,
+        color: '#919191',
+        fontFamily: 'Poppins',
+        paddingHorizontal: 16,
+        paddingBottom: 16,
+    },
+
+    // Weekly Plan
+    daysList: {
+        gap: 6,
+    },
+    dayItem: {
+        alignItems: 'center',
+        backgroundColor: '#FCEEE1',
+        borderRadius: 14,
+        paddingHorizontal: 3,
+        paddingVertical: 3,
+        minWidth: 46,
+    },
+    dayItemSelected: {
+        backgroundColor: Colors.mainColor,
+    },
+    dayText: {
+        fontSize: 12,
+        color: Colors.grey,
+        fontFamily: 'Poppins-Medium',
+        padding: 10,
+    },
+    dayTextSelected: {
+        color: Colors.white,
+    },
+    dateText: {
+        fontSize: 16,
+        color: '#B5B5B5',
+        fontFamily: 'Poppins-SemiBold',
+        padding: 10,
+    },
+    dateTextSelected: {
+        backgroundColor: Colors.white,
+        color: Colors.mainColor,
+        padding: 10,
+        borderRadius: 12,
     },
 })

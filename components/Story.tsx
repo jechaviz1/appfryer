@@ -20,7 +20,11 @@ export default function Story ({ image, name, viewed = false }: StoryProps) {
     return (
         <View style={s.story}>
             <LinearGradient colors={gradientColors} style={s.circle}>
-                <Image source={{uri: image}} style={[s.profileImg, {borderColor}]}/>
+                {image && image.trim() !== '' ? (
+                    <Image source={{uri: image}} style={[s.profileImg, {borderColor}]}/>
+                ) : (
+                    <View style={[s.profileImg, {borderColor}, s.placeholderProfileImg]} />
+                )}
             </LinearGradient>
             <Text style={s.name} numberOfLines={1}>{name}</Text>
         </View>
@@ -46,6 +50,9 @@ const s = StyleSheet.create({
         height: 52,
         borderRadius: 26,
         borderWidth: 2,
+    },
+    placeholderProfileImg: {
+        backgroundColor: '#E0E0E0',
     },
     name: {
         width: 56,

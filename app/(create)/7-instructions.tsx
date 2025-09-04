@@ -88,11 +88,15 @@ function StepRow({ index, step, stepsArr, setStepsArr, onDelete }: IStepProps) {
                 <View style={s.images}>
                     {recipe?.media.filter((m: ImageMedia) => m.type?.split('/')[0] === 'image').map((m: ImageMedia, i: number) => (
                         <Pressable key={i} onPress={() => toggleUsedImage(m.uuid)}>
-                            <Image
-                                source={{uri: m.urlThumb}}
-                                style={s.image}
-                                key={m.uri}
-                            />
+                            {m.urlThumb && m.urlThumb.trim() !== '' ? (
+                                <Image
+                                    source={{uri: m.urlThumb}}
+                                    style={s.image}
+                                    key={m.uri}
+                                />
+                            ) : (
+                                <View style={[s.image, s.placeholderImage]} />
+                            )}
                             { stepInner.mediaUuid === m.uuid && <View style={[s.image, s.selectedImageOverlay]}>
                                 <Image source={require('@/assets/icons/x-white.png')} style={s.closeBtn} />
                             </View> }
@@ -339,6 +343,11 @@ const s = StyleSheet.create({
         width: 56,
         height: 56,
         borderRadius: 8,
+    },
+    placeholderImage: {
+        backgroundColor: '#E0E0E0',
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     selectedImageOverlay: {
         position: 'absolute',

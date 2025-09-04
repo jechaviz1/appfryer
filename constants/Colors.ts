@@ -9,9 +9,11 @@ const tintColorLight = '#0a7ea4'
 const tintColorDark = '#fff'
 const mainColor = '#c3803a'
 const greyTextColor = '#6C7278'
+const mainBGColor = '#F9F5F2'
 
 export const Colors = {
     mainColor,
+    mainBGColor,
     greyTextColor,
     mainColorLight: '#c3803a1a',
     lightGrey: '#e9e9e9',
