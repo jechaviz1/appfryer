@@ -6,6 +6,7 @@ import { LinearGradient } from 'expo-linear-gradient'
 
 import { Button, ScrollView, Text, View, TextInput } from "@/components/base/BaseComponents"
 import Notifications from '@/components/modals/Notifications'
+import Filters from '@/components/modals/Filters'
 import Stories from '@/components/Stories'
 import Categories from '@/components/Categories'
 import { theme, isLight, getBgColor } from '@/constants/Theme'
@@ -52,6 +53,7 @@ export default function HomeScreen() {
 
     const [avatar, setAvatar] = useState<any>()
     const [showNotifications, setShowNotifications] = useState<boolean>(false)
+    const [showFilters, setShowFilters] = useState<boolean>(false)
     const [searchText, setSearchText] = useState<string>('')
     const [recipesForYou, setRecipesForYou] = useState<any[]>([])
     const [recipesOfMonth, setRecipesOfMonth] = useState<any[]>([])
@@ -94,6 +96,29 @@ export default function HomeScreen() {
                 setRecipes([])
             })
     }, [user?.token, modifyRecipesForCards])
+
+    const handleSearchSubmit = useCallback(() => {
+        if (searchText.trim()) {
+            const searchData = {
+                ...searchFilters?.home,
+                filterTitle: searchText.trim()
+            }
+            
+            post({
+                url: '/feed',
+                data: searchData,
+                token: user?.token
+            })
+                .then((recipes: IRecipe[]) => {
+                    setRecipesForYou(modifyRecipesForCards(recipes))
+                })
+                .catch(logError)
+        }
+    }, [searchText, searchFilters, user?.token, modifyRecipesForCards])
+
+    const handleFilterResults = useCallback((filteredRecipes: IRecipe[]) => {
+        setRecipesForYou(modifyRecipesForCards(filteredRecipes))
+    }, [modifyRecipesForCards])
 
     const window = Dimensions.get('window')
     
@@ -241,6 +266,12 @@ export default function HomeScreen() {
             <View style={theme.statusBarHeight} />
             <ScrollView style={theme.mainContainer}>
                 <Notifications isVisible={showNotifications} onHide={() => setShowNotifications(false)} />
+                <Filters 
+                    isVisible={showFilters} 
+                    onHide={() => setShowFilters(false)} 
+                    page="home" 
+                    onSubmit={handleFilterResults}
+                />
 
                 {/* Header Section */}
                 <View style={s.header}>
@@ -268,9 +299,14 @@ export default function HomeScreen() {
                             value={searchText}
                             onChangeText={setSearchText}
                             placeholderTextColor={Colors.grey}
+                            onSubmitEditing={handleSearchSubmit}
+                            returnKeyType="search"
                         />
                     </View>
-                    <Pressable style={s.filterButton}>
+                    <Pressable 
+                        style={s.filterButton}
+                        onPress={() => setShowFilters(true)}
+                    >
                         <Image source={require('@/assets/icons/filter-dark.png')} style={s.filterIcon} />
                     </Pressable>
                 </View>

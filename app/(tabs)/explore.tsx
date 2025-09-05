@@ -7,6 +7,7 @@ import { useRouter } from 'expo-router'
 
 import { IngredientButton, ScrollView, Text, View, TextInput } from "@/components/base/BaseComponents"
 import Search from "@/components/Search"
+import Filters from "@/components/modals/Filters"
 import IngredientSearchInput from "@/components/IngredientSearchInput"
 import RecipeCard, { IRecipeCard } from '@/components/RecipeCard'
 import RecipeOfMonth from '@/components/RecipeOfMonth'
@@ -54,6 +55,7 @@ export default function SearchScreen() {
     const { searchFilters, setSearchFilters } = useSearchFilters()
     const [fridgeProds, setFridgeProds] = useState<IPrefItem[]>([])
     const [seasonalProds, setSeasonalProds] = useState<IPrefItem[]>([])
+    const [showFilters, setShowFilters] = useState<boolean>(false)
 
     const [searchResults, setSearchResults] = useState<IRecipeCard[]>([])
     const [recipesForYou, setRecipesForYou] = useState<IRecipeCard[]>([])
@@ -251,6 +253,13 @@ export default function SearchScreen() {
         }
     }, [searchText, user?.token, modifyRecipesForCards])
 
+    const handleFilterResults = useCallback((filteredRecipes: IRecipe[]) => {
+        setRecipesForYou(modifyRecipesForCards(filteredRecipes))
+        // Clear search results when filters are applied
+        setSearchResults([])
+        setSearchText('')
+    }, [modifyRecipesForCards])
+
     // Debounced search effect
     useEffect(() => {
         const timeoutId = setTimeout(() => {
@@ -363,6 +372,12 @@ export default function SearchScreen() {
         <View style={theme.container}>
             <View style={theme.statusBarHeight} />
             <ScrollView style={theme.mainContainer}>
+                <Filters 
+                    isVisible={showFilters} 
+                    onHide={() => setShowFilters(false)} 
+                    page="explore" 
+                    onSubmit={handleFilterResults}
+                />
                 {/* Search Section */}
                 <View style={s.searchSection}>
                     <View style={s.searchContainer}>
@@ -380,13 +395,7 @@ export default function SearchScreen() {
                     </View>
                     <Pressable 
                         style={s.filterButton}
-                        onPress={() => {
-                            console.log('Filter button pressed')
-                            // Here you can integrate with the existing filter functionality
-                            // For now, we'll just clear the search
-                            setSearchText('')
-                            setSearchResults([])
-                        }}
+                        onPress={() => setShowFilters(true)}
                     >
                         <Image source={require('@/assets/icons/filter-dark.png')} style={s.filterIcon} />
                     </Pressable>
