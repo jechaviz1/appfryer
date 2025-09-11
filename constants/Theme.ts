@@ -2,7 +2,7 @@ import { Appearance, Platform, StyleSheet } from 'react-native'
 import Constants from 'expo-constants'
 import { Colors } from './Colors'
 
-export const paddings = 15
+export const paddings = 24
 
 export const isLight = () => Appearance.getColorScheme() === 'light'
 export function getBgColor() {
