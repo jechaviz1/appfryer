@@ -6,8 +6,10 @@ import { LinearGradient } from 'expo-linear-gradient'
 
 import { Button, ScrollView, Text, View, TextInput } from "@/components/base/BaseComponents"
 import Notifications from '@/components/modals/Notifications'
+import Filters from '@/components/modals/Filters'
 import Stories from '@/components/Stories'
 import Categories from '@/components/Categories'
+import RecipeCard, { IRecipeCard } from '@/components/RecipeCard'
 import { theme, isLight, getBgColor } from '@/constants/Theme'
 import { useAuth } from '@/contexts/authContext'
 import { useSearchFilters } from '@/contexts/searchFiltersContext'
@@ -52,6 +54,7 @@ export default function HomeScreen() {
 
     const [avatar, setAvatar] = useState<any>()
     const [showNotifications, setShowNotifications] = useState<boolean>(false)
+    const [showFilters, setShowFilters] = useState<boolean>(false)
     const [searchText, setSearchText] = useState<string>('')
     const [recipesForYou, setRecipesForYou] = useState<any[]>([])
     const [recipesOfMonth, setRecipesOfMonth] = useState<any[]>([])
@@ -94,6 +97,29 @@ export default function HomeScreen() {
                 setRecipes([])
             })
     }, [user?.token, modifyRecipesForCards])
+
+    const handleSearchSubmit = useCallback(() => {
+        if (searchText.trim()) {
+            const searchData = {
+                ...searchFilters?.home,
+                filterTitle: searchText.trim()
+            }
+            
+            post({
+                url: '/feed',
+                data: searchData,
+                token: user?.token
+            })
+                .then((recipes: IRecipe[]) => {
+                    setRecipesForYou(modifyRecipesForCards(recipes))
+                })
+                .catch(logError)
+        }
+    }, [searchText, searchFilters, user?.token, modifyRecipesForCards])
+
+    const handleFilterResults = useCallback((filteredRecipes: IRecipe[]) => {
+        setRecipesForYou(modifyRecipesForCards(filteredRecipes))
+    }, [modifyRecipesForCards])
 
     const window = Dimensions.get('window')
     
@@ -139,90 +165,10 @@ export default function HomeScreen() {
     const bellIcon = isLight() ? require('@/assets/icons/bell-black.png') : require('@/assets/icons/bell-white.png')
 
     const renderRecipeCard = ({ item }: { item: any }) => {
-        // Handle both API data and mock data structures
-        const isApiData = 'profileName' in item && !('category' in item)
-        
         return (
-            <Pressable 
-                style={[s.recipeCard, { width: window.width - 36 }]}
-                onPress={() => {
-                    // Navigate to recipe detail page
-                    router.push(`/(pages)/recipe/${item.id}`)
-                }}
-            >
-                {item.image && item.image.trim() !== '' ? (
-                    <Image source={{ uri: item.image }} style={s.recipeImage} />
-                ) : (
-                    <View style={[s.recipeImage, s.placeholderImage]} />
-                )}
-                <LinearGradient
-                    colors={["#000000", "rgba(217, 217, 217, 0)"]}
-                    locations={[0.04, 1]}       // 4.07% and 100%
-                    start={{ x: 0.5, y: 0 }}    // top center
-                    end={{ x: 0.5, y: 1 }}      // bottom center
-                    style={s.recipeCardHeader}
-                >
-                    <View style={s.recipeCardUser}>
-                        <Image source={require('@/assets/icons/person-round.png')} style={s.userIcon} />
-                        <View style={s.recipeCardUserInfo}>
-                            <Text style={s.recipeUserName}>{item.profileName}</Text>
-                            <Text style={s.userCategory}>
-                                {isApiData ? t('Recipe') : (item.category || t('Recipe'))}
-                            </Text>
-                        </View>
-                    </View>
-                </LinearGradient>
-                <View style={s.recipeCardFooter}>
-                    <View style={s.footerSection}>
-                        <View style={s.engagementMetrics}>
-                            <Pressable 
-                                style={s.metricItem}
-                                onPress={() => {
-                                    console.log('Like toggled for recipe:', item.id)
-                                }}
-                            >
-                                <Image source={require('@/assets/icons/liked.png')} style={s.metricIcon} />
-                                <Text style={s.metricText}>
-                                    {isApiData ? '0' : (item.likes || '0')}
-                                </Text>
-                            </Pressable>
-                            <Pressable 
-                                style={s.metricItem}
-                                onPress={() => {
-                                    console.log('Comment pressed for recipe:', item.id)
-                                }}
-                            >
-                                <Image source={require('@/assets/icons/chat-box.png')} style={s.metricIcon} />
-                                <Text style={s.metricText}>
-                                    {isApiData ? '0' : (item.comments || '0')}
-                                </Text>
-                            </Pressable>
-                        </View>
-                    </View>
-                    <View style={s.footerSection}>
-                        <View style={s.paginationDots}>
-                            <View style={[s.dot, s.dotActive]} />
-                            <View style={[s.dot, s.dotInactive]} />
-                            <View style={[s.dot, s.dotInactive]} />
-                        </View>
-                    </View>
-                    <View style={s.footerSection}>
-                        <Pressable 
-                            style={s.bookmarkBtn}
-                            onPress={() => {
-                                console.log('Bookmark toggled for recipe:', item.id)
-                            }}
-                        >
-                            <Image source={require('@/assets/icons/ribbon.png')} style={s.bookmarkIcon} />
-                        </Pressable>
-                    </View>
-                </View>
-                
-                <Text style={s.recipeTitle}>{item.title}</Text>
-                <Text style={s.recipeTime}>
-                    {isApiData ? t('Just published') : (item.timeAgo || t('Just published'))}
-                </Text>
-            </Pressable>
+            <RecipeCard 
+                recipe={item}
+            />
         )
     }
 
@@ -241,6 +187,12 @@ export default function HomeScreen() {
             <View style={theme.statusBarHeight} />
             <ScrollView style={theme.mainContainer}>
                 <Notifications isVisible={showNotifications} onHide={() => setShowNotifications(false)} />
+                <Filters 
+                    isVisible={showFilters} 
+                    onHide={() => setShowFilters(false)} 
+                    page="home" 
+                    onSubmit={handleFilterResults}
+                />
 
                 {/* Header Section */}
                 <View style={s.header}>
@@ -268,9 +220,14 @@ export default function HomeScreen() {
                             value={searchText}
                             onChangeText={setSearchText}
                             placeholderTextColor={Colors.grey}
+                            onSubmitEditing={handleSearchSubmit}
+                            returnKeyType="search"
                         />
                     </View>
-                    <Pressable style={s.filterButton}>
+                    <Pressable 
+                        style={s.filterButton}
+                        onPress={() => setShowFilters(true)}
+                    >
                         <Image source={require('@/assets/icons/filter-dark.png')} style={s.filterIcon} />
                     </Pressable>
                 </View>
@@ -631,115 +588,6 @@ const s = StyleSheet.create({
 
     // Recipe Cards
     recipesList: {},
-    recipeCard: {
-        backgroundColor: Colors.white,
-        borderRadius: 14,
-        overflow: 'hidden',
-        position: 'relative',
-        marginHorizontal: 3,
-    },
-    recipeCardHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        paddingHorizontal: 16,
-        paddingTop: 16,
-        paddingBottom: 12,
-        position: 'absolute',
-        width: '100%',
-        zIndex: 2,
-        height: 160,
-    },
-    recipeCardHeaderOverlay: {
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        height: 100,
-        backgroundColor: 'linear-gradient(180deg, #000000 4.07%, rgba(217, 217, 217, 0) 100%)',
-        zIndex: 1,
-    },
-    recipeCardUser: {
-        flexDirection: 'row',
-        gap: 10,
-        backgroundColor: 'transparent',
-    },
-    recipeCardUserInfo: {
-        backgroundColor: 'transparent',
-    },
-    userIcon: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-        tintColor: Colors.white,
-    },
-    recipeUserName: {
-        fontSize: 16,
-        lineHeight: 22,
-        color: Colors.white,
-        fontFamily: 'Poppins-SemiBold',
-        backgroundColor: 'transparent',
-    },
-    userCategory: {
-        fontSize: 13,
-        lineHeight: 17,
-        color: Colors.white,
-        fontFamily: 'Poppins',
-        backgroundColor: 'transparent',
-    },
-    bookmarkBtn: {
-        flexDirection: 'row',
-        padding: 6,
-        justifyContent: 'flex-end',
-    },
-    bookmarkIcon: {
-        width: 24,
-        height: 24,
-        tintColor: '#8a8a8a',
-    },
-    recipeImage: {
-        width: '100%',
-        height: 450,
-        backgroundColor: '#f5f5f5',
-    },
-    placeholderImage: {
-        backgroundColor: '#E0E0E0',
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    recipeCardFooter: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        paddingHorizontal: 16,
-        paddingVertical: 12,
-        backgroundColor: Colors.white,
-    },
-    footerSection: {
-        flex: 1,
-        justifyContent: 'center',
-        width: '33.33%',
-    },
-    engagementMetrics: {
-        flexDirection: 'row',
-        gap: 16,
-        alignItems: 'center',
-        justifyContent: 'flex-start',
-    },
-    metricItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 4,
-    },
-    metricIcon: {
-        width: 24,
-        height: 24,
-    },
-    metricText: {
-        fontSize: 14,
-        lineHeight: 18,
-        color: '#919191',
-        fontFamily: 'Poppins',
-    },
     slidePaginationDots: {
         flexDirection: 'row',
         gap: 4,
@@ -747,6 +595,7 @@ const s = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         height: 40,
+        marginTop: 36,
         marginBottom: 16,
     },
     slideDot: {
@@ -754,36 +603,11 @@ const s = StyleSheet.create({
         height: 14,
         borderRadius: 7,
     },
-    paginationDots: {
-        flexDirection: 'row',
-        justifyContent: 'center',
-        gap: 4,
-    },
-    dot: {
-        width: 8,
-        height: 8,
-        borderRadius: 4,
-    },
     dotActive: {
         backgroundColor: Colors.mainColor,
     },
     dotInactive: {
         backgroundColor: '#e0e0e0',
-    },
-    recipeTitle: {
-        fontSize: 16,
-        color: Colors.black,
-        marginBottom: 6,
-        fontFamily: 'Poppins',
-        paddingHorizontal: 16,
-        lineHeight: 22,
-    },
-    recipeTime: {
-        fontSize: 13,
-        color: '#919191',
-        fontFamily: 'Poppins',
-        paddingHorizontal: 16,
-        paddingBottom: 16,
     },
 
     // Weekly Plan

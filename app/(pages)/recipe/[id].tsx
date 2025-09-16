@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { FlatList, Image, Pressable, Share, StyleSheet, useWindowDimensions } from 'react-native'
+import { FlatList, Image, ImageBackground, Pressable, Share, StyleSheet, useWindowDimensions, Dimensions } from 'react-native'
 import { useRouter, useGlobalSearchParams } from 'expo-router'
 import * as Linking from 'expo-linking'
 import Modal from 'react-native-modal'
@@ -7,6 +7,7 @@ import DatePicker from 'react-native-date-picker'
 // import * as Sharing from 'expo-sharing'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useTranslation } from 'react-i18next'
+import { LinearGradient } from 'expo-linear-gradient'
 
 import { BackButton, Button, ScrollView, Text, View } from "@/components/base/BaseComponents"
 import SavedRecipe from '@/components/modals/SavedRecipe'
@@ -14,7 +15,7 @@ import CommentBox from '@/components/CommentBox'
 import Comment from '@/components/Comment'
 import Ingredients from '@/components/Ingredients'
 import Instructions from '@/components/Instructions'
-import RecipeOfMonth from '@/components/RecipeOfMonth'
+import RecipeCard from '@/components/RecipeCard'
 import Categories from '@/components/Categories'
 import NutritionalValues from '@/components/NutritionalValues'
 import Badges from '@/components/Badges'
@@ -30,6 +31,8 @@ import { logError } from '@/services/utils'
 import IFolder from '@/interfaces/Folder'
 import { Colors, weeklyColors } from '@/constants/Colors'
 import { theme, isLight, getBgColor } from '@/constants/Theme'
+
+const { width: screenWidth } = Dimensions.get('window')
 
 export default function RecipeScreen() {
     const globQuery = useGlobalSearchParams()
@@ -59,9 +62,12 @@ export default function RecipeScreen() {
     const [showingCommentBox, setShowingCommentBox] = useState<boolean>(false)
 
     const [recipesOfMonth, setRecipesOfMonth] = useState<IRecipeCard[]>([])
+    const [trendingSlideIndex, setTrendingSlideIndex] = useState<number>(0)
 
     const [activeTab, setActiveTab] = useState<number>(0)
+    const [selectedThumbnailIndex, setSelectedThumbnailIndex] = useState<number>(0)
     const tabsRef = useRef<FlatList<string>>(null)
+    const trendingFlatListRef = useRef<FlatList>(null)
 
     const getProfileUrl = useCallback(() => {
         return recipe?.userId === user?.id ? '/(tabs)/profile' : '/(pages)/profile'
@@ -69,6 +75,14 @@ export default function RecipeScreen() {
     const getProfileImg = useCallback(() => {
         return recipe?.userProfileImageThumb ? {uri: recipe.userProfileImageThumb} : require('@/assets/images/icon.png')
     }, [recipe])
+
+    const renderRecipeCard = ({ item }: { item: any }) => {
+        return (
+            <RecipeCard 
+                recipe={item}
+            />
+        )
+    }
 
     const fetchRecipe = useCallback(async (id: number) => {
         const localRecipeStr = await AsyncStorage.getItem(`recipe/${id}`)
@@ -312,7 +326,8 @@ export default function RecipeScreen() {
     const greyTextColor = isLight() ? Colors.grey : Colors.lightGrey
 
     return (
-        <View style={theme.container}>
+        <View style={s.container}>
+            {/* Modals - keeping existing logic */}
             {showAddToPlanModal && <Modal
                 isVisible={showAddToPlanModal}
                 style={[theme.modal, s.modalView, {backgroundColor: getBgColor(), marginTop: height * 0.39}]}
@@ -402,8 +417,6 @@ export default function RecipeScreen() {
                 </View>
             </Modal> }
 
-            <View style={theme.statusBarHeight} />
-            <ScrollView style={theme.mainContainer}>
                 { displayFolders && <SavedRecipe
                     isVisible={displayFolders}
                     recipeId={recipe.id}
@@ -411,215 +424,339 @@ export default function RecipeScreen() {
                     inFolders={recipe.folders}
                     onUpdateFolders={(folders: IFolder[]) => setRecipe({...recipe, folders})}
                 /> }
-                <View style={s.titleImageWrapper}>
-                    <Image source={titleImageUrl ? { uri: titleImageUrl } : require('@/assets/images/icon.png')} style={s.titleImage} />
-                    <BackButton />
 
-                    <View style={s.gallery}>
-                        {recipe.medias.map((media, index) => {
-                            if (media.type != MediaType.IMAGE || media.url === titleImageUrl) {
-                                return null
-                            }
-                            return (<Pressable key={index} onPress={() => setTitleImageUrl(media.url)}>
+            <View style={theme.statusBarHeight} />
+
+            {/* Dark Header */}
+            <View style={s.header}>
+                <Pressable onPress={() => router.back()} style={s.backButton}>
+                    <Image source={require('@/assets/icons/back-2.png')} style={s.headerIcon} />
+                </Pressable>
+                <Text style={s.headerTitle}>{t('Recipe Details')}</Text>
+                <Pressable style={s.addButton} onPress={onShare}>
+                    <Image source={require('@/assets/icons/share.png')} style={s.addIcon} />
+                </Pressable>
+            </View>
+            <ScrollView style={s.scrollContainer} showsVerticalScrollIndicator={false}>
+                {/* Main Image Section */}
+                <View style={s.imageSection}>
                                 <Image
-                                    source={{ uri: media.url }}
-                                    style={s.galleryImage}
-                                />
-                            </Pressable>)
-                        })}
-                    </View>
-                </View>
-
-                {/* Badges */}
-                <Badges recipe={recipe} />
-
-                {/* Title and buttons */}
-                <View style={s.titleWrapper}>
-                    <Text type="subtitle" style={s.title}>{recipe.title}</Text>
-                    <View style={s.titleButtons}>
-                        <Pressable style={s.titleButton} onPress={onShare}>
-                            <Image
-                                source={isLight() ? require('@/assets/icons/share-dark.png') : require('@/assets/icons/share.png')}
-                                style={s.titleButtonImg}
-                            />
-                        </Pressable>
-                        <Pressable style={s.titleButton} onPress={toggleLikeRecipe}>
+                        source={titleImageUrl ? { uri: titleImageUrl } : require('@/assets/images/icon.png')} 
+                        style={s.mainImage} 
+                    />
+                    
+                    {/* Bottom Gradient Overlay */}
+                    <LinearGradient
+                        colors={["rgba(0, 0, 0, 0)", "rgba(0, 0, 0, 0.5)"]}
+                        locations={[0, 1]}
+                        start={{ x: 0.5, y: 0 }}
+                        end={{ x: 0.5, y: 1 }}
+                        style={s.bottomGradient}
+                    />
+                    
+                    {/* Action Buttons - Top Right */}
+                    <View style={s.actionButtons}>
+                        <Pressable style={s.actionButton} onPress={toggleLikeRecipe}>
                             <Image
                                 source={isLiked
                                     ? require('@/assets/icons/liked.png')
-                                    : (isLight() ? require('@/assets/icons/like-dark.png') : require('@/assets/icons/like.png'))
+                                    : require('@/assets/icons/like.png')
                                 }
-                                style={s.titleButtonImg}
+                                style={s.actionButtonIcon}
                             />
                         </Pressable>
-                        <Pressable style={s.titleButton} onPress={() => toggleSaveRecipe()}>
+                        <Pressable style={s.actionButton} onPress={() => toggleSaveRecipe()}>
                             <Image
                                 source={isSaved
                                     ? require('@/assets/icons/ribbon-filled.png')
-                                    : (isLight() ? require('@/assets/icons/ribbon-dark.png') : require('@/assets/icons/ribbon.png'))
+                                    : require('@/assets/icons/ribbon.png')
                                 }
-                                style={s.titleButtonImg}
+                                style={s.actionButtonIcon}
                             />
                         </Pressable>
+                </View>
+
+                    {/* Thumbnail Gallery - Left Center */}
+                    <View style={s.thumbnailGallery}>
+                        {recipe.medias.slice(0, 4).map((media, index) => {
+                            if (media.type !== MediaType.IMAGE) return null
+                            return (
+                                <Pressable key={index} onPress={() => {
+                                    setTitleImageUrl(media.url)
+                                    setSelectedThumbnailIndex(index)
+                                }}>
+                                    <Image 
+                                        source={{ uri: media.url }} 
+                                        style={[
+                                            s.thumbnailImage,
+                                            selectedThumbnailIndex === index && s.thumbnailImageActive
+                                        ]} 
+                                    />
+                        </Pressable>
+                            )
+                        })}
+                    </View>
+
+                    {/* Pagination Dots */}
+                    <View style={s.paginationDots}>
+                        {recipe.medias.filter(media => media.type === MediaType.IMAGE).slice(0, 4).map((media, index) => (
+                        <Pressable
+                            key={index}
+                                onPress={() => {
+                                    setTitleImageUrl(media.url)
+                                    setSelectedThumbnailIndex(index)
+                                }}
+                            >
+                                <View 
+                                    style={[
+                                        s.dot, 
+                                        index === selectedThumbnailIndex ? s.dotActive : s.dotInactive
+                                    ]} 
+                                />
+                        </Pressable>
+                    ))}
                     </View>
                 </View>
 
-                {/* Folders */}
-                {isSaved && <View style={s.recipeFolders}>
+                {/* Recipe Tags */}
+                <View style={s.tagsContainer}>
+                    {recipe.categories.slice(0, 3).map((category, index) => (
+                        <View key={index} style={s.tag}>
+                            <Text style={s.tagText}>{category.title}</Text>
+                        </View>
+                    ))}
+                </View>
+
+                {/* Usage Count */}
+                <View style={s.usageContainer}>
+                    <Image source={require('@/assets/icons/fire-akar.png')} style={s.usageIcon} />
+                    <Text style={s.usageText}>{t('This recipe has been used 23 times')}</Text>
+                </View>
+
+                {/* Author & Rating */}
+                <View style={s.authorContainer}>
+                    <View style={s.authorInfo}>
+                        <Text style={s.byText}>{t('By')}:</Text>
+                        <Image source={require('@/assets/icons/person-round.png')} style={s.userIcon} />
+                        <Text style={s.authorText}>{recipe.userFullname}</Text>
+                    </View>
+                    <Text>|</Text>
+                    <View style={s.ratingContainer}>
+                        <View style={s.starsContainer}>
+                            {Array.from({length: 5}, (_, index) => (
+                                <Image
+                                    key={index}
+                                    source={
+                                        index < Math.floor(recipe.avgRating || 0)
+                                            ? require('@/assets/icons/star-fill-78.png')
+                                            : require('@/assets/icons/star-grey-78.png')
+                                    }
+                                    style={s.starIcon}
+                                />
+                            ))}
+                        </View>
+                        <Text style={s.ratingText}>{recipe.avgRating || 0}/5</Text>
+                    </View>
+                </View>
+
+                {/* Recipe Title */}
+                <Text style={s.recipeTitle}>{recipe.title}</Text>
+
+                {/* Recipe Description */}
+                {recipe.description && (
+                    <Text style={s.recipeDescription}>{recipe.description}</Text>
+                )}
+
+                {/* Key Metrics */}
+                <View style={s.metricsContainer}>
+                    <View style={s.metricItem}>
+                        <Image source={require('@/assets/icons/clock.png')} style={s.metricIcon} />
+                        <Text style={s.metricValue}>{recipe.timeCooking || 25}</Text>
+                        <Text style={s.metricLabel}>Min</Text>
+                    </View>
+                    <View style={s.verticalLine} />
+                    <View style={s.metricItem}>
+                        <Image source={require('@/assets/icons/star.png')} style={s.metricIcon} />
+                        <Text style={s.metricValue}>{t('Easy')}</Text>
+                        <Text style={s.metricLabel}>{t('Level')}</Text>
+                    </View>
+                    <View style={s.verticalLine} />
+                    <View style={s.metricItem}>
+                        <Image source={require('@/assets/icons/fire-akar.png')} style={s.metricIcon} />
+                        <Text style={s.metricValue}>{recipe.calories || 244}</Text>
+                        <Text style={s.metricLabel}>Cal</Text>
+                    </View>
+                    <View style={s.verticalLine} />
+                    <View style={s.metricItem}>
+                        <Image source={require('@/assets/icons/cart.png')} style={s.metricIcon} />
+                        <Text style={s.metricValue}>{recipe.ingredients?.length || 5}</Text>
+                        <Text style={s.metricLabel}>{t('Ingredients')}</Text>
+                    </View>
+                </View>
+
+                {/* Ingredients and Instructions Tabs */}
+                <View style={s.tabsContainer}>
+                    <View style={s.tabContent}>
+                        {activeTab === 0 ? (
+                            <View style={s.ingredientsSection}>
+                                <Text style={s.sectionTitle}>{t('Ingredients for the recipe')}</Text>
+                                
+                                {/* Portion Selector */}
+                                <View style={s.portionSelector}>
+                                    <Pressable style={s.portionButton} onPress={() => setActualPortions(Math.max(1, actualPortions - 1))}>
+                                        <Text style={s.portionButtonText}>-</Text>
+                                    </Pressable>
+                                    <View style={s.portionContainer}>
+                                        <Text style={s.portionText}>{actualPortions} {t('portions')}</Text>
+                                    </View>
+                                    <Pressable style={s.portionButton} onPress={() => setActualPortions(actualPortions + 1)}>
+                                        <Text style={s.portionButtonText}>+</Text>
+                                    </Pressable>
+                                </View>
+
+                                {/* Ingredients List */}
+                                <View style={s.ingredientsList}>
+                                    {recipe.ingredients?.slice(0, 4).map((ingredient, index) => (
+                                        <View key={index} style={s.ingredientCard}>
+                                            <Image
+                                                source={{ uri: ingredient.category?.photo || ingredient.category?.thumb || 'https://via.placeholder.com/50' }} 
+                                                style={s.ingredientImage} 
+                                            />
+                                            <View style={s.ingredientInfo}>
+                                                <Text style={s.ingredientName}>{ingredient.ingredientTitle || ingredient.title}</Text>
+                                                <Text style={s.ingredientAmount}>{ingredient.cnt} {ingredient.measureTitle}</Text>
+                                            </View>
+                                            <Pressable style={[s.ingredientAddButton, index === 1 && s.ingredientAddedButton]}>
+                                                <Text style={[s.addButtonText, index === 1 && s.addedButtonText]}>
+                                                    {index === 1 ? t('Added') : t('Add')}
+                                                </Text>
+                                                <Image 
+                                                    source={index === 1 ? require('@/assets/icons/checkmark.png') : require('@/assets/icons/shopping-bag.png')} 
+                                                    style={[s.addButtonIcon, index === 1 && s.addedButtonIcon]} 
+                                                />
+                                            </Pressable>    
+                                            <Image source={require('@/assets/icons/chevron-right-neutral-grey.png')} style={s.navigationArrow} />
+                                        </View>
+                                    ))}
+                                </View>
+                            </View>
+                        ) : (
+                            <View style={s.instructionsSection}>
+                                <Instructions steps={recipe.cookingSteps} />
+                            </View>
+                        )}
+                    </View>
+                </View>
+
+                {/* Action Buttons */}
+                <View style={s.mainActionButtons}>
                     <Button
-                        text={t('Edit')}
-                        preIcon={require('@/assets/icons/folder-white.png')}
-                        onPress={() => setDisplayFolders(true)}
-                        isWide={false}
-                        size='small'
-                        style={s.recipeFolderButton}
-                        textStyle={{ fontSize: 12, paddingLeft: 6 }}
+                        text={t('Start cooking')}
+                        onPress={redirectToRecipeCooking}
+                        style={s.cookButton}
+                        textStyle={s.cookButtonText}
+                        size="small"
+                        postIcon={require('@/assets/icons/next-2.png')}
                     />
-                    {recipe.folders.map((folder, index) => (
-                        <Pressable
-                            key={index}
-                            style={s.recipeFolder}
-                            onPress={() => router.push({ pathname: '/(pages)/feed', params: { filterFolder: folder.id, title: folder.title } })}
-                        >
-                            <Text style={s.recipeFolderText}>{folder.title}</Text>
-                        </Pressable>
-                    ))}
-                </View> }
-
-                {/* Categories */}
-                <View style={s.recipeCategories}>
-                    {recipe.categories.map((category, index) => (
-                        <Pressable
-                            key={index}
-                            style={s.recipeCategory}
-                            onPress={() => router.push({
-                                pathname: '/(pages)/feed',
-                                params: { filterCategories: category.id, title: category.title } })}
-                        >
-                            <Text style={s.recipeCategoryText}>{category.title}</Text>
-                        </Pressable>
-                    ))}
+                    <Button
+                        text={t('Add to weekly plan')}
+                        onPress={() => setShowAddToPlanModal(true)}
+                        style={s.planButton}
+                        textStyle={s.planButtonText}
+                        size="medium"
+                        postIcon={require('@/assets/icons/calendar-2.png')}
+                    />
                 </View>
 
-                {/* Details */}
-                <View style={s.recipeDetails}>
-                    { recipe.avgRating ? <View style={s.recipeDetail}>
-                        <Image source={require('@/assets/icons/star.png')} style={s.recipeDetailImg}/>
-                        <Text style={s.recipeDetailText}>{recipe.avgRating}</Text>
-                    </View> : null }
-                    { recipe.timeCooking ? <View style={s.recipeDetail}>
-                        <Image source={require('@/assets/icons/clock.png')} style={s.recipeDetailImg}/>
-                        <Text style={s.recipeDetailText}>{timeFromMinutes(recipe.timeCooking)}</Text>
-                    </View> : null }
-                    { recipe.calories ? <View style={s.recipeDetail}>
-                        <Image source={require('@/assets/icons/fire-akar.png')} style={s.recipeDetailImg}/>
-                        <Text style={s.recipeDetailText}>{recipe.calories} {t('cal')}</Text>
-                    </View> : null }
-                    { recipe.ingredients ? <View style={s.recipeDetail}>
-                        <Image source={require('@/assets/icons/cart.png')} style={s.recipeDetailImg}/>
-                        <Text style={s.recipeDetailText}>{recipe.ingredients.length} {t('Ingredients')}</Text>
-                    </View> : null }
-                </View>
+                {/* Premium Subscription Card */}
+                {!user?.isPremium && (
+                    <ImageBackground 
+                        source={require('@/assets/images/premium-illustration.png')} 
+                        style={s.premiumCard}
+                        imageStyle={s.premiumBackgroundImage}
+                    >
+                        <Image source={require('@/assets/icons/premium.png')} style={s.premiumIcon} />
+                        <Text style={s.premiumTitle}>{t('¡Suscríbete a Premium!')}</Text>
+                        <Text style={s.premiumDescription}>
+                            {t('Suscríbete para ver los valores nutricionales y los macronutrientes de cada receta, ajustar las cantidades y los macronutrientes, y disfrutar de una experiencia sin anuncios.')}
+                        </Text>
+                    </ImageBackground>
+                )}
 
-                {/* Description */}
-                { recipe.description ? <View style={s.recipeDescription}>
-                    <Text type="caption">{t('Description')}</Text>
-                    <Text style={[s.recipeDescriptionText, {color: isLight() ? Colors.grey : Colors.lightGrey }]}>{recipe.description}</Text>
-                </View> : null }
-
-                {/* Recipe info */}
-                <View style={s.recipeInfo}>
-                    <View style={s.recipeInfoItem}>
-                        <Text type='caption'>{t('Created by')}</Text>
-                        <Pressable style={s.recipeInfoItemUser} onPress={() => recipe.userId && router.push({ pathname: getProfileUrl(), params: { userId: recipe.userId } })}>
-                            <Image source={getProfileImg()} style={s.recipeInfoItemImg}/>
-                            <Text type='link'>{recipe.userFullname}</Text>
-                        </Pressable>
-                    </View>
-                    <View style={s.recipeInfoItem}>
-                        <Text type='caption'>{t('Recipe used')}</Text>
-                        <Text type='link'>{t('{{count}} times', {count: 23})}</Text>
-                    </View>
-                </View>
-
-                {/* Nutritional values */}
-                <NutritionalValues
+                {/* Nutritional Values Component */}
+                <NutritionalValues 
                     isPremium={user?.isPremium || false}
                     recipe={recipe}
+                    nutrientsInit={recipe?.nutrients}
                     setRecipe={setRecipe}
                     onSaveLocal={onSaveLocal}
                 />
 
-                {/* Ingredients and instructions */}
-                <View style={theme.tabs}>
-                    <Pressable style={[theme.tabCaptionWrapper, activeTab === 0 ? theme.activeTab : {}]} onPress={() => setActiveTab(0)}>
-                        <Text style={[theme.tabCaption, { color: activeTab === 0 ? Colors.mainColor : greyTextColor }]}>{t('Ingredients')}</Text>
-                    </Pressable>
-                    <Pressable style={[theme.tabCaptionWrapper, activeTab === 1 ? theme.activeTab : {}]} onPress={() => setActiveTab(1)}>
-                        <Text style={[theme.tabCaption, { color: activeTab === 1 ? Colors.mainColor : greyTextColor }]}>{t('Instructions')}</Text>
-                    </Pressable>
-                </View>
-                <View>
-                    <FlatList
-                        ref={tabsRef}
-                        data={['ingredients', 'instructions']}
-                        renderItem={renderTab}
-                        initialScrollIndex={activeTab}
-                        horizontal
-                        style={theme.tabsFlatList}
-                        pagingEnabled
-                        scrollEnabled={false}
-                        showsHorizontalScrollIndicator={false}
-                    />
-                </View>
-
-                {/* Rate recipe */}
-                <View style={s.rateRecipe}>
-                    <Text type="caption" style={{ marginBottom: 12 }}>{t('Rate recipe')}</Text>
-                    <View style={theme.rateRecipeStars}>
-                        {Array.from({length: 5}, (_, index) => (
-                            <Pressable key={index} onPress={() => setRate(index + 1)}>
-                                <Image
-                                    source={
-                                        recipe.userRating && recipe.userRating >= index + 1
-                                            ? require('@/assets/icons/star-fill-78.png')
-                                            : isLight()
-                                                ? require('@/assets/icons/star-grey-78.png')
-                                                : require('@/assets/icons/star-78.png')}
-                                    style={theme.rateRecipeStar}
-                                />
-                            </Pressable>    
-                        ))}
+                {/* Recipes of the Month Section */}
+                <View style={s.section}>
+                    <View style={s.sectionHeader}>
+                        <Text style={s.sectionTitle}>{t('Recipes of the month')}</Text>
+                        <Pressable>
+                            <Text style={s.seeAllText}>{t('See all')}</Text>
+                        </Pressable>
                     </View>
+                    {recipesOfMonth.length === 0 ? (
+                        <View style={s.emptyState}>
+                            <Text style={s.emptyStateText}>
+                                {user?.token ? t('Loading recipes...') : t('Please sign in to see recipes')}
+                            </Text>
+                        </View>
+                    ) : (
+                        <>
+                            <FlatList
+                                ref={trendingFlatListRef}
+                                data={recipesOfMonth}
+                                horizontal
+                                showsHorizontalScrollIndicator={false}
+                                renderItem={renderRecipeCard}
+                                keyExtractor={(item) => item.id.toString()}
+                                contentContainerStyle={s.recipesList}
+                                pagingEnabled={true}
+                                onMomentumScrollEnd={(event) => {
+                                    const slideIndex = Math.round(event.nativeEvent.contentOffset.x / (Dimensions.get('window').width - 36))
+                                    setTrendingSlideIndex(slideIndex)
+                                }}
+                            />
+                            {recipesOfMonth.length > 1 && (
+                                <View style={s.slidePaginationDots}>
+                                    {recipesOfMonth.map((_, index) => (
+                                        <Pressable 
+                                            key={index}
+                                            style={[s.slideDot, trendingSlideIndex === index ? s.dotActive : s.dotInactive]}
+                                            onPress={() => {
+                                                setTrendingSlideIndex(index)
+                                                trendingFlatListRef.current?.scrollToIndex({ index, animated: true })
+                                            }}
+                                        />
+                                    ))}
+                                </View>
+                            )}
+                        </>
+                    )}
                 </View>
 
-                {/* Start recipe */}
-                <View style={s.startRecipeButtons}>
-                    <Button
-                        preIcon={require('@/assets/icons/calendar.png')}
-                        onPress={() => setShowAddToPlanModal(true)}
-                        isWide={false}
-                        style={s.calendarButton}
-                    />
-                    <Button
-                        text={t('Start recipe')}
-                        onPress={redirectToRecipeCooking}
-                        isWide={false}
-                        size='small'
-                        preIcon={require('@/assets/icons/video-triangle.png')}
-                        style={s.startRecipeButton}
-                        textStyle={theme.bold}
-                    />
+                {/* Categories */}
+                <View style={s.categoriesSection}>
+                    <View style={s.sectionHeader}>
+                        <Text style={s.sectionTitle}>{t('Categories')}</Text>
+                        <Pressable>
+                            <Text style={s.seeAllText}>{t('See all')}</Text>
+                        </Pressable>
+                    </View>
+                    <Categories style={s.categoriesContainer} />
                 </View>
 
-                {/* Comments */}
-                <Text type="caption" style={{ marginTop: 20, marginBottom: 6 }}>{t('Comments')}</Text>
-                <View style={{ marginBottom: 12 }}>
-                    {/* comments from feed */}
+                {/* Comments Section */}
+                {/* <View style={s.commentsSection}>
+                    <Text style={s.sectionTitle}>{t('Comments')}</Text>
                     {sortedComments.map(comment => (
                         <Comment key={comment.id} comment={comment} />
                     ))}
-
                     {showingCommentBox
                         ? <CommentBox
                             recipeId={recipe.id}
@@ -627,205 +764,603 @@ export default function RecipeScreen() {
                             onCancel={() => setShowingCommentBox(false)}
                         />
                         : <Pressable onPress={() => setShowingCommentBox(true)}>
-                            <Text type='link' style={theme.bold}>{t('Write a comment...')}</Text>
+                            <Text style={s.writeCommentText}>{t('Write a comment...')}</Text>
                         </Pressable>
                     }
-
-                </View>
-
-                {/* Recipes of the month */}
-                <Text type="caption" style={{ marginTop: 20, marginBottom: 6 }}>{t('Recipes of the month')}</Text>
-                <ScrollView horizontal style={{ marginBottom: 12 }}>
-                    {recipesOfMonth.map(recipe => (
-                        <RecipeOfMonth key={recipe.id} recipe={recipe} />
-                    ))}
-                </ScrollView>
-
-                {/* Categories */}
-                <Categories />
-                
-                <View style={{ height: 120 }} />
+                </View> */}
             </ScrollView>
         </View>
     )
 }
 
 const s = StyleSheet.create({
-    modalView: {
-        justifyContent: 'flex-start',
-        paddingTop: 16,
+    // Container
+    container: {
+        flex: 1,
+        backgroundColor: Colors.white,
     },
-    modalText: {
-        textAlign: 'center',
-        marginVertical: 12,
+    scrollContainer: {
+        flex: 1,
+        backgroundColor: Colors.mainBGColor,
     },
-    datePicker: {
-        justifyContent: 'flex-start',
-        gap: 20,
-    },
-    modalError: {
-        color: Colors.mainColor,
-    },
-    modalButtons: {
+
+    // Dark Header (from my-space.tsx)
+    header: {
+        backgroundColor: '#4F4240',
         flexDirection: 'row',
-        justifyContent: 'space-between',
         alignItems: 'center',
-        marginVertical: '2%',
-    },
-    titleImageWrapper: {
-        position: 'relative',
-        marginBottom: 8,
-    },
-    titleImage: {
-        width: '100%',
-        height: 328,
-        marginBottom: 12,
-        borderTopLeftRadius: 35,
-        borderTopRightRadius: 35,
-        borderBottomLeftRadius: 10,
-        borderBottomRightRadius: 10,
+        justifyContent: 'space-between',
+        paddingHorizontal: 24,
+        height: 54
     },
     backButton: {
-        position: 'absolute',
-        top: 18,
-        left: 18,
-    },
-    gallery: {
-        position: 'absolute',
-        bottom: 32,
-        left: 14,
-        flexDirection: 'row',
-        gap: 8,
-        backgroundColor: 'transparent',
-    },
-    galleryImage: {
-        width: 60,
-        height: 60,
-        borderRadius: 10,
-        borderWidth: 2,
-        borderColor: Colors.white,
-    },
-    titleWrapper: {
-        width: '100%',
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'flex-start',
-        gap: 16,
-        marginBottom: 8,
-    },
-    title: {
-        flex: 1,
-    },
-    titleButtons: {
-        flexDirection: 'row',
-        gap: 8,
-    },
-    titleButton: {
-        width: 35,
-        height: 35,
-        borderRadius: 10,
-        borderColor: '#d9d9d9',
-        borderWidth: 1,
+        width: 30,
+        height: 30,
         alignItems: 'center',
         justifyContent: 'center',
     },
-    titleButtonImg: {
+    headerIcon: {
+        width: 13,
+        height: 23,
+    },
+    headerTitle: {
+        color: 'white',
+        fontSize: 18,
+        fontWeight: 'bold',
+        flex: 1,
+        textAlign: 'center',
+    },
+    addButton: {
+        width: 26,
+        height: 26,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginRight: 5,
+    },
+    addIcon: {
+        width: 26,
+        height: 26,
+        tintColor: Colors.white,
+    },
+
+    // Main Image Section
+    imageSection: {
+        position: 'relative',
+    },
+    mainImage: {
+        width: '100%',
+        height: 357,
+        resizeMode: 'cover',
+    },
+    bottomGradient: {
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        height: 180,
+    },
+    thumbnailGallery: {
+        position: 'absolute',
+        left: 24,
+        top: '50%',
+        transform: [{ translateY: -100 }], // Center vertically (half of total height)
+        flexDirection: 'column',
+        gap: 8,
+        backgroundColor: 'transparent',
+    },
+    thumbnailImage: {
+        width: 50,
+        height: 50,
+        borderRadius: 8,
+        borderWidth: 2,
+        borderColor: Colors.white,
+    },
+    thumbnailImageActive: {
+        opacity: 0.4,
+        borderColor: '#C28040',
+    },
+    actionButtons: {
+        position: 'absolute',
+        right: 24,
+        top: 20,
+        flexDirection: 'row',
+        gap: 12,
+        backgroundColor: 'transparent',
+    },
+    actionButton: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: Colors.white,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    actionButtonIcon: {
+        width: 20,
+        height: 20,
+    },
+    paginationDots: {
+        position: 'absolute',
+        bottom: 16,
+        left: 0,
+        right: 0,
+        flexDirection: 'row',
+        justifyContent: 'center',
+        gap: 4,
+        backgroundColor: 'transparent',
+    },
+    dot: {
+        width: 8,
+        height: 8,
+        borderRadius: 4,
+    },
+    dotActive: {
+        backgroundColor: Colors.mainColor,
+    },
+    dotInactive: {
+        backgroundColor: '#e0e0e0',
+    },
+
+    // Tags
+    tagsContainer: {
+        flexDirection: 'row',
+        gap: 10,
+        paddingHorizontal: 24,
+        paddingTop: 19,
+        paddingBottom: 16,
+        backgroundColor: Colors.white,
+    },
+    tag: {
+        width: 110,
+        height: 32,
+        borderRadius: 18,
+        backgroundColor: '#F6ECE2',
+        padding: 10,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    tagText: {
+        fontFamily: 'Poppins',
+        fontWeight: '400',
+        fontSize: 14,
+        lineHeight: 16, // 100% of font size
+        color: '#C28040',
+    },
+
+    // Usage Count
+    usageContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 20,
+        paddingBottom: 16,
+        gap: 6,
+    },
+    usageIcon: {
         width: 16,
         height: 16,
     },
-    recipeFolders: {
+    usageText: {
+        fontFamily: 'Poppins',
+        fontWeight: '400',
+        fontSize: 14,
+        lineHeight: 20, // 100% of font size
+        color: "#C28040",
+    },
+
+    // Author & Rating
+    authorContainer: {
         flexDirection: 'row',
-        gap: 8,
-        marginBottom: 8,
+        alignItems: 'center',
+        paddingHorizontal: 20,
+        paddingBottom: 20,
+        gap: 6,
+        backgroundColor: Colors.white,
     },
-    recipeFolder: {
-        backgroundColor: Colors.purple + '30',
-        borderRadius: 6,
-        paddingHorizontal: 8,
-    },
-    recipeFolderText: {
-        color: Colors.purple,
-        fontSize: 12,
-    },
-    recipeFolderButton: {
-        paddingHorizontal: 8,
-        paddingVertical: 0,
-        height: 22,
-    },
-    recipeCategories: {
+    authorInfo: {
         flexDirection: 'row',
-        gap: 8,
+        alignItems: 'center',
+        gap: 6,
+        backgroundColor: Colors.white,
     },
-    recipeCategory: {
-        backgroundColor: Colors.mainColorLight,
-        borderRadius: 6,
-        paddingHorizontal: 8,
+    byText: {
+        
     },
-    recipeCategoryText: {
-        color: Colors.mainColor,
-        fontSize: 12,
+    userIcon: {
+        width: 16,
+        height: 16,
+        tintColor: Colors.grey,
     },
-    recipeDetails: {
-        marginTop: 12,
-        flexDirection: 'row',
-        gap: 16,
+    authorText: {
+        color: Colors.grey,
+        fontSize: 14,
     },
-    recipeDetail: {
+    ratingContainer: {
         flexDirection: 'row',
         alignItems: 'center',
         gap: 4,
     },
-    recipeDetailImg: {
-        width: 14,
-        height: 14,
+    starsContainer: {
+        flexDirection: 'row',
+        gap: 2,
     },
-    recipeDetailText: {
-        fontSize: 12,
+    starIcon: {
+        width: 16,
+        height: 16,
     },
-    recipeDescription: {
-        marginTop: 20,
-    },
-    recipeDescriptionText: {
+    ratingText: {
+        color: Colors.grey,
         fontSize: 14,
-        marginTop: 6,
+        fontWeight: '500',
     },
-    recipeInfo: {
-        marginTop: 20,
+
+    // Recipe Title
+    recipeTitle: {
+        fontFamily: 'Poppins-SemiBold',
+        fontSize: 20,
+        lineHeight: 25, // 100% of font size
+        color: '#000000',
+        paddingHorizontal: 20,
+        paddingBottom: 8,
+        backgroundColor: Colors.white,
+    },
+
+    // Recipe Description
+    recipeDescription: {
+        fontFamily: 'Poppins',
+        fontWeight: '400',
+        fontSize: 16,
+        lineHeight: 22,
+        color: '#6C7278',
+        paddingHorizontal: 20,
+        paddingBottom: 24,
+        backgroundColor: Colors.white,
+    },
+
+    // Key Metrics
+    metricsContainer: {
         flexDirection: 'row',
-        gap: 12,
+        justifyContent: 'space-around',
         alignItems: 'center',
+        paddingHorizontal: 20,
+        paddingBottom: 15,
     },
-    recipeInfoItem: {
-        minWidth: 120,
-    },
-    recipeInfoItemUser: {
-        flexDirection: 'row',
+    metricItem: {
         alignItems: 'center',
-        gap: 6,
-    },
-    recipeInfoItemImg: {
-        width: 21,
-        height: 21,
-        borderRadius: 100,
-    },
-    rateRecipe: {
-        marginTop: 20,
-    },
-    startRecipeButtons: {
-        marginTop: 26,
-        marginBottom: 20,
+        gap: 4,
         flex: 1,
-        flexDirection: 'row',
-        gap: 14,
     },
-    calendarButton: {
-        backgroundColor: Colors.mainColorLight,
+    verticalLine: {
+        width: 1,
+        height: 75,
+        backgroundColor: '#E0E0E0',
+        marginHorizontal: 8,
+    },
+    metricIcon: {
+        width: 15,
+        height: 15,
+        marginBottom: 2,
+        tintColor: '#4F4240',
+    },
+    metricValue: {
+        fontFamily: 'Poppins',
+        fontWeight: '500',
+        fontSize: 16,
+        lineHeight: 22, // 100% of font size
+        textAlign: 'center',
+        color: Colors.black,
+    },
+    metricLabel: {
+        fontFamily: 'Poppins',
+        fontWeight: '400',
+        fontSize: 13,
+        lineHeight: 18, // 100% of font size
+        textAlign: 'center',
+        color: '#6C7278',
+    },
+
+    // Tabs
+    tabsContainer: {
+        paddingTop: 19,
+        paddingBottom: 32,
+        backgroundColor: Colors.mainBGColor,
+        borderTopWidth: 1,
+        borderTopColor: '#E0E0E0',
+    },
+    tabsHeader: {
+        flexDirection: 'row',
+        marginBottom: 16,
+        backgroundColor: Colors.white,
+        borderRadius: 12,
+        marginHorizontal: 20,
+        padding: 4,
+        minHeight: 50,
+    },
+    tabButton: {
+        flex: 1,
+        paddingVertical: 12,
+        alignItems: 'center',
+        borderRadius: 8,
+    },
+    activeTab: {
+        backgroundColor: Colors.mainColor,
+    },
+    inactiveTab: {
+        backgroundColor: 'transparent',
+    },
+    tabText: {
+        fontSize: 16,
+        fontWeight: '500',
+        fontFamily: 'Poppins-Medium',
+    },
+    activeTabText: {
+        color: Colors.white,
+    },
+    inactiveTabText: {
+        color: Colors.grey,
+    },
+    tabContent: {
+        paddingHorizontal: 20,
+        backgroundColor: Colors.mainBGColor,
+    },
+
+    // Ingredients Section
+    ingredientsSection: {
+        marginBottom: 0,
+        backgroundColor: Colors.mainBGColor,
+    },
+    instructionsSection: {
+        marginBottom: 0,
+        backgroundColor: Colors.mainBGColor,
+    },
+    portionSelector: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 12,
+        marginVertical: 20,
+        backgroundColor: Colors.mainBGColor,
+    },
+    portionButton: {
+        width: 26,
+        height: 26,
+        borderRadius: 13,
+        backgroundColor: '#F6ECE2',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    portionButtonText: {
+        color: '#C28040',
+        fontSize: 19,
+        lineHeight: 22,
+        fontWeight: 'bold',
+    },
+    portionText: {
+        fontFamily: 'Poppins',
+        fontWeight: '400',
+        fontSize: 14,
+        lineHeight: 18,
+        color: '#1B1A1D',
+        textAlign: 'center',
+    },
+    portionContainer: {
+        width: 117,
+        height: 40,
+        borderRadius: 30,
+        backgroundColor: '#FFFFFF',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingHorizontal: 10,
+    },
+    ingredientsList: {
+        gap: 12,
+        backgroundColor: Colors.mainBGColor,
+    },
+    ingredientCard: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: Colors.white,
+        borderRadius: 12,
+        padding: 16,
+        gap: 12,
+        marginBottom: 8,
+    },
+    ingredientImage: {
         width: 50,
         height: 50,
+        borderRadius: 8,
     },
-    startRecipeButton: {
+    ingredientInfo: {
         flex: 1,
-        height: 50,
+        marginLeft: 4,
+    },
+    ingredientName: {
+        fontFamily: 'Poppins-Medium',
+        fontSize: 16,
+        color: '#1B1A1D',
+        marginBottom: 4,
+    },
+    ingredientAmount: {
+        fontFamily: 'Poppins',
+        fontSize: 14,
+        color: '#6C7278',
+    },
+    ingredientAddButton: {
+        height: 34,
+        borderRadius: 18,
         gap: 10,
+        borderWidth: 1,
+        padding: 10,
+        borderColor: '#EFF0F6',
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: Colors.white,
+        marginRight: 8,
+    },
+    addButtonText: {
+        fontFamily: 'Poppins',
+        fontSize: 14,
+        lineHeight: 16, // 100% of font size
+        color: '#6C7278',
+    },
+    addButtonIcon: {
+        width: 18,
+        height: 18,
+        tintColor: '#6C7278',
+    },
+    ingredientAddedButton: {
+        backgroundColor: '#F6ECE2',
+        borderColor: '#F6ECE2',
+    },
+    addedButtonText: {
+        color: '#C28040',
+    },
+    addedButtonIcon: {
+        tintColor: '#C28040',
+    },
+    navigationArrow: {
+        width: 9,
+        height: 17,
+        tintColor: '#C28040',
+    },
+
+    // Main Action Buttons
+    mainActionButtons: {
+        paddingHorizontal: 50,
+        gap: 12,
+        marginBottom: 32,
+        backgroundColor: Colors.mainBGColor,
+    },
+    cookButton: {
+        backgroundColor: '#C28040',
+        borderRadius: 12,
+        height: 53,
+    },
+    cookButtonText: {
+        color: Colors.white,
+        fontSize: 16,
+        lineHeight: 18,
+        paddingRight: 11,
+    },
+    planButton: {
+        backgroundColor: '#C28040',
+        borderRadius: 12,
+        height: 53,
+    },
+    planButtonText: {
+        color: Colors.white,
+        fontSize: 16,
+        lineHeight: 18,
+        paddingRight: 11,
+    },
+
+    // Premium Card
+    premiumCard: {
+        borderRadius: 16,
+        paddingHorizontal: 24,
+        paddingBottom: 24,
+        marginHorizontal: 24,
+        marginBottom: 32,
+        alignItems: 'center',
+        textAlign: 'center',
+        minHeight: 200,
+        justifyContent: 'center',
+    },
+    premiumBackgroundImage: {
+        borderRadius: 16,
+        resizeMode: 'cover',
+    },
+    premiumIcon: {
+        width: 143,
+        height: 95,
+    },
+    premiumTitle: {
+        fontFamily: 'Poppins',
+        fontWeight: '500',
+        fontSize: 16,
+        lineHeight: 22, // 100% of font size
+        textAlign: 'center',
+        color: Colors.white,
+        marginBottom: 12,
+    },
+    premiumDescription: {
+        fontFamily: 'Poppins',
+        fontWeight: '400',
+        fontSize: 13,
+        lineHeight: 18, // 100% of font size
+        textAlign: 'center',
+        color: Colors.white,
+    },
+
+    // Section Styles (from Home Page)
+    section: {
+        paddingHorizontal: 24,
+        marginBottom: 24,
+        backgroundColor: Colors.mainBGColor,
+    },
+    sectionHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 16,
+        backgroundColor: Colors.mainBGColor,
+    },
+    sectionTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: Colors.black,
+    },
+    seeAllText: {
+        fontSize: 14,
+        color: Colors.mainColor,
+        fontWeight: '500',
+    },
+    emptyState: {
+        padding: 20,
+        alignItems: 'center',
+    },
+    emptyStateText: {
+        fontSize: 14,
+        color: Colors.grey,
+        textAlign: 'center',
+    },
+    recipesList: {},
+    slidePaginationDots: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginTop: 16,
+        gap: 8,
+        backgroundColor: Colors.mainBGColor,
+    },
+    slideDot: {
+        width: 8,
+        height: 8,
+        borderRadius: 4,
+    },
+    categoriesSection: {
+        paddingHorizontal: 24,
+        marginBottom: 24,
+        backgroundColor: Colors.mainBGColor,
+    },
+    categoriesContainer: {
+        marginTop: 16,
+        backgroundColor: Colors.mainBGColor,
+    },
+    modalView: {
+        backgroundColor: Colors.white,
+        borderRadius: 12,
+        padding: 20,
+        margin: 20,
+    },
+    modalText: {
+        fontSize: 16,
+        color: Colors.black,
+        marginBottom: 16,
+        textAlign: 'center',
+    },
+    modalButtons: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        gap: 12,
     },
 })

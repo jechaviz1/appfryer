@@ -37,9 +37,9 @@ export function Button ({
         small: 30,
     }
     const fontWeights = {
-        large: 'DMSans-Bold',
-        medium: 'DMSans-Medium',
-        small: 'DMSans',
+        large: 'Poppins-Bold',
+        medium: 'Poppins-Medium',
+        small: 'Poppins',
     }
     const iconSizes = {
         large: 24,
@@ -63,7 +63,7 @@ export function Button ({
         >
             { preIcon && <Image
                 source={preIcon}
-                style={{ width: iconSizes[size], height: iconSizes[size] }}
+                style={{ width: iconSizes[size], height: iconSizes[size], objectFit: 'contain' }}
             /> }
             { text && <Text style={[
                 styles.text,
@@ -72,7 +72,7 @@ export function Button ({
             ]}>{text}</Text> }
             { postIcon && <Image
                 source={postIcon}
-                style={{ width: iconSizes[size], height: iconSizes[size] }}
+                style={{ width: iconSizes[size], height: iconSizes[size], objectFit: 'contain' }}
             /> }
         </Pressable>
     )

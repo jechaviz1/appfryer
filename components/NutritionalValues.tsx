@@ -162,172 +162,177 @@ export default function NutritionalValues({ isPremium, recipe, nutrientsInit, se
     const rightChevron = require('@/assets/icons/chevron-right-neutral-grey.png')
 
     return (
-        <View style={[s.wrapper, {width: (windowWidth - paddings * 2)}]}>
-            <Text type='caption' style={{ marginBottom: 12 }}>{t('Nutritional values')}</Text>
-            <View style={[theme.section, {marginBottom: 12, gap: 12}]}>
-                <View style={s.recordWrap}>
-                    <Text style={s.recordText}>{t('Calories')}</Text>
-                    <Text style={s.recordText}>{Number(nutrients?.calories).toFixed(2) || '0'}</Text>
+        <View style={s.nutritionalSection}>
+            <Text style={s.sectionTitle}>{t('Nutritional Values')}</Text>
+            
+            {/* Calories Card */}
+            <View style={s.nutritionalCard}>
+                <View style={s.nutritionalItem}>
+                    <Text style={s.nutritionalLabel}>{t('Calories')}</Text>
+                    <Text style={s.nutritionalValue}>{Number(nutrients?.calories).toFixed(0) || '0'}</Text>
                 </View>
-
-                {/* Fat */}
-                <View style={s.line} />
-                <View style={s.recordWrap}>
-                    <Text style={s.recordText}>{t('Total fat')}</Text>
+            </View>
+            
+            {/* Total Fat Card */}
+            <View style={s.nutritionalCard}>
+                <View style={s.nutritionalItem}>
+                    <Text style={s.nutritionalLabel}>{t('Total Fat')}</Text>
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                        { isAdjustingMacros && <Text>{fatsFactor}x</Text>}
+                        { isAdjustingMacros && <Text style={s.factorText}>{fatsFactor}x</Text>}
                         { isAdjustingMacros && fatsFactor > 0.5 ?
                         <Pressable disabled={isSentReq} onPress={() => changeMacros('fats', 'down')}>
                             <Image source={leftChevron} style={s.chevronImg}/>
-                        </Pressable> : <Text> </Text> }
-                        <Text style={s.recordText}>{nutrients?.fatTotalG || '0'} g</Text>
+                        </Pressable> : <Text style={s.spacer}> </Text> }
+                        <Text style={s.nutritionalValue}>{nutrients?.fatTotalG || '0'} g</Text>
                         { isAdjustingMacros && fatsFactor < 2 &&
                         <Pressable disabled={isSentReq} onPress={() => changeMacros('fats', 'up')}>
                             <Image source={rightChevron} style={s.chevronImg}/>
                         </Pressable> }
                     </View>
                 </View>
-                <View style={s.subrecordWrap}>
-                    <Text style={[s.subrecordText, {color: subrecordColor}]}>{t('Saturated fat')}</Text>
-                    <Text style={s.subrecordText}>{nutrients?.fatSaturatedG || '0'} {t('g')}</Text>
+                <View style={s.nutritionalSubItem}>
+                    <Text style={s.nutritionalSubLabel}>{t('Saturated fats')}</Text>
+                    <Text style={s.nutritionalSubValue}>{nutrients?.fatSaturatedG || '0'} g</Text>
                 </View>
-                <View style={s.subrecordWrap}>
-                    <Text style={[s.subrecordText, {color: subrecordColor}]}>{t('Monounsaturated fat')}</Text>
-                    <Text style={s.subrecordText}>{nutrients?.fatMonoG ?? '0'} {t('g')}</Text>
+                <View style={s.nutritionalSubItem}>
+                    <Text style={s.nutritionalSubLabel}>{t('Monounsaturated fats')}</Text>
+                    <Text style={s.nutritionalSubValue}>{nutrients?.fatMonoG ?? '0'} g</Text>
                 </View>
-                <View style={s.subrecordWrap}>
-                    <Text style={[s.subrecordText, {color: subrecordColor}]}>{t('Polyunsaturated fat')}</Text>
-                    <Text style={s.subrecordText}>{nutrients?.fatPolyG ?? '0'} {t('g')}</Text>
+                <View style={s.nutritionalSubItem}>
+                    <Text style={s.nutritionalSubLabel}>{t('Polyunsaturated fats')}</Text>
+                    <Text style={s.nutritionalSubValue}>{nutrients?.fatPolyG ?? '0'} g</Text>
                 </View>
-
-                {/* Carbs */}
-                <View style={s.line} />
-                <View style={s.recordWrap}>
-                    <Text style={s.recordText}>{t('Carbs')}</Text>
+            </View>
+            
+            {/* Carbohydrates Card */}
+            <View style={s.nutritionalCard}>
+                <View style={s.nutritionalItem}>
+                    <Text style={s.nutritionalLabel}>{t('Carbohydrates')}</Text>
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                        { isAdjustingMacros && <Text>{carbsFactor}x</Text>}
+                        { isAdjustingMacros && <Text style={s.factorText}>{carbsFactor}x</Text>}
                         { isAdjustingMacros && carbsFactor > 0.5 ?
                         <Pressable disabled={isSentReq} onPress={() => changeMacros('carbs', 'down')}>
                             <Image source={leftChevron} style={s.chevronImg}/>
-                        </Pressable> : <Text> </Text> }
-                        <Text style={s.recordText}>{nutrients?.carbG ?? '0'} g</Text>
+                        </Pressable> : <Text style={s.spacer}> </Text> }
+                        <Text style={s.nutritionalValue}>{nutrients?.carbG ?? '0'} g</Text>
                         { isAdjustingMacros && carbsFactor < 2 &&
                         <Pressable disabled={isSentReq} onPress={() => changeMacros('carbs', 'up')}>
                             <Image source={rightChevron} style={s.chevronImg}/>
                         </Pressable> }
                     </View>
                 </View>
-                <View style={s.subrecordWrap}>
-                    <Text style={[s.subrecordText, {color: subrecordColor}]}>{t('Sugar')}</Text>
-                    <Text style={s.subrecordText}>{nutrients?.sugarTotalG ?? '0'} {t('g')}</Text>
+                <View style={s.nutritionalSubItem}>
+                    <Text style={s.nutritionalSubLabel}>{t('Sugar')}</Text>
+                    <Text style={s.nutritionalSubValue}>{nutrients?.sugarTotalG ?? '0'} g</Text>
                 </View>
-                <View style={s.subrecordWrap}>
-                    <Text style={[s.subrecordText, {color: subrecordColor}]}>{t('Fiber')}</Text>
-                    <Text style={s.subrecordText}>{nutrients?.fiberG ?? '0'} {t('g')}</Text>
+                <View style={s.nutritionalSubItem}>
+                    <Text style={s.nutritionalSubLabel}>{t('Fiber')}</Text>
+                    <Text style={s.nutritionalSubValue}>{nutrients?.fiberG ?? '0'} g</Text>
                 </View>
-
-                {/* Protein */}
-                <View style={s.line} />
-                <View style={s.recordWrap}>
-                    <Text style={s.recordText}>{t('Protein')}</Text>
+            </View>
+            
+            {/* Protein Card */}
+            <View style={s.nutritionalCard}>
+                <View style={s.nutritionalItem}>
+                    <Text style={s.nutritionalLabel}>{t('Protein')}</Text>
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                        { isAdjustingMacros && <Text>{proteinFactor}x</Text>}
+                        { isAdjustingMacros && <Text style={s.factorText}>{proteinFactor}x</Text>}
                         { isAdjustingMacros && proteinFactor > 0.5 ?
                         <Pressable disabled={isSentReq} onPress={() => changeMacros('protein', 'down')}>
                             <Image source={leftChevron} style={s.chevronImg}/>
-                        </Pressable> : <Text> </Text> }
-                        <Text style={s.recordText}>{nutrients?.proteinG ?? '0'} g</Text>
+                        </Pressable> : <Text style={s.spacer}> </Text> }
+                        <Text style={s.nutritionalValue}>{nutrients?.proteinG ?? '0'} g</Text>
                         { isAdjustingMacros && proteinFactor < 3 &&
                         <Pressable disabled={isSentReq} onPress={() => changeMacros('protein', 'up')}>
                             <Image source={rightChevron} style={s.chevronImg}/>
                         </Pressable> }
                     </View>
                 </View>
+            </View>
 
-                {portionsCnt !== 1 && 
+            {portionsCnt !== 1 && 
                 <View style={s.portionsWrap}>
                     <Text style={s.portionsText}>{t('Eat {{portionsCnt}} portions to match your Macro needs', {portionsCnt})}</Text>
                 </View>}
 
-                {/* Macros button */}
-                { recipe && (!isAdjustingMacros
-                ? <Button
-                    text={t('Change Macros')}
-                    style={{ marginTop: 32 }}
-                    onPress={() => setAdjustingMacros(true)}
+            {/* Macros button */}
+            { recipe && (!isAdjustingMacros
+            ? <Button
+                text={t('Change Macros')}
+                style={{ marginBottom: 8 }}
+                onPress={() => setAdjustingMacros(true)}
+            />
+            : <View style={s.macrosBtns}>
+                <Button
+                    text={t('Save')}
+                    isWide={false}
+                    style={{ width: (windowWidth - paddings * 2) / 2 }}
+                    onPress={saveLocal}
                 />
-                : <View style={s.macrosBtns}>
-                    <Button
-                        text={t('Save')}
-                        isWide={false}
-                        style={{ paddingHorizontal: 48 }}
-                        onPress={saveLocal}
-                    />
-                    <Button
-                        text={t('Reset')}
-                        isWide={false}
-                        style={{ paddingHorizontal: 48 }}
-                        onPress={resetMacros}
-                    />
-                </View> )}
+                <Button
+                    text={t('Reset')}
+                    isWide={false}
+                    style={{ width: (windowWidth - paddings * 2) / 2 }}
+                    onPress={resetMacros}
+                />
+            </View> )}
 
-                {/* Donut chart */}
-                <View style={s.chartWrapper}>
-                    {tolalNutrVal !== 0 ? <DonutChart
-                        type="round"
-                        data={[
-                            {name: t('Carbs'), value: nutrients?.carbG ?? 0, color: '#8E59FF'},
-                            {name: t('Protein'), value: nutrients?.proteinG ?? 0, color: '#FF5555'},
-                            {name: t('Fat'), value: nutrients?.fatTotalG ?? 0, color: '#20BFF7'}
-                        ]}
-                        radius={53}
-                        startAngle={0}
-                        endAngle={360}
-                        strokeWidth={8}
-                        containerWidth={(windowWidth - paddings * 2) / 2}
-                        containerHeight={180}
-                        animationType="slide"
-                        labelTitleStyle={{ display: 'none' }}
-                        labelValueStyle={{ display: 'none' }}
-                    /> : null }
-                    <View style={[s.chartLegendWrap, {width: (windowWidth - paddings * 2) / 2.5}]}>
-                        <View style={[s.recordWrap, {gap: 8}]}>
-                            <View style={[s.chartLegendColor, {backgroundColor: '#8E59FF'}]}/>
-                            <Text style={[s.recordText, {flex: 1}]}>{t('Carbs')}</Text>
-                            <Text style={s.subrecordText}>{tolalNutrVal === 0 ? '0' : Math.round((nutrients?.carbG ?? 0) / tolalNutrVal * 100)}%</Text>
-                        </View>
-                        <View style={[s.recordWrap, {gap: 8}]}>
-                            <View style={[s.chartLegendColor, {backgroundColor: '#FF5555'}]}/>
-                            <Text style={[s.recordText, {flex: 1}]}>{t('Protein')}</Text>
-                            <Text style={s.subrecordText}>{tolalNutrVal === 0 ? '0' : Math.round((nutrients?.proteinG ?? 0) / tolalNutrVal * 100)}%</Text>
-                        </View>
-                        <View style={[s.recordWrap, {gap: 8}]}>
-                            <View style={[s.chartLegendColor, {backgroundColor: '#20BFF7'}]}/>
-                            <Text style={[s.recordText, {flex: 1}]}>{t('Fat')}</Text>
-                            <Text style={s.subrecordText}>{tolalNutrVal === 0 ? '0' : Math.round((nutrients?.fatTotalG ?? 0) / tolalNutrVal * 100)}%</Text>
-                        </View>
+            {/* Donut chart */}
+            <View style={s.chartWrapper}>
+                {tolalNutrVal !== 0 ? <DonutChart
+                    type="round"
+                    data={[
+                        {name: t('Carbs'), value: nutrients?.carbG ?? 0, color: '#8E59FF'},
+                        {name: t('Protein'), value: nutrients?.proteinG ?? 0, color: '#FF5555'},
+                        {name: t('Fat'), value: nutrients?.fatTotalG ?? 0, color: '#20BFF7'}
+                    ]}
+                    radius={53}
+                    startAngle={0}
+                    endAngle={360}
+                    strokeWidth={35}
+                    containerWidth={124}
+                    containerHeight={124}
+                    animationType="slide"
+                    labelTitleStyle={{ display: 'none' }}
+                    labelValueStyle={{ display: 'none' }}
+                    containerStyle={{ paddingRight: 20 }}
+                /> : null }
+                <View style={[s.chartLegendWrap, {width: (windowWidth - paddings * 2) / 1.75}]}>
+                    <View style={[s.recordWrap, {gap: 8}]}>
+                        <Image source={require('@/assets/icons/carbohidrato.png')} style={s.chartLegendIcon}/>
+                        <Text style={[s.nutritionalSubValue, {flex: 1}]}>{t('Carbs')}</Text>
+                        <Text style={s.nutritionalSubLabel}>{tolalNutrVal === 0 ? '0' : Math.round((nutrients?.carbG ?? 0) / tolalNutrVal * 100)}%</Text>
+                    </View>
+                    <View style={[s.recordWrap, {gap: 8}]}>
+                        <Image source={require('@/assets/icons/proteinas.png')} style={s.chartLegendIcon}/>
+                        <Text style={[s.nutritionalSubValue, {flex: 1}]}>{t('Protein')}</Text>
+                        <Text style={s.nutritionalSubLabel}>{tolalNutrVal === 0 ? '0' : Math.round((nutrients?.proteinG ?? 0) / tolalNutrVal * 100)}%</Text>
+                    </View>
+                    <View style={[s.recordWrap, {gap: 8}]}>
+                        <Image source={require('@/assets/icons/trans-fats-free.png')} style={s.chartLegendIcon}/>
+                        <Text style={[s.nutritionalSubValue, {flex: 1}]}>{t('Fat')}</Text>
+                        <Text style={s.nutritionalSubLabel}>{tolalNutrVal === 0 ? '0' : Math.round((nutrients?.fatTotalG ?? 0) / tolalNutrVal * 100)}%</Text>
                     </View>
                 </View>
             </View>
 
+            {/* Vitamins & Minerals */}
             { nutrients && Object.entries(nutrients)
                 .filter(([key, value]) => !commonNutrients.includes(key) && key !== 'ndbNumber' && value !== 0)
                 .length !== 0 ? (
-            <View>
-                <Text type='caption' style={{ marginVertical: 16 }}>{t('Vitamins & Minerals')}</Text>
-                <View style={[theme.section ]}>
-                    {Object.entries(nutrients)
-                        .filter(([key, value]) => !commonNutrients.includes(key) && key !== 'ndbNumber' && value !== 0)
-                        .map(([key, value], index, arr) => (
-                            <View key={key} style={{gap: 6, marginBottom: 6}}>
-                                <View style={s.recordWrap}>
-                                    <Text style={s.recordText}>{t(nutrientMap[key as keyof INutritional].title)}</Text>
-                                    <Text style={s.recordText}>{Number(value).toFixed(2)}{t(nutrientMap[key as keyof INutritional].unit)}</Text>
-                                </View>
-                                {arr.length - 1 !== index && (<View style={s.line} />)}
-                            </View> )
-                        )}
-                </View>
+            <View style={s.vitaminsSection}>
+                <Text style={s.sectionTitle}>{t('Vitamins & Minerals')}</Text>
+                {Object.entries(nutrients)
+                    .filter(([key, value]) => !commonNutrients.includes(key) && key !== 'ndbNumber' && value !== 0)
+                    .map(([key, value]) => (
+                        <View key={key} style={s.vitaminCard}>
+                            <View style={s.vitaminItem}>
+                                <Text style={s.vitaminLabel}>{t(nutrientMap[key as keyof INutritional].title)}</Text>
+                                <Text style={s.vitaminValue}>{Number(value).toFixed(0)}{t(nutrientMap[key as keyof INutritional].unit)}</Text>
+                                <Image source={require('@/assets/icons/chevron-right-neutral-grey.png')} style={s.vitaminArrow} />
+                            </View>
+                        </View>
+                    ))}
             </View> ) : null }
         </View>
     )
@@ -388,10 +393,138 @@ const s = StyleSheet.create({
         color: Colors.mainColor,
     },
     macrosBtns: {
-        marginTop: 32,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
+        backgroundColor: Colors.mainBGColor,
+        marginBottom: 8,
+    },
+    factorText: {
+        fontSize: 14,
+        color: Colors.mainColor,
+        fontWeight: '500',
+        marginRight: 8,
+    },
+    spacer: {
+        width: 18,
+    },
+    
+    // Nutritional Section Styles
+    nutritionalSection: {
+        paddingHorizontal: 20,
+        marginBottom: 32,
+        backgroundColor: Colors.mainBGColor,
+    },
+    sectionTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: Colors.black,
+        marginBottom: 16,
+    },
+    nutritionalCard: {
+        borderRadius: 10,
+        borderWidth: 1,
+        borderColor: '#EDF1F3',
+        backgroundColor: '#ffffff',
+        marginBottom: 5,
+        paddingHorizontal: 12,
+        paddingVertical: 15,
+        justifyContent: 'center',
+    },
+    nutritionalItem: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+    nutritionalLabel: {
+        fontFamily: 'Poppins',
+        fontSize: 16,
+        lineHeight: 22,
+        color: '#1B1A1D',
+    },
+    nutritionalValue: {
+        fontFamily: 'Poppins-Medium',
+        fontSize: 16,
+        lineHeight: 22,
+        textAlign: 'right',
+        color: '#1B1A1D',
+    },
+    nutritionalSubItem: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingTop: 13,
+    },
+    nutritionalSubLabel: {
+        fontFamily: 'Poppins',
+        fontSize: 16,
+        lineHeight: 22,
+        color: Colors.grey,
+    },
+    nutritionalSubValue: {
+        fontFamily: 'Poppins-Medium',
+        fontSize: 16,
+        lineHeight: 22,
+        color: Colors.grey,
+    },
+    
+    // Vitamins Section Styles
+    vitaminsSection: {
+        backgroundColor: Colors.mainBGColor,
+    },
+    vitaminCard: {
+        borderRadius: 10,
+        borderWidth: 1,
+        borderColor: '#EDF1F3',
+        backgroundColor: '#ffffff',
+        marginBottom: 5,
+        paddingHorizontal: 12,
+        paddingVertical: 15,
+        justifyContent: 'center',
+    },
+    vitaminItem: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingVertical: 12,
+    },
+    vitaminLabel: {
+        fontSize: 16,
+        color: Colors.black,
+        fontWeight: '500',
+        flex: 1,
+    },
+    vitaminValue: {
+        fontSize: 16,
+        color: Colors.black,
+        fontWeight: 'bold',
+        marginRight: 8,
+    },
+    vitaminArrow: {
+        width: 12,
+        height: 19,
+        tintColor: Colors.mainColor,
+    },
+    
+    // Donut Chart Styles
+    chartWrapper: {
+        alignItems: 'center',
+        flexDirection: 'row',
+        borderRadius: 10,
+        borderWidth: 1,
+        borderColor: '#EDF1F3',
+        backgroundColor: '#ffffff',
+        justifyContent: 'center',
+        paddingVertical: 16,
+        marginBottom: 17,
+    },
+    chartLegendWrap: {
+        gap: 13,
+        alignContent: 'center',
+    },
+    chartLegendIcon: {
+        width: 16,
+        height: 16,
     },
     recordWrap: {
         flexDirection: 'row',
@@ -404,35 +537,10 @@ const s = StyleSheet.create({
         fontWeight: 'bold',
         fontFamily: 'DMSans-Bold',
     },
-    line: {
-        width: '100%',
-        height: 1,
-        backgroundColor: Colors.lightGrey,
-        marginVertical: 6,
-    },
-    subrecordWrap: {
-        marginLeft: 10,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-    },
     subrecordText: {
         fontSize: 14,
         lineHeight: 17,
         fontWeight: 'medium',
         fontFamily: 'DMSans-Medium',
-    },
-    chartWrapper: {
-        alignItems: 'center',
-        flexDirection: 'row',
-    },
-    chartLegendWrap: {
-        gap: 20,
-        alignContent: 'center',
-    },
-    chartLegendColor: {
-        width: 8,
-        height: 8,
-        borderRadius: 2,
     },
 })

@@ -108,6 +108,7 @@ const s = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'flex-start',
         gap: 10,
+        backgroundColor: Colors.mainBGColor,
     },
     profileImg: {
         width: 40,
@@ -116,11 +117,13 @@ const s = StyleSheet.create({
     },
     main: {
         flex: 1,
+        backgroundColor: Colors.mainBGColor,
     },
     nameDate: {
         flexDirection: 'row',
         alignItems: 'center',
         marginBottom: 5,
+        backgroundColor: Colors.mainBGColor,
     },
     name: {
         fontSize: 13,
@@ -138,6 +141,7 @@ const s = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         gap: 4,
+        backgroundColor: Colors.mainBGColor,
     },
     interactImg: {
         width: 16,

@@ -6,6 +6,7 @@ import IComment from "@/interfaces/Comment"
 import { Button, Text, TextInput, View } from "@/components/base/BaseComponents"
 import { post } from "@/services/apiRequests"
 import { useAuth } from "@/contexts/authContext"
+import { Colors } from "@/constants/Colors"
 
 interface CommentBoxProps {
     recipeId: number
@@ -99,6 +100,7 @@ export default function CommentBox({ recipeId, commentId, onSuccess, onCancel }:
 const s = StyleSheet.create({
     container: {
         marginBottom: 20,
+        backgroundColor: Colors.mainBGColor,
     },
     inputContainer: {
         backgroundColor: 'white',
