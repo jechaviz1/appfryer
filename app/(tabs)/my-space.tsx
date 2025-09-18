@@ -364,7 +364,7 @@ const s = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        paddingHorizontal: 14,
+        paddingHorizontal: 24,
         height: 54
     },
     backButton: {
@@ -401,7 +401,7 @@ const s = StyleSheet.create({
     },
     categoriesList: {
         gap: 10,
-        paddingHorizontal: 20,
+        paddingHorizontal: 24,
     },
     categoryItem: {
         color: '#6C7278',
@@ -431,7 +431,7 @@ const s = StyleSheet.create({
     },
     mainContent: {
         flex: 1,
-        paddingHorizontal: 15,
+        paddingHorizontal: 24,
         backgroundColor: getBgColor(),
     },
     section: {

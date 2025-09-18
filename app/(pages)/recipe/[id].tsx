@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { FlatList, Image, ImageBackground, Pressable, Share, StyleSheet, useWindowDimensions, Dimensions } from 'react-native'
+import { FlatList, Image, ImageBackground, Pressable, Share, StyleSheet, useWindowDimensions, Dimensions, Alert } from 'react-native'
 import { useRouter, useGlobalSearchParams } from 'expo-router'
 import * as Linking from 'expo-linking'
 import Modal from 'react-native-modal'
@@ -64,6 +64,10 @@ export default function RecipeScreen() {
     const [recipesOfMonth, setRecipesOfMonth] = useState<IRecipeCard[]>([])
     const [trendingSlideIndex, setTrendingSlideIndex] = useState<number>(0)
 
+	// Bookmark state for child RecipeCard list
+	const [bookmarkedRecipes, setBookmarkedRecipes] = useState<Set<number>>(new Set())
+	const [disableBookmarkActionCards, setDisableBookmarkActionCards] = useState<boolean>(false)
+
     const [activeTab, setActiveTab] = useState<number>(0)
     const [selectedThumbnailIndex, setSelectedThumbnailIndex] = useState<number>(0)
     const tabsRef = useRef<FlatList<string>>(null)
@@ -76,13 +80,53 @@ export default function RecipeScreen() {
         return recipe?.userProfileImageThumb ? {uri: recipe.userProfileImageThumb} : require('@/assets/images/icon.png')
     }, [recipe])
 
-    const renderRecipeCard = ({ item }: { item: any }) => {
-        return (
-            <RecipeCard 
-                recipe={item}
-            />
-        )
-    }
+	// Toggle bookmark for carousel RecipeCard items
+	const toggleBookmark = useCallback((recipeId: number) => {
+		if (disableBookmarkActionCards) {
+			return
+		}
+
+		const isBookmarked = bookmarkedRecipes.has(recipeId)
+		const url = `/recipe/${recipeId}/${isBookmarked ? 'unsave' : 'save'}`
+
+		setDisableBookmarkActionCards(true)
+		post({ url, token: user?.token })
+			.then((response) => {
+				if (response.isSaved) {
+					setBookmarkedRecipes(prev => {
+						const next = new Set(prev)
+						next.add(recipeId)
+						return next
+					})
+				} else {
+					setBookmarkedRecipes(prev => {
+						const next = new Set(prev)
+						next.delete(recipeId)
+						return next
+					})
+				}
+				setDisableBookmarkActionCards(false)
+			})
+			.catch((error) => {
+				logError(error)
+				setDisableBookmarkActionCards(false)
+				Alert.alert(
+					'Error',
+					t('Could not update bookmark. Please try again.')
+				)
+			})
+	}, [disableBookmarkActionCards, bookmarkedRecipes, user?.token, t])
+
+	const renderRecipeCard = ({ item }: { item: any }) => {
+		return (
+			<RecipeCard 
+				recipe={item}
+				bookmarkedRecipes={bookmarkedRecipes}
+				toggleBookmark={toggleBookmark}
+				disableBookmarkAction={disableBookmarkActionCards}
+			/>
+		)
+	}
 
     const fetchRecipe = useCallback(async (id: number) => {
         const localRecipeStr = await AsyncStorage.getItem(`recipe/${id}`)
@@ -112,9 +156,23 @@ export default function RecipeScreen() {
             token: user?.token
         })
             .then((recs: IRecipe[]) => {
+				// initialize bookmark state for saved recipes
+				const savedIds = recs.filter(r => r.isSaved).map(r => r.id)
+				setBookmarkedRecipes(prev => {
+					const next = new Set(prev)
+					savedIds.forEach(id => next.add(id))
+					return next
+				})
                 const recipes4Cards: IRecipeCard[] = recs.map((r: IRecipe) => {
                     const image = r.medias.find(media => media.type == MediaType.IMAGE)
-                    return { id: r.id, title: r.title, image: image?.url || '', profileName: r.userFullname }
+                    return { 
+                        id: r.id, 
+                        title: r.title, 
+                        image: image?.url || '', 
+                        profileName: r.userFullname,
+                        cntLikes: r.cntLikes,
+                        cntComments: r.cntComments,
+                    }
                 })
                 return recipes4Cards
             })

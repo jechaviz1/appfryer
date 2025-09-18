@@ -158,7 +158,7 @@ export default function ProfileScreen({page, person, initRecipes}: IProfileScree
                 <Button
                     text={t('Create new recipe')}
                     size='large'
-                    onPress={() => router.push('/(create)/0-create')}
+                    onPress={() => router.push('/(create)/new-recipe')}
                 />
             </View>}
 

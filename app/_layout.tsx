@@ -54,6 +54,7 @@ export default function RootLayout() {
         '(pages)/static-page',
         '(pages)/user-list',
         '(pages)/weekly-plan',
+        '(create)/new-recipe',
         '(create)/0-create',
         '(create)/1-upload-media',
         '(create)/2-title',

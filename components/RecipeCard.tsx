@@ -18,6 +18,8 @@ export interface IRecipeCard {
     image: string
     title: string
     profileName: string
+    cntLikes?: number
+    cntComments?: number
 }
 
 export default function RecipeCard({recipe, bookmarkedRecipes, toggleBookmark, disableBookmarkAction}: {
@@ -66,7 +68,7 @@ export default function RecipeCard({recipe, bookmarkedRecipes, toggleBookmark, d
                             }}
                         >
                             <Image source={require('@/assets/icons/liked.png')} style={s.metricIcon} />
-                            <Text style={s.metricText}>0</Text>
+                            <Text style={s.metricText}>{recipe.cntLikes ?? 0}</Text>
                         </Pressable>
                         <Pressable 
                             style={s.metricItem}
@@ -75,7 +77,7 @@ export default function RecipeCard({recipe, bookmarkedRecipes, toggleBookmark, d
                             }}
                         >
                             <Image source={require('@/assets/icons/chat-box.png')} style={s.metricIcon} />
-                            <Text style={s.metricText}>0</Text>
+                            <Text style={s.metricText}>{recipe.cntComments ?? 0}</Text>
                         </Pressable>
                     </View>
                 </View>

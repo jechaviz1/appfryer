@@ -73,7 +73,9 @@ export default function SearchScreen() {
                 id: r.id,
                 title: r.title,
                 image: img?.url || '',
-                profileName: r.userFullname
+                profileName: r.userFullname,
+                cntLikes: r.cntLikes,
+                cntComments: r.cntComments,
             }
         })
     }, [])
