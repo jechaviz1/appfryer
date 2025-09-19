@@ -1,6 +1,6 @@
 import { type ReactNode, useCallback, useEffect, useState } from 'react'
 import { Dimensions, Image, Keyboard, Platform, Pressable, StyleSheet } from 'react-native'
-import { Asset, ImagePickerResponse, launchImageLibrary } from 'react-native-image-picker'
+import { Asset, ImagePickerResponse } from 'react-native-image-picker'
 import { useGlobalSearchParams, useRouter } from 'expo-router'
 import { Slider } from '@miblanchard/react-native-slider'
 import Modal from 'react-native-modal'
@@ -17,8 +17,10 @@ import { timeFromMinutes } from '@/services/datetime'
 import { fetchMeasures } from '@/services/fetches'
 import { get, post } from '@/services/apiRequests'
 import { logError } from '@/services/utils'
+import { launchMediaLibrary } from '@/services/mediaPicker'
 import IIngredinent, { IMeasure } from '@/interfaces/Ingredient'
 import IPrefItem from '@/interfaces/PrefItem'
+import Header from '@/components/Header'
 
 // Lazy import to avoid type issues and normalize default export shape
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -309,12 +311,13 @@ export default function CreateRecipePage() {
         setMedia(prev => prev.filter((_, i) => i !== index))
     }, [])
 
-    const handleSelectedMedia = useCallback((uploadedMedia: ImagePickerResponse) => {
+    const handleSelectedMedia = useCallback((uploadedMedia: ImagePickerResponse, activeRecipe?: { [key: string]: any } | null) => {
         if (!uploadedMedia?.assets || uploadedMedia.assets.length === 0 || !uploadedMedia.assets[0].uri) {
             return
         }
-        if (!recipe) {
-            // ensure recipe is created before trying again
+        const currentRecipe = activeRecipe ?? recipe
+        if (!currentRecipe) {
+            setMediaError(t('Failed to create recipe'))
             return
         }
         setMediaError('')
@@ -326,7 +329,7 @@ export default function CreateRecipePage() {
         const uri = Platform.OS === 'ios' ? file.uri!.replace('file://', '') : file.uri!
 
         post({
-            url: `/recipe/${recipe.id}/mediaUpload`,
+            url: `/recipe/${currentRecipe.id}/mediaUpload`,
             files: [['mediaFile', {
                 uri: uri,
                 type: file.type,
@@ -353,7 +356,7 @@ export default function CreateRecipePage() {
             })
     }, [media, recipe, user?.token, t])
 
-    const addMedia = useCallback(() => {
+    const addMedia = useCallback(async () => {
         setMediaError('')
 
         if (!user?.token) {
@@ -361,47 +364,32 @@ export default function CreateRecipePage() {
             return
         }
 
-        if (!recipe) {
-            post({ url: '/recipe/create', token: user.token })
-                .then((obtainedEmptyRecipe) => {
-                    const createdRecipe = { ...obtainedEmptyRecipe, id: obtainedEmptyRecipe.recipeId }
-                    setRecipe(createdRecipe)
-                    try {
-                        if (!launchImageLibrary) {
-                            setMediaError(t('Image picker not available'))
-                            return
-                        }
-                        const allowOnlyImages = media.filter((m: Asset) => m.type?.split('/')[0] === 'video').length > 0
-                        const allowOnlyVideos = media.filter((m: Asset) => m.type?.split('/')[0] === 'image').length === 5
-                        launchImageLibrary({
-                            mediaType: allowOnlyImages ? 'photo' : (allowOnlyVideos ? 'video' : 'mixed'),
-                            quality: 1,
-                        }, handleSelectedMedia)
-                    } catch (error) {
-                        console.error('Error launching image library:', error)
-                        setMediaError(t('Failed to open image picker'))
-                    }
-                })
-                .catch(e => {
-                    logError(e)
-                    setMediaError(t('Failed to create recipe'))
-                })
-            return
+        let activeRecipe = recipe
+
+        if (!activeRecipe) {
+            try {
+                const obtainedEmptyRecipe = await post({ url: '/recipe/create', token: user.token })
+                activeRecipe = { ...obtainedEmptyRecipe, id: obtainedEmptyRecipe.recipeId }
+                setRecipe(activeRecipe)
+            } catch (e) {
+                logError(e)
+                setMediaError(t('Failed to create recipe'))
+                return
+            }
         }
 
         const allowOnlyImages = media.filter((m: Asset) => m.type?.split('/')[0] === 'video').length > 0
         const allowOnlyVideos = media.filter((m: Asset) => m.type?.split('/')[0] === 'image').length === 5
 
         try {
-            if (!launchImageLibrary) {
-                setMediaError(t('Image picker not available'))
-                return
-            }
-
-            launchImageLibrary({
+            const pickerResponse = await launchMediaLibrary({
                 mediaType: allowOnlyImages ? 'photo' : (allowOnlyVideos ? 'video' : 'mixed'),
                 quality: 1,
-            }, handleSelectedMedia)
+            }, (response) => handleSelectedMedia(response, activeRecipe))
+
+            if (pickerResponse.errorCode) {
+                setMediaError(pickerResponse.errorMessage || t('Failed to open image picker'))
+            }
         } catch (error) {
             console.error('Error launching image library:', error)
             setMediaError(t('Failed to open image picker'))
@@ -656,13 +644,7 @@ export default function CreateRecipePage() {
 
             <View style={theme.statusBarHeight} />
 
-            <View style={s.header}>
-                <Pressable onPress={() => router.navigate('/(tabs)/')} style={s.headerButton}>
-                    <Image source={require('@/assets/icons/back-2.png')} style={s.headerIcon} />
-                </Pressable>
-                <Text style={s.headerTitle}>{t('New recipe')}</Text>
-                <View style={s.headerButton} />
-            </View>
+            <Header title={t('New recipe')} onBack={() => router.navigate('/(tabs)/')} />
 
             <ScrollView
                 style={s.main}

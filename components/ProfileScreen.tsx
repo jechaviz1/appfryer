@@ -1,6 +1,6 @@
 import { Dimensions, FlatList, Image, Platform, Pressable, StyleSheet } from 'react-native'
 import { useEffect, useRef, useState } from 'react'
-import { launchImageLibrary } from 'react-native-image-picker'
+import { launchMediaLibrary } from '@/services/mediaPicker'
 import { useRouter } from "expo-router"
 import { useTranslation } from 'react-i18next'
 
@@ -56,28 +56,35 @@ export default function ProfileScreen({page, person, initRecipes}: IProfileScree
         })
     }, [activeTab])
 
-    const uploadAvatar = () => {
-        launchImageLibrary({mediaType: 'photo'}, photo => {
-            if (!photo.assets || photo.assets.length === 0 || !photo.assets[0].uri) {
+    const uploadAvatar = async () => {
+        try {
+            const pickerResponse = await launchMediaLibrary({ mediaType: 'photo' })
+
+            if (pickerResponse.errorCode) {
+                setAvatarError(pickerResponse.errorMessage || t('Failed to open image picker'))
                 return
             }
+
+            if (!pickerResponse.assets || pickerResponse.assets.length === 0 || !pickerResponse.assets[0].uri) {
+                return
+            }
+
+            const pickedAsset = pickerResponse.assets[0]
             setAvatarError('')
 
-            // we use the 'uri' and so on here, because the iOs and Android use different formats
-            // for the 'uri' property. And we cannot use Platform.OS in the helper function.
             post({
                 url: '/profile/update',
                 files: [['profileImage', {
-                    uri: Platform.OS === 'ios' ? photo.assets[0].uri.replace('file://', '') : photo.assets[0].uri,
-                    type: photo.assets[0].type,
-                    name: photo.assets[0].fileName,
+                    uri: Platform.OS === 'ios' ? pickedAsset.uri!.replace('file://', '') : pickedAsset.uri!,
+                    type: pickedAsset.type,
+                    name: pickedAsset.fileName,
                 }]],
                 token: person?.token
             })
                 .then(userData => {
                     setUser({ ...person, ...userData })
-        
-                    userData.profileImageHq 
+
+                    userData.profileImageHq
                         ? setAvatar({uri: userData.profileImageHq})
                         : setAvatar(require('@/assets/images/icon.png'))
                 })
@@ -87,7 +94,9 @@ export default function ProfileScreen({page, person, initRecipes}: IProfileScree
                         console.log(e.response.status, e.response.data)
                     }
                 })
-        })
+        } catch (error) {
+            setAvatarError(t('Failed to open image picker'))
+        }
     }
 
     const window = Dimensions.get('window')

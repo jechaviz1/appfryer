@@ -27,6 +27,7 @@ export const theme = StyleSheet.create({
         paddingBottom: bottomMargin + Constants.statusBarHeight,
         minHeight: '100%',
         backgroundColor: getBgColor(),
+        marginTop: 25,
     },
     authContainer: {
         height: '100%',

@@ -31,6 +31,7 @@ import { logError } from '@/services/utils'
 import IFolder from '@/interfaces/Folder'
 import { Colors, weeklyColors } from '@/constants/Colors'
 import { theme, isLight, getBgColor } from '@/constants/Theme'
+import Header from '@/components/Header'
 
 const { width: screenWidth } = Dimensions.get('window')
 
@@ -486,15 +487,13 @@ export default function RecipeScreen() {
             <View style={theme.statusBarHeight} />
 
             {/* Dark Header */}
-            <View style={s.header}>
-                <Pressable onPress={() => router.back()} style={s.backButton}>
-                    <Image source={require('@/assets/icons/back-2.png')} style={s.headerIcon} />
-                </Pressable>
-                <Text style={s.headerTitle}>{t('Recipe Details')}</Text>
-                <Pressable style={s.addButton} onPress={onShare}>
-                    <Image source={require('@/assets/icons/share.png')} style={s.addIcon} />
-                </Pressable>
-            </View>
+            <Header
+                title={t('Recipe Details')}
+                onBack={() => router.back()}
+                rightIconSource={require('@/assets/icons/share.png')}
+                onRightPress={onShare}
+            />
+
             <ScrollView style={s.scrollContainer} showsVerticalScrollIndicator={false}>
                 {/* Main Image Section */}
                 <View style={s.imageSection}>

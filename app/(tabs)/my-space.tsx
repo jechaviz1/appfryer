@@ -22,6 +22,7 @@ import IIngredinent, { IIngredientForShoppingList } from '@/interfaces/Ingredien
 import IRecipe from '@/interfaces/Recipe'
 import IPlanMeal from '@/interfaces/WeeklyPlan'
 import { logError } from '@/services/utils'
+import Header from '@/components/Header'
 
 interface IInterest {
     id?: number
@@ -205,15 +206,11 @@ export default function MySpaceScreen() {
             <View style={theme.statusBarHeight} />
             
             {/* Dark Header */}
-            <View style={s.header}>
-                <Pressable onPress={() => router.back()} style={s.backButton}>
-                    <Image source={require('@/assets/icons/back-2.png')} style={s.headerIcon} />
-                </Pressable>
-                <Text style={s.headerTitle}>{t('Saved recipes')}</Text>
-                <Pressable style={s.addButton}>
-                    <Image source={require('@/assets/icons/add.png')} style={s.addIcon} />
-                </Pressable>
-            </View>
+            <Header
+                title={t('Saved recipes')}
+                onBack={() => router.back()}
+                rightIconSource={require('@/assets/icons/add.png')}
+            />
 
             {/* Category Tabs */}
             <View style={s.categoriesSection}>

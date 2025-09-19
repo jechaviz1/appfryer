@@ -49,7 +49,7 @@
     "react-native-circular-chart": "^1.0.9",
     "react-native-date-picker": "^5.0.8",
     "react-native-gesture-handler": "~2.16.1",
-    "react-native-image-picker": "8.2.1",
+    "react-native-image-picker": "^8.2.1",
     "react-native-keyboard-aware-scroll-view": "^0.9.5",
     "react-native-modal": "^13.0.1",
     "react-native-radial-slider": "^1.1.0",
