@@ -23,11 +23,10 @@ export const theme = StyleSheet.create({
     },
     mainContainer: {
         paddingHorizontal: paddings,
-        paddingTop: 0,
+        paddingTop: 25,
         paddingBottom: bottomMargin + Constants.statusBarHeight,
         minHeight: '100%',
         backgroundColor: getBgColor(),
-        marginTop: 25,
     },
     authContainer: {
         height: '100%',
@@ -124,12 +123,12 @@ export const theme = StyleSheet.create({
     },
     tabsFlatList: {
         flexDirection: 'row',
-        marginTop: 20,
     },
     tabInner: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
+        backgroundColor: Colors.mainBGColor
     },
 
     // Badges

@@ -20,6 +20,7 @@ export interface IRecipeCard {
     profileName: string
     cntLikes?: number
     cntComments?: number
+    isDraft?: boolean
 }
 
 export default function RecipeCard({recipe, bookmarkedRecipes, toggleBookmark, disableBookmarkAction}: {
@@ -57,6 +58,11 @@ export default function RecipeCard({recipe, bookmarkedRecipes, toggleBookmark, d
                         </Text>
                     </View>
                 </View>
+                {recipe.isDraft && (
+                    <View style={[s.recipeMark, s.recipeDraft]}>
+                        <Text style={s.recipeTypeText}>{t('Draft')}</Text>
+                    </View>
+                )}
             </LinearGradient>
             <View style={s.recipeCardFooter}>
                 <View style={s.footerSection}>
@@ -126,6 +132,20 @@ const s = StyleSheet.create({
         borderRadius: 14,
         overflow: 'hidden',
         position: 'relative',
+    },
+    recipeMark: {
+        paddingVertical: 3,
+        paddingHorizontal: 9,
+        borderRadius: 8,
+        backgroundColor: Colors.disabledButton,
+    },
+    recipeDraft: {
+        position: 'absolute',
+        top: 16,
+        right: 16,
+    },
+    recipeTypeText: {
+        color: Colors.white,
     },
     recipeCardHeader: {
         flexDirection: 'row',

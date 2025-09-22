@@ -7,13 +7,8 @@ import { useRouter } from 'expo-router'
 
 import { IngredientButton, ScrollView, Text, View, TextInput } from "@/components/base/BaseComponents"
 import Search from "@/components/Search"
-import Filters from "@/components/modals/Filters"
-import IngredientSearchInput from "@/components/IngredientSearchInput"
 import RecipeCard, { IRecipeCard } from '@/components/RecipeCard'
-import Challenges from '@/components/Challenges'
-import Achievements from '@/components/Achievements'
 import Categories from '@/components/Categories'
-import Diets from '@/components/Diets'
 import { useAuth } from '@/contexts/authContext'
 import { get, post } from '@/services/apiRequests'
 import { logError } from '@/services/utils'
@@ -55,12 +50,9 @@ export default function SearchScreen() {
     const [fridgeProds, setFridgeProds] = useState<IPrefItem[]>([])
     const [seasonalProds, setSeasonalProds] = useState<IPrefItem[]>([])
     const [showFilters, setShowFilters] = useState<boolean>(false)
-
-    const [searchResults, setSearchResults] = useState<IRecipeCard[]>([])
     const [recipesForYou, setRecipesForYou] = useState<IRecipeCard[]>([])
     const [recipesOfMonth, setRecipesOfMonth] = useState<IRecipeCard[]>([])
-    const [searchText, setSearchText] = useState<string>('')
-    const [isSearching, setIsSearching] = useState<boolean>(false)
+    
     
     // Bookmark state management
     const [bookmarkedRecipes, setBookmarkedRecipes] = useState<Set<number>>(new Set())
@@ -213,9 +205,8 @@ export default function SearchScreen() {
             selected: tab.id === selectedId
         })))
         
-        // Clear search when changing categories
-        setSearchText('')
-        setSearchResults([])
+        // Clear current list when switching categories
+        setRecipesForYou([])
         
         // Handle category selection logic
         if (selectedId === 'month') {
@@ -230,47 +221,15 @@ export default function SearchScreen() {
         }
     }, [fetchRecipes])
 
-    const handleSearch = useCallback(() => {
-        if (searchText.trim()) {
-            setIsSearching(true)
-            // Use existing search logic
-            post({
-                url: '/feed',
-                data: { filterTitle: searchText.trim() },
-                token: user?.token
-            })
-                .then((recipes: IRecipe[]) => {
-                    setSearchResults(modifyRecipesForCards(recipes))
-                    setIsSearching(false)
-                })
-                .catch((error) => {
-                    logError(error)
-                    setIsSearching(false)
-                    Alert.alert('Error', t('Search could not be completed. Please try again.'))
-                })
-        } else {
-            // Clear search results
-            setSearchResults([])
-        }
-    }, [searchText, user?.token, modifyRecipesForCards])
+    const handleSearchResults = useCallback((recipes: IRecipe[]) => {
+        setRecipesForYou(modifyRecipesForCards(recipes))
+    }, [modifyRecipesForCards])
 
     const handleFilterResults = useCallback((filteredRecipes: IRecipe[]) => {
         setRecipesForYou(modifyRecipesForCards(filteredRecipes))
-        // Clear search results when filters are applied
-        setSearchResults([])
-        setSearchText('')
     }, [modifyRecipesForCards])
 
-    // Debounced search effect
-    useEffect(() => {
-        const timeoutId = setTimeout(() => {
-            if (searchText.trim()) {
-                handleSearch()
-            }
-        }, 500)
-
-        return () => clearTimeout(timeoutId)
-    }, [searchText, handleSearch])
+    // no debounced search needed; Search component handles submission
 
     const renderRecipeCard = ({ item }: { item: any }) => {
         return (
@@ -287,34 +246,8 @@ export default function SearchScreen() {
         <View style={theme.container}>
             <View style={theme.statusBarHeight} />
             <ScrollView style={theme.mainContainer}>
-                <Filters 
-                    isVisible={showFilters} 
-                    onHide={() => setShowFilters(false)} 
-                    page="explore" 
-                    onSubmit={handleFilterResults}
-                />
                 {/* Search Section */}
-                <View style={s.searchSection}>
-                    <View style={s.searchContainer}>
-                        <Image source={require('@/assets/icons/search.png')} style={s.searchIcon} />
-                        <TextInput
-                            styleContainer={s.searchInput}
-                            styleTextInput={s.searchTextInput}
-                            placeholder={t('Search recipes')}
-                            value={searchText}
-                            onChangeText={setSearchText}
-                            placeholderTextColor={Colors.grey}
-                            onSubmitEditing={handleSearch}
-                            returnKeyType="search"
-                        />
-                    </View>
-                    <Pressable 
-                        style={s.filterButton}
-                        onPress={() => setShowFilters(true)}
-                    >
-                        <Image source={require('@/assets/icons/filter-dark.png')} style={s.filterIcon} />
-                    </Pressable>
-                </View>
+                <Search page="explore" onSearch={handleSearchResults} />
 
                 {/* Category Tabs */}
                 <View style={s.categoriesSection}>
@@ -339,43 +272,20 @@ export default function SearchScreen() {
 
                 {/* Recipe Feed */}
                 <View style={s.feedSection}>
-                    {isSearching ? (
-                        <View style={s.loadingState}>
-                            <Text style={s.loadingStateText}>{t('Searching recipes...')}</Text>
-                        </View>
-                    ) : searchResults.length > 0 ? (
-                        <View>
-                            <Text style={s.searchResultsTitle}>{t('Search results')}</Text>
-                            <FlatList
-                                data={searchResults}
-                                renderItem={renderRecipeCard}
-                                keyExtractor={(item) => item.id.toString()}
-                                showsVerticalScrollIndicator={false}
-                                scrollEnabled={false}
-                                contentContainerStyle={s.recipesList}
-                            />
-                        </View>
-                    ) : searchText.length > 0 ? (
-                        <View style={s.emptyState}>
-                            <Text style={s.emptyStateText}>{t('No recipes found')}</Text>
-                            <Text style={s.emptyStateSubtext}>{t('Try with other search terms')}</Text>
-                        </View>
+                    {recipesForYou.length > 0 ? (
+                        <FlatList
+                            data={recipesForYou}
+                            renderItem={renderRecipeCard}
+                            keyExtractor={(item) => item.id.toString()}
+                            showsVerticalScrollIndicator={false}
+                            scrollEnabled={false}
+                            contentContainerStyle={s.recipesList}
+                        />
                     ) : (
-                        recipesForYou.length > 0 ? (
-                            <FlatList
-                                data={recipesForYou}
-                                renderItem={renderRecipeCard}
-                                keyExtractor={(item) => item.id.toString()}
-                                showsVerticalScrollIndicator={false}
-                                scrollEnabled={false}
-                                contentContainerStyle={s.recipesList}
-                            />
-                        ) : (
-                            <View style={s.emptyState}>
-                                <Text style={s.emptyStateText}>{t('No recipes available')}</Text>
-                                <Text style={s.emptyStateSubtext}>{t('Come back later to see new recipes')}</Text>
-                            </View>
-                        )
+                        <View style={s.emptyState}>
+                            <Text style={s.emptyStateText}>{t('No recipes available')}</Text>
+                            <Text style={s.emptyStateSubtext}>{t('Come back later to see new recipes')}</Text>
+                        </View>
                     )}
                 </View>
 

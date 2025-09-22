@@ -476,13 +476,13 @@ export default function RecipeScreen() {
                 </View>
             </Modal> }
 
-                { displayFolders && <SavedRecipe
-                    isVisible={displayFolders}
-                    recipeId={recipe.id}
-                    onHide={() => setDisplayFolders(false)}
-                    inFolders={recipe.folders}
-                    onUpdateFolders={(folders: IFolder[]) => setRecipe({...recipe, folders})}
-                /> }
+            { displayFolders && <SavedRecipe
+                isVisible={displayFolders}
+                recipeId={recipe.id}
+                onHide={() => setDisplayFolders(false)}
+                inFolders={recipe.folders}
+                onUpdateFolders={(folders: IFolder[]) => setRecipe({...recipe, folders})}
+            /> }
 
             <View style={theme.statusBarHeight} />
 

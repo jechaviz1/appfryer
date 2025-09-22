@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next'
 
 import { Button, ScrollView, Text, View, TextInput } from "@/components/base/BaseComponents"
 import Notifications from '@/components/modals/Notifications'
-import Filters from '@/components/modals/Filters'
+import Search from '@/components/Search'
 import Categories from '@/components/Categories'
 import RecipeCard, { IRecipeCard } from '@/components/RecipeCard'
 import { theme, isLight, getBgColor } from '@/constants/Theme'
@@ -47,8 +47,6 @@ export default function HomeScreen() {
 
     const [avatar, setAvatar] = useState<any>()
     const [showNotifications, setShowNotifications] = useState<boolean>(false)
-    const [showFilters, setShowFilters] = useState<boolean>(false)
-    const [searchText, setSearchText] = useState<string>('')
     const [recipesForYou, setRecipesForYou] = useState<any[]>([])
     const [recipesOfMonth, setRecipesOfMonth] = useState<any[]>([])
     const [recommendationsSlideIndex, setRecommendationsSlideIndex] = useState<number>(0)
@@ -142,27 +140,8 @@ export default function HomeScreen() {
 			})
 	}, [disableBookmarkAction, bookmarkedRecipes, user?.token, t])
 
-    const handleSearchSubmit = useCallback(() => {
-        if (searchText.trim()) {
-            const searchData = {
-                ...searchFilters?.home,
-                filterTitle: searchText.trim()
-            }
-            
-            post({
-                url: '/feed',
-                data: searchData,
-                token: user?.token
-            })
-                .then((recipes: IRecipe[]) => {
-                    setRecipesForYou(modifyRecipesForCards(recipes))
-                })
-                .catch(logError)
-        }
-    }, [searchText, searchFilters, user?.token, modifyRecipesForCards])
-
-    const handleFilterResults = useCallback((filteredRecipes: IRecipe[]) => {
-        setRecipesForYou(modifyRecipesForCards(filteredRecipes))
+    const handleSearchResults = useCallback((recipes: IRecipe[]) => {
+        setRecipesForYou(modifyRecipesForCards(recipes))
     }, [modifyRecipesForCards])
 
     const window = Dimensions.get('window')
@@ -235,12 +214,6 @@ export default function HomeScreen() {
             <View style={theme.statusBarHeight} />
             <ScrollView style={theme.mainContainer}>
                 <Notifications isVisible={showNotifications} onHide={() => setShowNotifications(false)} />
-                <Filters 
-                    isVisible={showFilters} 
-                    onHide={() => setShowFilters(false)} 
-                    page="home" 
-                    onSubmit={handleFilterResults}
-                />
 
                 {/* Header Section */}
                 <View style={s.header}>
@@ -258,27 +231,7 @@ export default function HomeScreen() {
                 </View>
 
                 {/* Search Bar */}
-                <View style={s.searchSection}>
-                    <View style={s.searchContainer}>
-                        <Image source={require('@/assets/icons/search.png')} style={s.searchIcon} />
-                        <TextInput
-                            styleContainer={s.searchInput}
-                            styleTextInput={s.searchTextInput}
-                            placeholder={t('Search recipes')}
-                            value={searchText}
-                            onChangeText={setSearchText}
-                            placeholderTextColor={Colors.grey}
-                            onSubmitEditing={handleSearchSubmit}
-                            returnKeyType="search"
-                        />
-                    </View>
-                    <Pressable 
-                        style={s.filterButton}
-                        onPress={() => setShowFilters(true)}
-                    >
-                        <Image source={require('@/assets/icons/filter-dark.png')} style={s.filterIcon} />
-                    </Pressable>
-                </View>
+                <Search page="home" onSearch={handleSearchResults} />
 
                 {/* Categories */}
                 <Categories style={s.categoriesSection} />
