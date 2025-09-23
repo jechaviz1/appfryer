@@ -1,13 +1,11 @@
 import { useCallback, useEffect, useState, useRef } from 'react'
-import { Image, Pressable, StyleSheet, FlatList, Dimensions } from 'react-native'
+import { Image, Pressable, StyleSheet, FlatList, Dimensions, Alert } from 'react-native'
 import { useFocusEffect } from '@react-navigation/native'
 import { useTranslation } from 'react-i18next'
-import { LinearGradient } from 'expo-linear-gradient'
 
 import { Button, ScrollView, Text, View, TextInput } from "@/components/base/BaseComponents"
 import Notifications from '@/components/modals/Notifications'
-import Filters from '@/components/modals/Filters'
-import Stories from '@/components/Stories'
+import Search from '@/components/Search'
 import Categories from '@/components/Categories'
 import RecipeCard, { IRecipeCard } from '@/components/RecipeCard'
 import { theme, isLight, getBgColor } from '@/constants/Theme'
@@ -19,7 +17,6 @@ import { logError } from '@/services/utils'
 import IRecipe from '@/interfaces/Recipe'
 import { Colors } from '@/constants/Colors'
 import { useRouter } from 'expo-router'
-import { t } from 'i18next'
 import { MediaType } from '@/interfaces/Media'
 
 const storiesFake = [
@@ -31,19 +28,15 @@ const storiesFake = [
     { id: 6, image: 'https://picsum.photos/200', name: 'Miguel', viewed: true, link: 'https://videos.pexels.com/video-files/7929021/7929021-hd_1080_1920_24fps.mp4' },
 ]
 
-
-
 const weeklyDays = [
-    { id: 1, day: t('Sun'), date: '23', selected: false },
-    { id: 2, day: t('Mon'), date: '24', selected: false },
-    { id: 3, day: t('Tue'), date: '25', selected: true },
-    { id: 4, day: t('Wed'), date: '26', selected: false },
-    { id: 5, day: t('Thu'), date: '27', selected: false },
-    { id: 6, day: t('Fri'), date: '28', selected: false },
-    { id: 7, day: t('Sat'), date: '29', selected: false },
+    { id: 1, day: 'Sun', date: '23', selected: false },
+    { id: 2, day: 'Mon', date: '24', selected: false },
+    { id: 3, day: 'Tue', date: '25', selected: true },
+    { id: 4, day: 'Wed', date: '26', selected: false },
+    { id: 5, day: 'Thu', date: '27', selected: false },
+    { id: 6, day: 'Fri', date: '28', selected: false },
+    { id: 7, day: 'Sat', date: '29', selected: false },
 ]
-
-
 
 export default function HomeScreen() {
     const router = useRouter()
@@ -54,12 +47,14 @@ export default function HomeScreen() {
 
     const [avatar, setAvatar] = useState<any>()
     const [showNotifications, setShowNotifications] = useState<boolean>(false)
-    const [showFilters, setShowFilters] = useState<boolean>(false)
-    const [searchText, setSearchText] = useState<string>('')
     const [recipesForYou, setRecipesForYou] = useState<any[]>([])
     const [recipesOfMonth, setRecipesOfMonth] = useState<any[]>([])
     const [recommendationsSlideIndex, setRecommendationsSlideIndex] = useState<number>(0)
     const [trendingSlideIndex, setTrendingSlideIndex] = useState<number>(0)
+
+	// Bookmark state for recipe cards
+	const [bookmarkedRecipes, setBookmarkedRecipes] = useState<Set<number>>(new Set())
+	const [disableBookmarkAction, setDisableBookmarkAction] = useState<boolean>(false)
 
     const recommendationsFlatListRef = useRef<FlatList>(null)
     const trendingFlatListRef = useRef<FlatList>(null)
@@ -73,15 +68,15 @@ export default function HomeScreen() {
                 image: img?.url || '',
                 profileName: r.userFullname,
                 category: r.categoryName,
-                likes: r.cntLikes,
-                comments: r.cntComments,
+                cntLikes: r.cntLikes,
+                cntComments: r.cntComments,
                 timeAgo: t('35 minutes ago'), // This could be calculated from createdAt
                 bookmarked: r.isSaved
             }
         })
     }, [])
 
-    const fetchRecipes = useCallback((type: string, setRecipes: (recipes: any[]) => void) => {
+	const fetchRecipes = useCallback((type: string, setRecipes: (recipes: any[]) => void) => {
         if (!user?.token) return
         
         post({
@@ -91,6 +86,16 @@ export default function HomeScreen() {
         })
             .then((recipes: IRecipe[]) => {
                 setRecipes(modifyRecipesForCards(recipes))
+				// prime bookmark state from API result
+				recipes.forEach((r: IRecipe) => {
+					if (r.isSaved) {
+						setBookmarkedRecipes(prev => {
+							const next = new Set(prev)
+							next.add(r.id)
+							return next
+						})
+					}
+				})
             })
             .catch((error) => {
                 logError(error)
@@ -98,38 +103,57 @@ export default function HomeScreen() {
             })
     }, [user?.token, modifyRecipesForCards])
 
-    const handleSearchSubmit = useCallback(() => {
-        if (searchText.trim()) {
-            const searchData = {
-                ...searchFilters?.home,
-                filterTitle: searchText.trim()
-            }
-            
-            post({
-                url: '/feed',
-                data: searchData,
-                token: user?.token
-            })
-                .then((recipes: IRecipe[]) => {
-                    setRecipesForYou(modifyRecipesForCards(recipes))
-                })
-                .catch(logError)
-        }
-    }, [searchText, searchFilters, user?.token, modifyRecipesForCards])
+	// Toggle bookmark functionality
+	const toggleBookmark = useCallback((recipeId: number) => {
+		if (disableBookmarkAction) {
+			return
+		}
 
-    const handleFilterResults = useCallback((filteredRecipes: IRecipe[]) => {
-        setRecipesForYou(modifyRecipesForCards(filteredRecipes))
+		const isCurrentlyBookmarked = bookmarkedRecipes.has(recipeId)
+		const url = `/recipe/${recipeId}/${isCurrentlyBookmarked ? 'unsave' : 'save'}`
+
+		setDisableBookmarkAction(true)
+		post({ url, token: user?.token })
+			.then((response) => {
+				if (response.isSaved) {
+					setBookmarkedRecipes(prev => {
+						const next = new Set(prev)
+						next.add(recipeId)
+						return next
+					})
+				} else {
+					setBookmarkedRecipes(prev => {
+						const next = new Set(prev)
+						next.delete(recipeId)
+						return next
+					})
+				}
+				setDisableBookmarkAction(false)
+			})
+			.catch((error) => {
+				logError(error)
+				setDisableBookmarkAction(false)
+				Alert.alert(
+					'Error',
+					t('Could not update bookmark. Please try again.')
+				)
+			})
+	}, [disableBookmarkAction, bookmarkedRecipes, user?.token, t])
+
+    const handleSearchResults = useCallback((recipes: IRecipe[]) => {
+        setRecipesForYou(modifyRecipesForCards(recipes))
     }, [modifyRecipesForCards])
 
     const window = Dimensions.get('window')
     
-    useEffect(() => {
+	useEffect(() => {
         if (user?.token) {
             fetchRecipes('recipesForYou', setRecipesForYou)
             fetchRecipes('recipesOfMonth', setRecipesOfMonth)
         } else {
             setRecipesForYou([])
             setRecipesOfMonth([])
+			setBookmarkedRecipes(new Set())
         }
     }, [user?.token, fetchRecipes])
 
@@ -164,10 +188,13 @@ export default function HomeScreen() {
 
     const bellIcon = isLight() ? require('@/assets/icons/bell-black.png') : require('@/assets/icons/bell-white.png')
 
-    const renderRecipeCard = ({ item }: { item: any }) => {
+	const renderRecipeCard = ({ item }: { item: any }) => {
         return (
             <RecipeCard 
-                recipe={item}
+				recipe={item}
+				bookmarkedRecipes={bookmarkedRecipes}
+				toggleBookmark={toggleBookmark}
+				disableBookmarkAction={disableBookmarkAction}
             />
         )
     }
@@ -187,12 +214,6 @@ export default function HomeScreen() {
             <View style={theme.statusBarHeight} />
             <ScrollView style={theme.mainContainer}>
                 <Notifications isVisible={showNotifications} onHide={() => setShowNotifications(false)} />
-                <Filters 
-                    isVisible={showFilters} 
-                    onHide={() => setShowFilters(false)} 
-                    page="home" 
-                    onSubmit={handleFilterResults}
-                />
 
                 {/* Header Section */}
                 <View style={s.header}>
@@ -210,27 +231,7 @@ export default function HomeScreen() {
                 </View>
 
                 {/* Search Bar */}
-                <View style={s.searchSection}>
-                    <View style={s.searchContainer}>
-                        <Image source={require('@/assets/icons/search.png')} style={s.searchIcon} />
-                        <TextInput
-                            styleContainer={s.searchInput}
-                            styleTextInput={s.searchTextInput}
-                            placeholder={t('Search recipes')}
-                            value={searchText}
-                            onChangeText={setSearchText}
-                            placeholderTextColor={Colors.grey}
-                            onSubmitEditing={handleSearchSubmit}
-                            returnKeyType="search"
-                        />
-                    </View>
-                    <Pressable 
-                        style={s.filterButton}
-                        onPress={() => setShowFilters(true)}
-                    >
-                        <Image source={require('@/assets/icons/filter-dark.png')} style={s.filterIcon} />
-                    </Pressable>
-                </View>
+                <Search page="home" onSearch={handleSearchResults} />
 
                 {/* Categories */}
                 <Categories style={s.categoriesSection} />
@@ -245,11 +246,6 @@ export default function HomeScreen() {
                     <View style={s.heroBannerOverlay}>
                         <View style={s.heroBannerContent}>
                             <View style={s.heroLeftSection}>
-                                <Image 
-                                    source={require('@/assets/images/quiz-person.png')} 
-                                    style={s.heroPersonImage}
-                                    resizeMode="contain"
-                                />
                             </View>
                             <View style={s.heroRightSection}>
                                 <View style={s.heroIconContainer}>
@@ -478,7 +474,7 @@ const s = StyleSheet.create({
 
     // Categories Section
     categoriesSection: {
-        marginBottom: 24,
+        marginBottom: 16,
         backgroundColor: getBgColor(),
     },
     emptyState: {
@@ -496,7 +492,7 @@ const s = StyleSheet.create({
     // Hero Banner
     heroBanner: {
         position: 'relative',
-        height: 116,
+        height: 120,
         borderRadius: 10,
         marginBottom: 24,
         overflow: 'hidden',
@@ -616,26 +612,28 @@ const s = StyleSheet.create({
     },
     dayItem: {
         alignItems: 'center',
-        backgroundColor: '#FCEEE1',
+        backgroundColor: '#FFFFFF',
         borderRadius: 14,
         paddingHorizontal: 3,
         paddingVertical: 3,
-        minWidth: 46,
+        width: 46,
+        height: 85,
     },
     dayItemSelected: {
         backgroundColor: Colors.mainColor,
     },
     dayText: {
         fontSize: 12,
-        color: Colors.grey,
+        color: '#B5B5B5',
         fontFamily: 'Poppins-Medium',
-        padding: 10,
+        paddingVertical: 7,
     },
     dayTextSelected: {
         color: Colors.white,
     },
     dateText: {
         fontSize: 16,
+        lineHeight: 22,
         color: '#B5B5B5',
         fontFamily: 'Poppins-SemiBold',
         padding: 10,

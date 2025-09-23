@@ -1,4 +1,4 @@
-import { Appearance, Image, Linking, Platform, Pressable, StyleSheet, Switch } from "react-native"
+import { Appearance, Image, ImageBackground, Linking, Platform, Pressable, StyleSheet, Switch } from "react-native"
 import { useRouter } from 'expo-router'
 import { useCallback, useEffect, useState } from "react"
 import AsyncStorage from '@react-native-async-storage/async-storage'
@@ -8,16 +8,18 @@ import Constants from 'expo-constants'
 import { useTranslation } from 'react-i18next'
 
 import { ScrollView, Text, View } from "@/components/base/BaseComponents"
+import Header from '@/components/Header'
 import Preferences from '@/components/modals/Preferences'
 import PersonalInfo from '@/components/modals/PersonalInfo'
 import ChangePassword from '@/components/modals/ChangePassword'
 import { useSettings } from "@/contexts/settingsContext"
 import { useAuth } from "@/contexts/authContext"
 import { Colors } from "@/constants/Colors"
-import { theme, isLight } from '@/constants/Theme'
+import { theme, isLight, getBgColor } from '@/constants/Theme'
 import { logError } from "@/services/utils"
 
 interface SettingsItem {
+    key: string
     label: string
     action: () => void
     rightSide?: React.JSX.Element
@@ -74,9 +76,7 @@ export default function Settings() {
         router.navigate('/(auth)/login')
     }, [])
 
-    const backIconLight = require('@/assets/icons/arrow-left.png')
-    const backIconDark = require('@/assets/icons/arrow-left-light.png')
-    const rightChevronLight = require('@/assets/icons/chevron-right-grey.png')
+    const rightChevronLight = require('@/assets/icons/chevron-right-neutral-grey.png')
     const rightChevronDark = require('@/assets/icons/chevron-right-light-grey.png')
     const rightArrow = isLight() ? rightChevronLight : rightChevronDark
     const gradientColors = ['#d6a674', Colors.mainColor]
@@ -84,24 +84,22 @@ export default function Settings() {
 
     const getItems = useCallback((): SettingsItem[][] => [
         [
-            { label: t('Language'), action: () => router.push('/(settings)/languages'), rightSide: <Text style={s.language} type="link">{langsMap[user?.language as ('en' | 'es' | undefined) ?? 'es']}</Text> },
-            { label: t('Preferences'), action: () => setShowPreferences(true), rightSide: rightArrowElem },
-            { label: t('Edit password'), action: () => setShowChangePassword(true), rightSide: rightArrowElem },
-            { label: t('Dark mode'), action: () => Appearance.setColorScheme(isLight() ? 'dark' : 'light'), rightSide: <Switch value={!isLight()} trackColor={Colors.switchTrack} onValueChange={() => Appearance.setColorScheme(isLight() ? 'dark' : 'light')} /> },
-            { label: t('Review App'), action: () => openStore(), rightSide: rightArrowElem },
-            { label: t('Activity log'), action: () => router.push('/(settings)/activity-log'), rightSide: rightArrowElem },
-            { label: t('Manage notifications'), action: () => router.push('/(settings)/notifications'), rightSide: rightArrowElem },
+            { key: 'content-creator', label: t('Content creator settings'), action: () => {}, rightSide: <Image source={require('@/assets/icons/chevron-down-light.png')} style={s.downArrow} /> },
+            { key: 'language', label: t('Language'), action: () => router.push('/(settings)/languages'), rightSide: <Text style={s.language}>{langsMap[user?.language as ('en' | 'es' | undefined) ?? 'es']}</Text> },
+            { key: 'dark-mode', label: t('Dark mode'), action: () => Appearance.setColorScheme(isLight() ? 'dark' : 'light'), rightSide: <Switch value={!isLight()} style={{ height: 20 }} onValueChange={() => Appearance.setColorScheme(isLight() ? 'dark' : 'light')} /> },
+            { key: 'units', label: t('Units of measurement'), action: () => {}, rightSide: <Image source={require('@/assets/icons/chevron-down-light.png')} style={s.downArrow} /> },
+            { key: 'review-app', label: t('Review App'), action: () => openStore(), rightSide: <Image source={require('@/assets/icons/chevron-down-light.png')} style={s.downArrow} /> },
+            { key: 'notifications', label: t('Manage notifications'), action: () => router.push('/(settings)/notifications'), rightSide: <Image source={require('@/assets/icons/chevron-down-light.png')} style={s.downArrow} /> },
+            { key: 'edit-password', label: t('Edit password'), action: () => setShowChangePassword(true), rightSide: <Image source={require('@/assets/icons/chevron-down-light.png')} style={s.downArrow} /> },
         ],
         [
-            { label: t('About AppFryer'), action: () => router.push({pathname: '/(pages)/static-page', params: {name: 'about'}}), rightSide: rightArrowElem },
-            { label: t('Terms and Conditions'), action: () => router.push({pathname: '/(pages)/static-page', params: {name: 'terms'}}), rightSide: rightArrowElem },
-            { label: t('Latest and Upcoming Updates'), action: () => router.push({pathname: '/(pages)/static-page', params: {name: 'updates'}}), rightSide: rightArrowElem },
+            { key: 'premium', label: t('Premium'), action: () => router.push('/(pages)/premium') },
         ],
         [
-            { label: t('Support'), action: () => {}, rightSide: rightArrowElem },
-        ],
-        [
-            { label: t('Delete account & personal data'), action: () => router.push({pathname: '/(settings)/delete-account'}), rightSide: rightArrowElem },
+            { key: 'security', label: t('Advanced security and privacy'), action: () => {}, rightSide: <Image source={require('@/assets/icons/chevron-down-light.png')} style={s.downArrow} /> },
+            { key: 'about', label: t('About AppFryer'), action: () => router.push({pathname: '/(pages)/static-page', params: {name: 'about'}}), rightSide: <Image source={require('@/assets/icons/chevron-down-light.png')} style={s.downArrow} /> },
+            { key: 'terms', label: t('Terms and Conditions'), action: () => router.push({pathname: '/(pages)/static-page', params: {name: 'terms'}}), rightSide: <Image source={require('@/assets/icons/chevron-down-light.png')} style={s.downArrow} /> },
+            { key: 'updates', label: t('Latest and Upcoming Updates'), action: () => router.push({pathname: '/(pages)/static-page', params: {name: 'updates'}}), rightSide: <Image source={require('@/assets/icons/chevron-down-light.png')} style={s.downArrow} /> },
         ]
     ], [user])
 
@@ -119,205 +117,223 @@ export default function Settings() {
     // }
 
     return (
-        <View style={theme.container}>
+        <View style={s.container}>
             <View style={theme.statusBarHeight} />
-            <ScrollView style={theme.mainContainer}>
+            <Header 
+                title={t('Settings')}
+                onBack={() => router.canGoBack() ? router.back() : router.navigate('/(tabs)/profile')}
+            />
+            <ScrollView style={s.mainContainer}>
                 { showPreferences && <Preferences isVisible={showPreferences} onHide={() => setShowPreferences(false)} /> }
                 { showPersonalInfo && <PersonalInfo isVisible={showPersonalInfo} onHide={() => setShowPersonalInfo(false)} /> }
                 { showChangePassword && <ChangePassword isVisible={showChangePassword} onHide={() => setShowChangePassword(false)} /> }
 
-                <View style={[theme.titleContainer, s.topbarWrap]}>
-                    <Pressable
-                        onPress={() => router.canGoBack() ? router.back() : router.navigate('/(tabs)/profile')}
-                        style={s.topbarInner}
-                    >
-                        <Image
-                            source={isLight() ? backIconLight : backIconDark}
-                            style={{ width: 16, height: 16 }}
-                        />
-                        <Text type="subtitle">{t('Settings')}</Text>
-                    </Pressable>
-                </View>
-
                 <View style={s.main}>
+                    {/* User Profile Section */}
                     <Pressable onPress={() => setShowPersonalInfo(true)}>
-                        <View style={[theme.section, s.brief]}>
-                        {avatar && <Image source={avatar} style={ s.avatar } /> }
-                        <View style={{ flex: 1 }}>
-                            <Text type="defaultSemiBold">{user?.fullname}</Text>
-                            <Text style={{ color: isLight() ? Colors.grey : Colors.lightGrey }}>{user?.email}</Text>
-                        </View>
-                        <Image source={rightArrow} style={s.rightArrow} />
+                        <View style={s.profileSection}>
+                            {avatar && <Image source={avatar} style={s.avatar} /> }
+                            <View style={s.profileInfo}>
+                                <Text style={s.profileName}>{user?.fullname}</Text>
+                                <Text style={s.profileEmail}>{user?.email}</Text>
+                            </View>
+                            <Image source={rightArrow} style={s.rightArrow} />
                         </View>
                     </Pressable>
 
-                    {/* <View style={theme.section}>
-                        {items[0].map((item, index) => (
-                            <Pressable
-                                key={index}
-                                style={[s.menuItem, index === 0 ? s.menuItemFirst : null, index === items[0].length - 1 ? s.menuItemLast : null]}
-                                onPress={() => item.action()}
-                            >
-                                <Text style={{ flex: 1 }}>{item.label}</Text>
-                                {item.rightSide}
-                            </Pressable>
-                        ))}
-                    </View> */}
-
-                    {/* Premium section */}
-                    {/* <Pressable onPress={() => router.push('/(pages)/premium')}>
-                        <LinearGradient
-                            start={{x: 0, y: 0.75}}
-                            end={{x: 1, y: 0.25}}
-                            colors={gradientColors}
-                            style={s.premiumWrapper}
-                        >
-                            <View style={s.premiumBellCircle}>
-                                <Image source={require('@/assets/icons/bell-70.png')} style={s.premiumBell} />
-                            </View>
-                            <View style={{ backgroundColor: 'transparent' }}>
-                                <Text style={[s.premiumText, s.textBold]}>{t('Get premium!')}</Text>
-                                <Text style={s.premiumText}>{t('Subscribe today and start exploring a world full of flavor and knowledge!')}</Text>
-                            </View>
-
-                        </LinearGradient>
-                    </Pressable> */}
-
-                    {/* {getItems().filter((item, index) => index > 0).map((section, index) => ( */}
+                    {/* Settings Items */}
                     {getItems().map((section, index) => (
-                    <View style={theme.section} key={index}>
-                        {section.map((item, index) => {
-                            const isFirst = index === 0
-                            const isLast = index === section.length - 1
-                            return (
-                            <Pressable
-                                key={item.label}
-                                style={[s.menuItem, isFirst && s.menuItemFirst, isLast && s.menuItemLast]}
-                                onPress={() => item.action()}
-                            >
-                                <Text style={{ flex: 1 }}>{item.label}</Text>
-                                {item.rightSide}
-                            </Pressable>
-                        )})}
-                    </View>
+                        <View style={s.menuSection} key={index}>
+                            {section.map((item, index) => {
+                                const isFirst = index === 0
+                                const isLast = index === section.length - 1
+                                
+                                // Replace premium menu item with Premium Section
+                                if (item.key === 'premium') {
+                                    return (
+                                        <Pressable key={item.key} onPress={() => item.action()}>
+                                            <ImageBackground 
+                                                source={require('@/assets/images/premium-bg.png')} 
+                                                style={s.premiumCard}
+                                                imageStyle={s.premiumBackgroundImage}
+                                            >
+                                                <Image source={require('@/assets/images/diamond.png')} style={s.premiumIcon} />
+                                                <Text style={s.premiumTitle}>{t('Go Premium!')}</Text>
+                                                <Text style={s.premiumDescription}>
+                                                    {t('Subscribe today and start exploring a world full of flavor and knowledge.')}
+                                                </Text>
+                                            </ImageBackground>
+                                        </Pressable>
+                                    )
+                                }
+                                
+                                return (
+                                    <Pressable
+                                        key={item.key}
+                                        style={[s.menuItem, isFirst && s.menuItemFirst, isLast && s.menuItemLast]}
+                                        onPress={() => item.action()}
+                                    >
+                                        <Text style={s.menuItemText}>{item.label}</Text>
+                                        {item.rightSide}
+                                    </Pressable>
+                            )})}
+                        </View>
                     ))}
 
-                    {/* <View style={theme.section}>
-                        <Pressable onPress={() => generateNotification()}>
-                            <Text>Notification token: {settings?.notificationToken}</Text>
-                        </Pressable>
-                    </View> */}
-
+                    {/* Logout Button */}
                     <Pressable onPress={signOut}>
-                        <View style={theme.section}>
-                            <Text style={{
-                                position: 'absolute',
-                                top: 0,
-                                left: 4,
-                                textTransform: 'uppercase',
-                                fontSize: 13,
-                            }}>AppFryer V{Constants.expoConfig?.version}</Text>
-                            <Text type="subtitle" style={{
-                                textAlign: 'center',
-                                color: Colors.mainColor,
-                                fontSize: 14
-                            }}>{t('Log out')}</Text>
+                        <View style={s.logoutContainer}>
+                            <Text style={s.logoutText}>{t('Log out')}</Text>
                         </View>
                     </Pressable>
                 </View>
-                <View style={s.bottomBar} />
             </ScrollView>
         </View>
     )
 }
 
 const s = StyleSheet.create({
-    topbarWrap: {
-        gap: 16,
-        alignItems: 'center',
-        width: '100%',
-        marginBottom: 16,
+    container: {
+        flex: 1,
+        backgroundColor: '#F8F5F0',
     },
-    topbarInner: {
-        flexDirection: 'row',
-        justifyContent: 'flex-start',
-        alignItems: 'center',
-        gap: 16,
-        width: '100%',
+    mainContainer: {
+        flex: 1,
+        backgroundColor: '#F8F5F0',
     },
     main: {
         width: '100%',
         gap: 16,
+        paddingHorizontal: 25,
+        backgroundColor: getBgColor(),
     },
-    
-    brief: {
+    profileSection: {
+        backgroundColor: '#ECD8C4',
+        borderRadius: 13,
+        padding: 13,
         flexDirection: 'row',
         alignItems: 'center',
         gap: 15,
+        marginTop: 30,
+        marginBottom: 16,
+    },
+    profileInfo: {
+        flex: 1,
+        backgroundColor: '#ECD8C4',
+    },
+    profileName: {
+        fontFamily: 'Poppins-Medium',
+        fontSize: 16,
+        fontWeight: '500',
+        color: '#1B1A1D',
+    },
+    profileEmail: {
+        fontFamily: 'Poppins',
+        fontSize: 14,
+        color: '#6C7278',
+        marginTop: 2,
     },
     avatar: {
-        width: 64,
-        height: 64,
-        borderRadius: 32,
+        width: 60,
+        height: 60,
+        borderRadius: 30,
+        borderWidth: 1,
+        borderColor: '#C28040',
     },
     rightArrow: {
-        width: 6,
-        height: 10,
+        width: 13,
+        height: 25,
+        tintColor: '#C28040',
+    },
+    downArrow: {
+        width: 25,
+        height: 13,
+        tintColor: '#C28040',
+    },
+    settingsSection: {
+        backgroundColor: '#FFFFFF',
+        borderRadius: 12,
+        marginBottom: 16,
+        overflow: 'hidden',
+    },
+    menuSection: {
+        backgroundColor: 'transparent',
+        gap: 13,
     },
     menuItem: {
+        backgroundColor: '#FFFFFF',
         flexDirection: 'row',
         alignItems: 'center',
-        paddingTop: 12,
-        paddingBottom: 12,
-        borderBottomWidth: 1,
-        borderBottomColor: Colors.lightGrey,
+        paddingHorizontal: 12,
+        paddingVertical: 14,
+        borderRadius: 10,
+        borderWidth: 1,
+        borderColor: '#EDF1F3',
     },
     menuItemFirst: {
-        paddingTop: 0,
+        paddingTop: 16,
     },
     menuItemLast: {
         borderBottomWidth: 0,
-        borderBottomColor: Colors.lightGrey,
-        paddingBottom: 0,
+        paddingBottom: 16,
+    },
+    menuItemText: {
+        fontFamily: 'Poppins',
+        flex: 1,
+        fontSize: 15,
+        color: '#919191',
     },
     language: {
-        fontFamily: 'DMSans-Bold',
-        fontWeight: '700',
+        fontFamily: 'Poppins',
+        fontSize: 15,
+        color: '#C28040',
     },
-    premiumWrapper: {
+    premiumCard: {
         borderRadius: 16,
-        width: '100%',
-        height: 150,
-        paddingLeft: 70,
-        paddingRight: 32,
-        justifyContent: 'center',
-    },
-    premiumBellCircle: {
-        position: 'absolute',
-        top: 22,
-        left: 13,
-        width: 35,
-        height: 35,
-        borderRadius: 20,
-        backgroundColor: Colors.white,
+        paddingHorizontal: 40,
         alignItems: 'center',
+        textAlign: 'center',
+        minHeight: 182,
         justifyContent: 'center',
     },
-    premiumBell: {
-        width: 17,
-        height: 17,
+    premiumBackgroundImage: {
+        borderRadius: 10,
+        resizeMode: 'cover',
     },
-    premiumText: {
-        fontSize: 12,
+    premiumIcon: {
+        width: 84,
+        height: 84,
+    },
+    premiumTitle: {
+        fontFamily: 'Poppins-SemiBold',
+        fontWeight: '600',
+        fontSize: 16,
+        lineHeight: 20,
+        textAlign: 'center',
+        color: Colors.white,
+        marginBottom: 10,
+    },
+    premiumDescription: {
+        fontFamily: 'Poppins',
+        fontWeight: '400',
+        fontSize: 13,
+        lineHeight: 18,
+        textAlign: 'center',
         color: Colors.white,
     },
-    textBold: {
-        fontSize: 13,
-        fontWeight: 'medium',
-        fontFamily: 'DMSans-Medium',
+    logoutContainer: {
+        alignItems: 'center',
+        paddingVertical: 10,
+        marginBottom: 20,
+        backgroundColor: 'transparent',
     },
-    bottomBar: {
-        width: '100%',
-        height: 80,
-    }
+    logoutText: {
+        fontFamily: 'Poppins',
+        fontWeight: '500',
+        fontSize: 16,
+        lineHeight: 22,
+        textAlign: 'center',
+        textDecorationLine: 'underline',
+        color: '#C28040',
+    },
 })

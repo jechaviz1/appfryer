@@ -34,7 +34,7 @@ export default function OwnRecipeCard({recipe, onHide}: Props) {
 
         if (recipe.status === RecipeStatus.DRAFT) {
             return router.push({
-                pathname: '/(create)/1-upload-media',
+                pathname: '/(create)/new-recipe',
                 params: { id: recipe.id }
             })
         }

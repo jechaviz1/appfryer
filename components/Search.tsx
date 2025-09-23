@@ -5,7 +5,6 @@ import { useTranslation } from 'react-i18next'
 import { TextInput, View } from '@/components/base/BaseComponents'
 import Filters from './modals/Filters'
 import { Colors } from '@/constants/Colors'
-import { isLight } from '@/constants/Theme'
 import IRecipe from '@/interfaces/Recipe'
 import { post } from '@/services/apiRequests'
 import { logError } from '@/services/utils'
@@ -54,10 +53,6 @@ export default function Search({page, onSearch, personId, sendOnBlankFiltersEmpt
             .catch(logError)
     }
 
-    const searchIcon = require('@/assets/icons/search.png')
-    const filterLight = require('@/assets/icons/filter-light.png')
-    const filterDark = require('@/assets/icons/filter-dark.png')
-
     return (
         <View style={s.container}>
             { showFilters && <Filters
@@ -67,9 +62,11 @@ export default function Search({page, onSearch, personId, sendOnBlankFiltersEmpt
                 personId={personId}
                 onSubmit={onSearch}
             /> }
-            <View style={{ flex: 1 }} >
+            <View style={s.searchContainer}>
+                <Image source={require('@/assets/icons/search.png')} style={s.searchIcon} />
                 <TextInput
-                    styleContainer={s.inputContainer}
+                    styleContainer={s.searchInput}
+                    styleTextInput={s.searchTextInput}
                     inputMode='text'
                     autoCapitalize='none'
                     value={searchVal}
@@ -78,17 +75,19 @@ export default function Search({page, onSearch, personId, sendOnBlankFiltersEmpt
                     returnKeyType='search'
                     textContentType='none'
                     onChangeText={val => setSearchVal(val)}
-                    placeholder={t('Search...')}
-                    startIcon={searchIcon}
+                    placeholder={t('Search recipes')}
+                    placeholderTextColor={Colors.grey}
+                    useCustomPlaceholder
+                    placeholderStyle={{ fontSize: 15, lineHeight: 17 }}
                 />
             </View>
             <Pressable
-                style={s.filterBtn}
+                style={s.filterButton}
                 onPress={() => setShowFilters(true)}
             >
                 <Image
-                    style={s.filterImg}
-                    source={isLight() ? filterLight : filterDark}
+                    style={s.filterIcon}
+                    source={require('@/assets/icons/filter-dark.png')}
                 />
             </Pressable>
         </View>
@@ -98,24 +97,47 @@ export default function Search({page, onSearch, personId, sendOnBlankFiltersEmpt
 const s = StyleSheet.create({
     container: {
         flexDirection: 'row',
-        justifyContent: 'center',
         alignItems: 'center',
-        gap: 10,
+        gap: 12,
+        marginBottom: 20,
+        borderRadius: 16,
         position: 'relative',
     },
-    inputContainer: {
-        backgroundColor: '#00000008',
-        borderWidth: 0,
+    searchContainer: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        borderRadius: 16,
+        paddingHorizontal: 16,
     },
-    filterBtn: {
-        width: 50,
-        height: 50,
+    searchIcon: {
+        width: 18,
+        height: 18,
+        tintColor: '#A3A3A3',
+    },
+    searchInput: {
+        flex: 1,
+        color: Colors.black,
+        borderWidth: 0,
+        paddingHorizontal: 10,
+        height: 42,
+    },
+    searchTextInput: {
+        fontSize: 15,
+        lineHeight: 21,
+        fontFamily: 'Poppins',
+        color: Colors.greyTextColor,
+    },
+    filterButton: {
+        width: 32,
+        height: 32,
+        backgroundColor: '#F6ECE2',
+        borderRadius: 16,
         alignItems: 'center',
         justifyContent: 'center',
-        borderRadius: 14,
-        backgroundColor: Colors.mainColor,
+        marginRight: 10,
     },
-    filterImg: {
+    filterIcon: {
         width: 20,
         height: 20,
     },

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Dimensions, Image, Platform, Pressable, StyleSheet } from 'react-native'
 import { useGlobalSearchParams, useRouter } from 'expo-router'
-import { Asset, ImagePickerResponse, launchImageLibrary } from 'react-native-image-picker'
+import { Asset, ImagePickerResponse } from 'react-native-image-picker'
 import { useTranslation } from 'react-i18next'
 
 import { Button, Lines, Text, VideoPlayer, View } from "@/components/base/BaseComponents"
@@ -11,6 +11,7 @@ import { isLight, paddings, theme } from '@/constants/Theme'
 import { Colors } from '@/constants/Colors'
 import { get, post } from '@/services/apiRequests'
 import { logError } from '@/services/utils'
+import { launchMediaLibrary } from '@/services/mediaPicker'
 
 interface SelectedMedia extends Asset {
     uuid?: string
@@ -81,8 +82,9 @@ export default function UploadMediaStep() {
         setMedia(media.filter((_, i) => i !== index))
     }, [])
 
-    const handleSelectedMedia = useCallback((uploadedMedia: ImagePickerResponse) => {
-        if (!recipe || !uploadedMedia.assets || uploadedMedia.assets.length === 0 || !uploadedMedia.assets[0].uri) {
+    const handleSelectedMedia = useCallback((uploadedMedia: ImagePickerResponse, activeRecipe?: { [key: string]: any } | null) => {
+        const currentRecipe = activeRecipe ?? recipe
+        if (!currentRecipe || !uploadedMedia.assets || uploadedMedia.assets.length === 0 || !uploadedMedia.assets[0].uri) {
             return
         }
         setError('')
@@ -92,7 +94,7 @@ export default function UploadMediaStep() {
         setUploading(true)
         const uri = Platform.OS === 'ios' ? file.uri!.replace('file://', '') : file.uri!
         post({
-            url: `/recipe/${recipe.id}/mediaUpload`,
+            url: `/recipe/${currentRecipe.id}/mediaUpload`,
             files: [['mediaFile', {
                 uri: uri,
                 type: file.type,
@@ -116,20 +118,27 @@ export default function UploadMediaStep() {
                 setUploading(false)
                 setError(e.response?.data?.message)
             })
-    }, [media])
+    }, [media, recipe, user?.token])
 
-    const addMedia = useCallback(() => {
+    const addMedia = useCallback(async () => {
         setError('')
         const allowOnlyImages = media.filter((m: Asset) => m.type?.split('/')[0] === 'video').length > 0
         const allowOnlyVideos = media.filter((m: Asset) => m.type?.split('/')[0] === 'image').length === 5
 
-        launchImageLibrary({
+        try {
+            const pickerResponse = await launchMediaLibrary({
                 mediaType: allowOnlyImages ? 'photo' : (allowOnlyVideos ? 'video' : 'mixed'),
                 quality: 1
-            },
-            handleSelectedMedia
-        )
-    }, [media])
+            }, (response) => handleSelectedMedia(response, recipe))
+
+            if (pickerResponse.errorCode) {
+                setError(pickerResponse.errorMessage || t('Failed to open image picker'))
+            }
+        } catch (error) {
+            logError(error)
+            setError(t('Failed to open image picker'))
+        }
+    }, [handleSelectedMedia, media, recipe, t])
 
     const nextStep = useCallback(() => {
         if (!recipe || !isLoaded) {

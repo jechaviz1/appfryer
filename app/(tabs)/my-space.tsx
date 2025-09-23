@@ -22,6 +22,7 @@ import IIngredinent, { IIngredientForShoppingList } from '@/interfaces/Ingredien
 import IRecipe from '@/interfaces/Recipe'
 import IPlanMeal from '@/interfaces/WeeklyPlan'
 import { logError } from '@/services/utils'
+import Header from '@/components/Header'
 
 interface IInterest {
     id?: number
@@ -205,15 +206,11 @@ export default function MySpaceScreen() {
             <View style={theme.statusBarHeight} />
             
             {/* Dark Header */}
-            <View style={s.header}>
-                <Pressable onPress={() => router.back()} style={s.backButton}>
-                    <Image source={require('@/assets/icons/back-2.png')} style={s.headerIcon} />
-                </Pressable>
-                <Text style={s.headerTitle}>{t('Saved recipes')}</Text>
-                <Pressable style={s.addButton}>
-                    <Image source={require('@/assets/icons/add.png')} style={s.addIcon} />
-                </Pressable>
-            </View>
+            <Header
+                title={t('Saved recipes')}
+                onBack={() => router.back()}
+                rightIconSource={require('@/assets/icons/add.png')}
+            />
 
             {/* Category Tabs */}
             <View style={s.categoriesSection}>
@@ -364,7 +361,7 @@ const s = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        paddingHorizontal: 14,
+        paddingHorizontal: 24,
         height: 54
     },
     backButton: {
@@ -401,7 +398,7 @@ const s = StyleSheet.create({
     },
     categoriesList: {
         gap: 10,
-        paddingHorizontal: 20,
+        paddingHorizontal: 24,
     },
     categoryItem: {
         color: '#6C7278',
@@ -431,7 +428,7 @@ const s = StyleSheet.create({
     },
     mainContent: {
         flex: 1,
-        paddingHorizontal: 15,
+        paddingHorizontal: 24,
         backgroundColor: getBgColor(),
     },
     section: {

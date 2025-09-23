@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { FlatList, Image, ImageBackground, Pressable, Share, StyleSheet, useWindowDimensions, Dimensions } from 'react-native'
+import { FlatList, Image, ImageBackground, Pressable, Share, StyleSheet, useWindowDimensions, Dimensions, Alert } from 'react-native'
 import { useRouter, useGlobalSearchParams } from 'expo-router'
 import * as Linking from 'expo-linking'
 import Modal from 'react-native-modal'
@@ -31,6 +31,7 @@ import { logError } from '@/services/utils'
 import IFolder from '@/interfaces/Folder'
 import { Colors, weeklyColors } from '@/constants/Colors'
 import { theme, isLight, getBgColor } from '@/constants/Theme'
+import Header from '@/components/Header'
 
 const { width: screenWidth } = Dimensions.get('window')
 
@@ -64,6 +65,10 @@ export default function RecipeScreen() {
     const [recipesOfMonth, setRecipesOfMonth] = useState<IRecipeCard[]>([])
     const [trendingSlideIndex, setTrendingSlideIndex] = useState<number>(0)
 
+	// Bookmark state for child RecipeCard list
+	const [bookmarkedRecipes, setBookmarkedRecipes] = useState<Set<number>>(new Set())
+	const [disableBookmarkActionCards, setDisableBookmarkActionCards] = useState<boolean>(false)
+
     const [activeTab, setActiveTab] = useState<number>(0)
     const [selectedThumbnailIndex, setSelectedThumbnailIndex] = useState<number>(0)
     const tabsRef = useRef<FlatList<string>>(null)
@@ -76,13 +81,53 @@ export default function RecipeScreen() {
         return recipe?.userProfileImageThumb ? {uri: recipe.userProfileImageThumb} : require('@/assets/images/icon.png')
     }, [recipe])
 
-    const renderRecipeCard = ({ item }: { item: any }) => {
-        return (
-            <RecipeCard 
-                recipe={item}
-            />
-        )
-    }
+	// Toggle bookmark for carousel RecipeCard items
+	const toggleBookmark = useCallback((recipeId: number) => {
+		if (disableBookmarkActionCards) {
+			return
+		}
+
+		const isBookmarked = bookmarkedRecipes.has(recipeId)
+		const url = `/recipe/${recipeId}/${isBookmarked ? 'unsave' : 'save'}`
+
+		setDisableBookmarkActionCards(true)
+		post({ url, token: user?.token })
+			.then((response) => {
+				if (response.isSaved) {
+					setBookmarkedRecipes(prev => {
+						const next = new Set(prev)
+						next.add(recipeId)
+						return next
+					})
+				} else {
+					setBookmarkedRecipes(prev => {
+						const next = new Set(prev)
+						next.delete(recipeId)
+						return next
+					})
+				}
+				setDisableBookmarkActionCards(false)
+			})
+			.catch((error) => {
+				logError(error)
+				setDisableBookmarkActionCards(false)
+				Alert.alert(
+					'Error',
+					t('Could not update bookmark. Please try again.')
+				)
+			})
+	}, [disableBookmarkActionCards, bookmarkedRecipes, user?.token, t])
+
+	const renderRecipeCard = ({ item }: { item: any }) => {
+		return (
+			<RecipeCard 
+				recipe={item}
+				bookmarkedRecipes={bookmarkedRecipes}
+				toggleBookmark={toggleBookmark}
+				disableBookmarkAction={disableBookmarkActionCards}
+			/>
+		)
+	}
 
     const fetchRecipe = useCallback(async (id: number) => {
         const localRecipeStr = await AsyncStorage.getItem(`recipe/${id}`)
@@ -112,9 +157,23 @@ export default function RecipeScreen() {
             token: user?.token
         })
             .then((recs: IRecipe[]) => {
+				// initialize bookmark state for saved recipes
+				const savedIds = recs.filter(r => r.isSaved).map(r => r.id)
+				setBookmarkedRecipes(prev => {
+					const next = new Set(prev)
+					savedIds.forEach(id => next.add(id))
+					return next
+				})
                 const recipes4Cards: IRecipeCard[] = recs.map((r: IRecipe) => {
                     const image = r.medias.find(media => media.type == MediaType.IMAGE)
-                    return { id: r.id, title: r.title, image: image?.url || '', profileName: r.userFullname }
+                    return { 
+                        id: r.id, 
+                        title: r.title, 
+                        image: image?.url || '', 
+                        profileName: r.userFullname,
+                        cntLikes: r.cntLikes,
+                        cntComments: r.cntComments,
+                    }
                 })
                 return recipes4Cards
             })
@@ -417,26 +476,24 @@ export default function RecipeScreen() {
                 </View>
             </Modal> }
 
-                { displayFolders && <SavedRecipe
-                    isVisible={displayFolders}
-                    recipeId={recipe.id}
-                    onHide={() => setDisplayFolders(false)}
-                    inFolders={recipe.folders}
-                    onUpdateFolders={(folders: IFolder[]) => setRecipe({...recipe, folders})}
-                /> }
+            { displayFolders && <SavedRecipe
+                isVisible={displayFolders}
+                recipeId={recipe.id}
+                onHide={() => setDisplayFolders(false)}
+                inFolders={recipe.folders}
+                onUpdateFolders={(folders: IFolder[]) => setRecipe({...recipe, folders})}
+            /> }
 
             <View style={theme.statusBarHeight} />
 
             {/* Dark Header */}
-            <View style={s.header}>
-                <Pressable onPress={() => router.back()} style={s.backButton}>
-                    <Image source={require('@/assets/icons/back-2.png')} style={s.headerIcon} />
-                </Pressable>
-                <Text style={s.headerTitle}>{t('Recipe Details')}</Text>
-                <Pressable style={s.addButton} onPress={onShare}>
-                    <Image source={require('@/assets/icons/share.png')} style={s.addIcon} />
-                </Pressable>
-            </View>
+            <Header
+                title={t('Recipe Details')}
+                onBack={() => router.back()}
+                rightIconSource={require('@/assets/icons/share.png')}
+                onRightPress={onShare}
+            />
+
             <ScrollView style={s.scrollContainer} showsVerticalScrollIndicator={false}>
                 {/* Main Image Section */}
                 <View style={s.imageSection}>
@@ -676,9 +733,9 @@ export default function RecipeScreen() {
                         imageStyle={s.premiumBackgroundImage}
                     >
                         <Image source={require('@/assets/icons/premium.png')} style={s.premiumIcon} />
-                        <Text style={s.premiumTitle}>{t('¡Suscríbete a Premium!')}</Text>
+                        <Text style={s.premiumTitle}>{t('Subscribe to Premium!')}</Text>
                         <Text style={s.premiumDescription}>
-                            {t('Suscríbete para ver los valores nutricionales y los macronutrientes de cada receta, ajustar las cantidades y los macronutrientes, y disfrutar de una experiencia sin anuncios.')}
+                            {t('Subscribe to view nutritional values and macronutrients for each recipe, adjust quantities and macronutrients, and enjoy an ad-free experience.')}
                         </Text>
                     </ImageBackground>
                 )}

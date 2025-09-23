@@ -18,6 +18,9 @@ export interface IRecipeCard {
     image: string
     title: string
     profileName: string
+    cntLikes?: number
+    cntComments?: number
+    isDraft?: boolean
 }
 
 export default function RecipeCard({recipe, bookmarkedRecipes, toggleBookmark, disableBookmarkAction}: {
@@ -55,6 +58,11 @@ export default function RecipeCard({recipe, bookmarkedRecipes, toggleBookmark, d
                         </Text>
                     </View>
                 </View>
+                {recipe.isDraft && (
+                    <View style={[s.recipeMark, s.recipeDraft]}>
+                        <Text style={s.recipeTypeText}>{t('Draft')}</Text>
+                    </View>
+                )}
             </LinearGradient>
             <View style={s.recipeCardFooter}>
                 <View style={s.footerSection}>
@@ -66,7 +74,7 @@ export default function RecipeCard({recipe, bookmarkedRecipes, toggleBookmark, d
                             }}
                         >
                             <Image source={require('@/assets/icons/liked.png')} style={s.metricIcon} />
-                            <Text style={s.metricText}>0</Text>
+                            <Text style={s.metricText}>{recipe.cntLikes ?? 0}</Text>
                         </Pressable>
                         <Pressable 
                             style={s.metricItem}
@@ -75,7 +83,7 @@ export default function RecipeCard({recipe, bookmarkedRecipes, toggleBookmark, d
                             }}
                         >
                             <Image source={require('@/assets/icons/chat-box.png')} style={s.metricIcon} />
-                            <Text style={s.metricText}>0</Text>
+                            <Text style={s.metricText}>{recipe.cntComments ?? 0}</Text>
                         </Pressable>
                     </View>
                 </View>
@@ -124,6 +132,20 @@ const s = StyleSheet.create({
         borderRadius: 14,
         overflow: 'hidden',
         position: 'relative',
+    },
+    recipeMark: {
+        paddingVertical: 3,
+        paddingHorizontal: 9,
+        borderRadius: 8,
+        backgroundColor: Colors.disabledButton,
+    },
+    recipeDraft: {
+        position: 'absolute',
+        top: 16,
+        right: 16,
+    },
+    recipeTypeText: {
+        color: Colors.white,
     },
     recipeCardHeader: {
         flexDirection: 'row',

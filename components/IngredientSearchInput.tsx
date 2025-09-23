@@ -18,6 +18,7 @@ interface Props {
     selected: (IPrefItem | IIngredinent | null)[]
     onSelectedIngredient: (ingredient: IPrefItem | IIngredinent) => void
     textInputStyle?: any
+    onPopupVisibleChange?: (visible: boolean) => void
 }
 
 export default function IngredientSearchInput({
@@ -26,6 +27,7 @@ export default function IngredientSearchInput({
     selected=[],
     onSelectedIngredient,
     textInputStyle,
+    onPopupVisibleChange,
 }: Props) {
     const inputRef = useRef(null)
     const { user } = useAuth()
@@ -93,21 +95,26 @@ export default function IngredientSearchInput({
     const onChange = useCallback((val: string) => {
         setVal(val)
         if (val.length < 2) {
+            onPopupVisibleChange && onPopupVisibleChange(false)
             return setFiltered([])
         }
         const t = type === 'category' ? categories : ingredients
         const selectedTitles = selected.map(item => item?.title)
         
-        setFiltered(
-            t.filter(item => item.title!.toLowerCase().includes(val.toLowerCase()))
-                .filter(item => {
-                    return !selectedTitles.includes(item.title)
-                })
-        )
-    }, [val, selected])
+        const list = t
+            .filter(item => item.title!.toLowerCase().includes(val.toLowerCase()))
+            .filter(item => !selectedTitles.includes(item.title))
+
+        setFiltered(list)
+        onPopupVisibleChange && onPopupVisibleChange(list.length > 0)
+    }, [val, selected, onPopupVisibleChange])
+
+    useEffect(() => {
+        console.log('filtered', filtered)
+    }, [filtered])
 
     return (
-        <View style={s.container}>
+        <View style={[s.container, filtered.length > 0 ? s.containerActive : undefined]}>
             <TextInput
                 ref={inputRef}
                 value={val}
@@ -119,14 +126,16 @@ export default function IngredientSearchInput({
                 onBlur={() => Keyboard.dismiss()}
             />
 
-            { filtered.length > 0 && <ScrollView style={s.popup}>
+            { filtered.length > 0 && <ScrollView style={s.popup} keyboardShouldPersistTaps="always" nestedScrollEnabled>
                 {filtered.map(ing => (
                     <Pressable
                         key={ing.id}
                         style={s.item}
                         onPress={() => {
                             inputRef.current && (inputRef.current as TextInputNative).clear()
+                            setVal('')
                             setFiltered([])
+                            onPopupVisibleChange && onPopupVisibleChange(false)
                             onSelectedIngredient(ing)
                         }}
                     >
@@ -149,6 +158,10 @@ const s = StyleSheet.create({
     container: {
         position: 'relative',
         flex: 1,
+        overflow: 'visible',
+    },
+    containerActive: {
+        zIndex: 1000,
     },
     inputContainer: {
         backgroundColor: '#00000008',
@@ -156,12 +169,13 @@ const s = StyleSheet.create({
         // flex: 1,
     },
     popup: {
-        flex: 1,
         position: 'relative',
-        zIndex: 100,
         left: 0,
+        right: 0,
+        zIndex: 1000,
         width: '100%',
-        maxHeight: 200,
+        maxHeight: 220,
+        backgroundColor: '#ffffff',
         borderColor: Colors.lightGrey,
         borderWidth: 1,
         borderRadius: 10,

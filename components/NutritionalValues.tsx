@@ -280,16 +280,16 @@ export default function NutritionalValues({ isPremium, recipe, nutrientsInit, se
             {/* Donut chart */}
             <View style={s.chartWrapper}>
                 {tolalNutrVal !== 0 ? <DonutChart
-                    type="round"
+                    type="butt"
                     data={[
                         {name: t('Carbs'), value: nutrients?.carbG ?? 0, color: '#8E59FF'},
                         {name: t('Protein'), value: nutrients?.proteinG ?? 0, color: '#FF5555'},
                         {name: t('Fat'), value: nutrients?.fatTotalG ?? 0, color: '#20BFF7'}
                     ]}
-                    radius={53}
+                    radius={50}
                     startAngle={0}
                     endAngle={360}
-                    strokeWidth={35}
+                    strokeWidth={20}
                     containerWidth={124}
                     containerHeight={124}
                     animationType="slide"

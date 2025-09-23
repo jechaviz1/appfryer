@@ -260,12 +260,12 @@ export default function TabLayout() {
                         title: "",
                         tabBarIcon: ({ focused }) => (
                             <View style={s.plusButtonContainer}>
-                                <Pressable style={s.plusButton}>
+                                <View style={s.plusButton}>
                                     <Image
                                         source={TabBarIcons.PlusIcon}
                                         style={[s.plusIconSize]}
                                     />
-                                </Pressable>
+                                </View>
                             </View>
                         ),
                     }}
