@@ -733,9 +733,9 @@ export default function RecipeScreen() {
                         imageStyle={s.premiumBackgroundImage}
                     >
                         <Image source={require('@/assets/icons/premium.png')} style={s.premiumIcon} />
-                        <Text style={s.premiumTitle}>{t('¡Suscríbete a Premium!')}</Text>
+                        <Text style={s.premiumTitle}>{t('Subscribe to Premium!')}</Text>
                         <Text style={s.premiumDescription}>
-                            {t('Suscríbete para ver los valores nutricionales y los macronutrientes de cada receta, ajustar las cantidades y los macronutrientes, y disfrutar de una experiencia sin anuncios.')}
+                            {t('Subscribe to view nutritional values and macronutrients for each recipe, adjust quantities and macronutrients, and enjoy an ad-free experience.')}
                         </Text>
                     </ImageBackground>
                 )}

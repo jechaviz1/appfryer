@@ -55,6 +55,7 @@ const s = StyleSheet.create({
         height: 30,
         alignItems: 'center',
         justifyContent: 'center',
+        backgroundColor: 'transparent',
     },
     backIcon: {
         width: 13,

@@ -24,7 +24,7 @@ export const theme = StyleSheet.create({
     mainContainer: {
         paddingHorizontal: paddings,
         paddingTop: 25,
-        paddingBottom: bottomMargin + Constants.statusBarHeight,
+        paddingBottom: bottomMargin,
         minHeight: '100%',
         backgroundColor: getBgColor(),
     },

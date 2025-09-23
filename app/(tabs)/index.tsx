@@ -612,11 +612,12 @@ const s = StyleSheet.create({
     },
     dayItem: {
         alignItems: 'center',
-        backgroundColor: '#FCEEE1',
+        backgroundColor: '#FFFFFF',
         borderRadius: 14,
         paddingHorizontal: 3,
         paddingVertical: 3,
-        minWidth: 46,
+        width: 46,
+        height: 85,
     },
     dayItemSelected: {
         backgroundColor: Colors.mainColor,
@@ -625,13 +626,14 @@ const s = StyleSheet.create({
         fontSize: 12,
         color: '#B5B5B5',
         fontFamily: 'Poppins-Medium',
-        padding: 10,
+        paddingVertical: 7,
     },
     dayTextSelected: {
         color: Colors.white,
     },
     dateText: {
         fontSize: 16,
+        lineHeight: 22,
         color: '#B5B5B5',
         fontFamily: 'Poppins-SemiBold',
         padding: 10,
