@@ -1,15 +1,10 @@
-import { Image, Pressable, StyleSheet, Dimensions, Alert } from 'react-native'
+import { Image, Pressable, StyleSheet, Dimensions } from 'react-native'
 import { LinearGradient } from 'expo-linear-gradient'
 import { useTranslation } from 'react-i18next'
 import { useRouter } from 'expo-router'
-import { useCallback, useState } from 'react'
-
 import { Text, View } from '@/components/base/BaseComponents'
 import { Colors } from '@/constants/Colors'
 import { theme } from '@/constants/Theme'
-import { useAuth } from '@/contexts/authContext'
-import { post } from '@/services/apiRequests'
-import { logError } from '@/services/utils'
 
 const window = Dimensions.get('window')
 
@@ -32,10 +27,26 @@ export default function RecipeCard({recipe, bookmarkedRecipes, toggleBookmark, d
     const { t } = useTranslation()
     const router = useRouter()
 
+    const handleRecipePress = () => {
+        router.push(`/(pages)/recipe/${recipe.id}`)
+    }
+
+    const handleLikePress = () => {
+        console.log('Like toggled for recipe:', recipe.id)
+    }
+
+    const handleCommentPress = () => {
+        console.log('Comment pressed for recipe:', recipe.id)
+    }
+
+    const handleBookmarkPress = () => {
+        toggleBookmark && toggleBookmark(recipe.id)
+    }
+
     return (
         <Pressable 
             style={[s.recipeCard, { width: window.width - 48 }]}
-            onPress={() => router.push(`/(pages)/recipe/${recipe.id}`)}
+            onPress={handleRecipePress}
         >
             {recipe.image && recipe.image.trim() !== '' ? (
                 <Image source={{ uri: recipe.image }} style={s.recipeImage} />
@@ -69,18 +80,14 @@ export default function RecipeCard({recipe, bookmarkedRecipes, toggleBookmark, d
                     <View style={s.engagementMetrics}>
                         <Pressable 
                             style={s.metricItem}
-                            onPress={() => {
-                                console.log('Like toggled for recipe:', recipe.id)
-                            }}
+                            onPress={handleLikePress}
                         >
                             <Image source={require('@/assets/icons/liked.png')} style={s.metricIcon} />
                             <Text style={s.metricText}>{recipe.cntLikes ?? 0}</Text>
                         </Pressable>
                         <Pressable 
                             style={s.metricItem}
-                            onPress={() => {
-                                console.log('Comment pressed for recipe:', recipe.id)
-                            }}
+                            onPress={handleCommentPress}
                         >
                             <Image source={require('@/assets/icons/chat-box.png')} style={s.metricIcon} />
                             <Text style={s.metricText}>{recipe.cntComments ?? 0}</Text>
@@ -98,7 +105,7 @@ export default function RecipeCard({recipe, bookmarkedRecipes, toggleBookmark, d
                     {toggleBookmark && (
                         <Pressable 
                             style={s.bookmarkBtn}
-                            onPress={() => toggleBookmark(recipe.id)}
+                            onPress={handleBookmarkPress}
                             disabled={disableBookmarkAction}
                         >
                             <Image 

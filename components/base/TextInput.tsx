@@ -6,7 +6,6 @@ import { isLight } from "@/constants/Theme"
 
 type TextInputProps = React.ComponentProps<typeof TextInputNative> & {
     startIcon?: any,
-    background?: string,
     styleContainer?: StyleProp<ViewStyle>,
     styleTextInput?: StyleProp<TextStyle>,
     onChangeText?: (text: string) => void,
@@ -36,6 +35,25 @@ export const TextInput = forwardRef<TextInputNative, TextInputProps>((props: Tex
 
     const showCustomPlaceholder = props.useCustomPlaceholder && !isFocused && (!internalValue || internalValue.length === 0)
 
+    const handleFocus = (e: any) => {
+        setIsFocused(true)
+        props.onFocus && props.onFocus(e)
+    }
+
+    const handleBlur = (e: any) => {
+        setIsFocused(false)
+        props.onBlur && props.onBlur(e)
+    }
+
+    const handleChangeText = (text: string) => {
+        setInternalValue(text)
+        props.onChangeText && props.onChangeText(text)
+    }
+
+    const handleTogglePassword = () => {
+        setShowPassword(!showPassword)
+    }
+
     return (
         <View style={[s.inputContainer, props.styleContainer]}>
             { props.startIcon && <Image source={props.startIcon} style={s.startIcon} /> }
@@ -63,23 +81,14 @@ export const TextInput = forwardRef<TextInputNative, TextInputProps>((props: Tex
                     {...props}
                     placeholder={props.useCustomPlaceholder ? undefined : props.placeholder}
                     secureTextEntry={props.textContentType === 'password' && !showPassword}
-                    onFocus={(e) => {
-                        setIsFocused(true)
-                        props.onFocus && props.onFocus(e)
-                    }}
-                    onBlur={(e) => {
-                        setIsFocused(false)
-                        props.onBlur && props.onBlur(e)
-                    }}
-                    onChangeText={(text) => {
-                        setInternalValue(text)
-                        props.onChangeText && props.onChangeText(text)
-                    }}
+                    onFocus={handleFocus}
+                    onBlur={handleBlur}
+                    onChangeText={handleChangeText}
                 />
             </RNView>
 
             { props.textContentType === 'password' &&
-                <Pressable onPress={() => setShowPassword(!showPassword)}>
+                <Pressable onPress={handleTogglePassword}>
                     <Image
                         source={showPassword ? eyeOpen : eyeSlashed}
                         style={s.endIcon}

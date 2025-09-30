@@ -73,6 +73,41 @@ export default function Filters({ isVisible, onHide, page, personId, onSubmit }:
         { title: '5.0', checked: false },
     ])
 
+    const handleToggleCategories = () => {
+        setShowCategories(!showCategories)
+    }
+
+    const handleToggleCategory = (category: IPrefItem) => {
+        toggleItem(category, 'categories')
+    }
+
+    const handleToggleDiets = () => {
+        setShowDiets(!showDiets)
+    }
+
+    const handleToggleDiet = (diet: IPrefItem) => {
+        toggleItem(diet, 'diets')
+    }
+
+    const handleRemoveIngredient = (ingredientId: number) => {
+        removeIngredient(ingredientId)
+    }
+
+    const handleClearRating = () => {
+        setFilters({ ...filters, rating: [] })
+    }
+
+    const handleToggleRating = (rating: IRating) => {
+        if (filters.rating.filter((item: { title: string }) => item.title === rating.title).length > 0) {
+            return setFilters({ ...filters, rating: filters.rating.filter((item: { title: string }) => item.title !== rating.title) })
+        }
+        setFilters({ ...filters, rating: [...filters.rating, rating] })
+    }
+
+    const handleClearFilters = () => {
+        setFilters({...blankSearchFilters})
+    }
+
     useEffect( () => {
         const fetchCategories = () => {
             get({ url: '/meta/categories', token: user?.token})
@@ -242,7 +277,7 @@ export default function Filters({ isVisible, onHide, page, personId, onSubmit }:
                 {/* Categories */}
                 <View style={s.sections}>
                     <View style={s.section}>
-                        <Pressable onPress={() => setShowCategories(!showCategories)} style={{flexDirection: 'row', alignItems: 'center'}}>
+                        <Pressable onPress={handleToggleCategories} style={{flexDirection: 'row', alignItems: 'center'}}>
                             <Text style={s.sectionTitle}>{t('Categories')}</Text>
                             <Image source={showCategories ? (isLight() ? chevronUpBlack : chevronUpLight) : (isLight() ? chevronDownBlack : chevronDownLight)} style={s.chevron} />
                         </Pressable>
@@ -264,7 +299,7 @@ export default function Filters({ isVisible, onHide, page, personId, onSubmit }:
                                         isSelected ? s.itemSelected : {}
                                     ]}
                                     textStyle={isSelected ? s.itemTextSelected : {color: isLight() ? '#000000A6' : '#FFFFFFA6'}}
-                                    onPress={() => toggleItem(category, 'categories')}
+                                    onPress={() => handleToggleCategory(category)}
                                 />
                             )}
                         )}
@@ -273,7 +308,7 @@ export default function Filters({ isVisible, onHide, page, personId, onSubmit }:
 
                     {/* Diets */}
                     {/* <View style={s.section}>
-                        <Pressable onPress={() => setShowDiets(!showDiets)} style={{flexDirection: 'row', alignItems: 'center'}}>
+                        <Pressable onPress={handleToggleDiets} style={{flexDirection: 'row', alignItems: 'center'}}>
                             <Text style={s.sectionTitle}>{t('Diets')}</Text>
                             <Image source={showDiets ? (isLight() ? chevronUpBlack : chevronUpLight) : (isLight() ? chevronDownBlack : chevronDownLight)} style={s.chevron} />
                         </Pressable>
@@ -296,7 +331,7 @@ export default function Filters({ isVisible, onHide, page, personId, onSubmit }:
                                         isSelected ? s.itemSelected : {}
                                     ]}
                                     textStyle={isSelected ? s.itemTextSelected : {color: isLight() ? '#000000A6' : '#FFFFFFA6'}}
-                                    onPress={() => toggleItem(diet, 'diets')}
+                                    onPress={() => handleToggleDiet(diet)}
                                 />
                             )}
                         )}
@@ -318,7 +353,7 @@ export default function Filters({ isVisible, onHide, page, personId, onSubmit }:
                                     ingredient={ingredient}
                                     key={index}
                                     needRemoveIcon={true}
-                                    onPress={() => removeIngredient(ingredient.id)}
+                                    onPress={() => handleRemoveIngredient(ingredient.id)}
                                 />
                             ))}
                         </View>
@@ -358,7 +393,7 @@ export default function Filters({ isVisible, onHide, page, personId, onSubmit }:
                                     !filters?.rating || filters?.rating?.length === 0
                                         ? s.itemTextSelected
                                         : { color: isLight() ? '#000000A6' : '#FFFFFFA6' }}
-                                onPress={() => setFilters({ ...filters, rating: [] })}
+                                onPress={handleClearRating}
                             />
                             {ratings.map((rating, index) => {
                                 const isSelected = filters?.rating?.filter(
@@ -375,12 +410,7 @@ export default function Filters({ isVisible, onHide, page, personId, onSubmit }:
                                             isSelected ? s.itemSelected : {}
                                         ]}
                                         textStyle={isSelected ? s.itemTextSelected : {color: isLight() ? '#000000A6' : '#FFFFFFA6'}}
-                                        onPress={() => {
-                                            if (filters.rating.filter((item: { title: string }) => item.title === rating.title).length > 0) {
-                                                return setFilters({ ...filters, rating: filters.rating.filter((item: { title: string }) => item.title !== rating.title) })
-                                            }
-                                            setFilters({ ...filters, rating: [...filters.rating, rating] })
-                                        }}
+                                        onPress={() => handleToggleRating(rating)}
                                     />
                                 }
                             )}
@@ -390,7 +420,7 @@ export default function Filters({ isVisible, onHide, page, personId, onSubmit }:
                     <View style={s.line}/>
 
                     <View style={{ alignSelf: 'flex-end', flexDirection: 'row', gap: 8, alignItems: 'center' }}>
-                        <Pressable onPress={() => setFilters({...blankSearchFilters})} style={s.clearBtn}>
+                        <Pressable onPress={handleClearFilters} style={s.clearBtn}>
                             <Image source={xIcon} style={{ width: 13, height: 13 }} />
                             <Text>{t('Clear filters')}</Text>
                         </Pressable>

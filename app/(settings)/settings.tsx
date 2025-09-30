@@ -3,7 +3,6 @@ import { useRouter } from 'expo-router'
 import { useCallback, useEffect, useState } from "react"
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { LinearGradient } from 'expo-linear-gradient'
-// import * as Notifications from 'expo-notifications'
 import Constants from 'expo-constants'
 import { useTranslation } from 'react-i18next'
 
@@ -46,6 +45,10 @@ export default function Settings() {
     const [showPersonalInfo, setShowPersonalInfo] = useState<boolean>(false)
     const [showChangePassword, setShowChangePassword] = useState<boolean>(false)
     const [avatar, setAvatar] = useState<any>()
+
+    const handleShowPersonalInfo = () => {
+        setShowPersonalInfo(true)
+    }
 
     useEffect(() => {
         user?.profileImageThumb
@@ -130,7 +133,7 @@ export default function Settings() {
 
                 <View style={s.main}>
                     {/* User Profile Section */}
-                    <Pressable onPress={() => setShowPersonalInfo(true)}>
+                    <Pressable onPress={handleShowPersonalInfo}>
                         <View style={s.profileSection}>
                             {avatar && <Image source={avatar} style={s.avatar} /> }
                             <View style={s.profileInfo}>

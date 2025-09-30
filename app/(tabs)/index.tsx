@@ -3,7 +3,7 @@ import { Image, Pressable, StyleSheet, FlatList, Dimensions, Alert } from 'react
 import { useFocusEffect } from '@react-navigation/native'
 import { useTranslation } from 'react-i18next'
 
-import { Button, ScrollView, Text, View, TextInput } from "@/components/base/BaseComponents"
+import { Button, ScrollView, Text, View } from "@/components/base/BaseComponents"
 import Notifications from '@/components/modals/Notifications'
 import Search from '@/components/Search'
 import Categories from '@/components/Categories'
@@ -18,15 +18,6 @@ import IRecipe from '@/interfaces/Recipe'
 import { Colors } from '@/constants/Colors'
 import { useRouter } from 'expo-router'
 import { MediaType } from '@/interfaces/Media'
-
-const storiesFake = [
-    { id: 1, image: 'https://picsum.photos/200', name: 'Shiovan', link: 'https://videos.pexels.com/video-files/7929005/7929005-hd_1080_1920_24fps.mp4' },
-    { id: 2, image: 'https://picsum.photos/200', name: 'Marcia Hernandez', link: 'https://videos.pexels.com/video-files/7204663/7204663-hd_1080_1920_24fps.mp4' },
-    { id: 3, image: 'https://picsum.photos/200', name: 'Greg Egan', viewed: true, link: 'https://videos.pexels.com/video-files/7929021/7929021-hd_1080_1920_24fps.mp4' },
-    { id: 4, image: 'https://picsum.photos/200', name: 'Emma', viewed: true, link: 'https://videos.pexels.com/video-files/7929005/7929005-hd_1080_1920_24fps.mp4' },
-    { id: 5, image: 'https://picsum.photos/200', name: 'Jaime', viewed: true, link: 'https://videos.pexels.com/video-files/7204663/7204663-hd_1080_1920_24fps.mp4' },
-    { id: 6, image: 'https://picsum.photos/200', name: 'Miguel', viewed: true, link: 'https://videos.pexels.com/video-files/7929021/7929021-hd_1080_1920_24fps.mp4' },
-]
 
 const weeklyDays = [
     { id: 1, day: 'Sun', date: '23', selected: false },
@@ -186,8 +177,6 @@ export default function HomeScreen() {
             : setAvatar(require('@/assets/images/icon.png'))
     }, [user])
 
-    const bellIcon = isLight() ? require('@/assets/icons/bell-black.png') : require('@/assets/icons/bell-white.png')
-
 	const renderRecipeCard = ({ item }: { item: any }) => {
         return (
             <RecipeCard 
@@ -199,10 +188,55 @@ export default function HomeScreen() {
         )
     }
 
+    const handleNotificationPress = () => {
+        setShowNotifications(true)
+        setAppState({ ...appState, isNewNotifications: false })
+    }
+
+    const handleQuizPress = () => {
+        router.navigate('/(pages)/quiz')
+    }
+
+    const handleSeeAllRecommendations = () => {
+        // TODO: Navigate to recommendations page
+    }
+
+    const handleSeeAllWeeklyPlan = () => {
+        // TODO: Navigate to weekly plan page
+    }
+
+    const handleSeeAllTrending = () => {
+        // TODO: Navigate to trending page
+    }
+
+    const handleRecommendationsScrollEnd = (event: any) => {
+        const slideIndex = Math.round(event.nativeEvent.contentOffset.x / (window.width - 36))
+        setRecommendationsSlideIndex(slideIndex)
+    }
+
+    const handleTrendingScrollEnd = (event: any) => {
+        const slideIndex = Math.round(event.nativeEvent.contentOffset.x / (window.width - 36))
+        setTrendingSlideIndex(slideIndex)
+    }
+
+    const handleRecommendationDotPress = (index: number) => {
+        setRecommendationsSlideIndex(index)
+        recommendationsFlatListRef.current?.scrollToIndex({ index, animated: true })
+    }
+
+    const handleTrendingDotPress = (index: number) => {
+        setTrendingSlideIndex(index)
+        trendingFlatListRef.current?.scrollToIndex({ index, animated: true })
+    }
+
+    const handleDayPress = (item: any) => {
+        console.log('Day selected:', item.day)
+    }
+
     const renderDayItem = ({ item }: { item: any }) => (
         <Pressable 
             style={[s.dayItem, item.selected && s.dayItemSelected]}
-            onPress={() => console.log('Day selected:', item.day)}
+            onPress={() => handleDayPress(item)}
         >
             <Text style={[s.dayText, item.selected && s.dayTextSelected]}>{item.day}</Text>
             <Text style={[s.dateText, item.selected && s.dateTextSelected]}>{item.date}</Text>
@@ -221,10 +255,7 @@ export default function HomeScreen() {
                         <Text style={[s.greeting, { color: isLight() ? Colors.grey : Colors.lightGrey }]}>{t('Hello,')}</Text>
                         <Text style={s.userName}>{user?.fullname || t('User')}</Text>
                     </View>
-                    <Pressable onPress={() => {
-                        setShowNotifications(true)
-                        setAppState({ ...appState, isNewNotifications: false })
-                    }}>
+                    <Pressable onPress={handleNotificationPress}>
                         <Image source={avatar} style={s.profileImage} />
                         { appState.isNewNotifications && <View style={s.notificationMarker} />}
                     </Pressable>
@@ -237,7 +268,7 @@ export default function HomeScreen() {
                 <Categories style={s.categoriesSection} />
 
                 {/* Hero Banner */}
-                <Pressable style={s.heroBanner} onPress={() => router.navigate('/(pages)/quiz')}>
+                <Pressable style={s.heroBanner} onPress={handleQuizPress}>
                     <Image
                         source={require('@/assets/images/quiz-banner.png')}
                         style={s.heroBannerImage}
@@ -265,7 +296,7 @@ export default function HomeScreen() {
                 <View style={s.section}>
                     <View style={s.sectionHeader}>
                         <Text style={s.sectionTitle}>{t('Recommendations for you')}</Text>
-                        <Pressable>
+                        <Pressable onPress={handleSeeAllRecommendations}>
                             <Text style={s.seeAllText}>{t('See all')}</Text>
                         </Pressable>
                     </View>
@@ -286,10 +317,7 @@ export default function HomeScreen() {
                                 keyExtractor={(item) => item.id.toString()}
                                 contentContainerStyle={s.recipesList}
                                 pagingEnabled={true}
-                                onMomentumScrollEnd={(event) => {
-                                    const slideIndex = Math.round(event.nativeEvent.contentOffset.x / (window.width - 36))
-                                    setRecommendationsSlideIndex(slideIndex)
-                                }}
+                                onMomentumScrollEnd={handleRecommendationsScrollEnd}
                             />
                             {recipesForYou.length > 1 && (
                                 <View style={s.slidePaginationDots}>
@@ -297,10 +325,7 @@ export default function HomeScreen() {
                                         <Pressable 
                                             key={index}
                                             style={[s.slideDot, recommendationsSlideIndex === index ? s.dotActive : s.dotInactive]}
-                                            onPress={() => {
-                                                setRecommendationsSlideIndex(index)
-                                                recommendationsFlatListRef.current?.scrollToIndex({ index, animated: true })
-                                            }}
+                                            onPress={() => handleRecommendationDotPress(index)}
                                         />
                                     ))}
                                 </View>
@@ -313,7 +338,7 @@ export default function HomeScreen() {
                 <View style={s.section}>
                     <View style={s.sectionHeader}>
                         <Text style={s.sectionTitle}>{t('Weekly plan')}</Text>
-                        <Pressable>
+                        <Pressable onPress={handleSeeAllWeeklyPlan}>
                             <Text style={s.seeAllText}>{t('See all')}</Text>
                         </Pressable>
                     </View>
@@ -331,7 +356,7 @@ export default function HomeScreen() {
                 <View style={s.section}>
                     <View style={s.sectionHeader}>
                         <Text style={s.sectionTitle}>{t('Trending recipes')}</Text>
-                        <Pressable>
+                        <Pressable onPress={handleSeeAllTrending}>
                             <Text style={s.seeAllText}>{t('See all')}</Text>
                         </Pressable>
                     </View>
@@ -352,10 +377,7 @@ export default function HomeScreen() {
                                 keyExtractor={(item) => item.id.toString()}
                                 contentContainerStyle={s.recipesList}
                                 pagingEnabled={true}
-                                onMomentumScrollEnd={(event) => {
-                                    const slideIndex = Math.round(event.nativeEvent.contentOffset.x / (window.width - 36))
-                                    setTrendingSlideIndex(slideIndex)
-                                }}
+                                onMomentumScrollEnd={handleTrendingScrollEnd}
                             />
                             {recipesOfMonth.length > 1 && (
                                 <View style={s.slidePaginationDots}>
@@ -363,10 +385,7 @@ export default function HomeScreen() {
                                         <Pressable 
                                             key={index}
                                             style={[s.slideDot, trendingSlideIndex === index ? s.dotActive : s.dotInactive]}
-                                            onPress={() => {
-                                                setTrendingSlideIndex(index)
-                                                trendingFlatListRef.current?.scrollToIndex({ index, animated: true })
-                                            }}
+                                            onPress={() => handleTrendingDotPress(index)}
                                         />
                                     ))}
                                 </View>
@@ -425,52 +444,6 @@ const s = StyleSheet.create({
         borderColor: Colors.white,
     },
 
-    // Search Section
-    searchSection: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 12,
-        marginBottom: 20,
-        borderRadius: 16,
-    },
-    searchContainer: {
-        flex: 1,
-        flexDirection: 'row',
-        alignItems: 'center',
-        borderRadius: 16,
-        paddingHorizontal: 16,
-    },
-    searchIcon: {
-        width: 18,
-        height: 18,
-        tintColor: '#8a8a8a',
-    },
-    searchInput: {
-        flex: 1,
-        color: Colors.black,
-        borderWidth: 0,
-        paddingHorizontal: 10,
-        height: 42,
-    },
-    searchTextInput: {
-        fontSize: 16,
-        fontFamily: 'Poppins',
-        color: Colors.greyTextColor,
-    },
-    filterButton: {
-        width: 32,
-        height: 32,
-        backgroundColor: '#F6ECE2',
-        borderRadius: 16,
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginRight: 10,
-    },
-    filterIcon: {
-        width: 20,
-        height: 20,
-        tintColor: '#8a8a8a',
-    },
 
     // Categories Section
     categoriesSection: {
@@ -523,11 +496,6 @@ const s = StyleSheet.create({
         paddingRight: 16,
         backgroundColor: 'transparent',
     },
-    heroPersonImage: {
-        width: 130,
-        height: 150,
-        position: 'absolute',
-    },
     heroRightSection: {
         flex: 1,
         alignItems: 'center',
@@ -549,11 +517,6 @@ const s = StyleSheet.create({
         lineHeight: 22,
         textAlign: 'center',
         fontWeight: 'bold',
-    },
-    heroIcon: {
-        width: 24,
-        height: 24,
-        marginBottom: 8,
     },
 
     // Section Styles

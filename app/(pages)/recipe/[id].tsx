@@ -4,7 +4,6 @@ import { useRouter, useGlobalSearchParams } from 'expo-router'
 import * as Linking from 'expo-linking'
 import Modal from 'react-native-modal'
 import DatePicker from 'react-native-date-picker'
-// import * as Sharing from 'expo-sharing'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useTranslation } from 'react-i18next'
 import { LinearGradient } from 'expo-linear-gradient'
@@ -127,6 +126,14 @@ export default function RecipeScreen() {
 				disableBookmarkAction={disableBookmarkActionCards}
 			/>
 		)
+	}
+
+	const handleOpenDatePicker = () => {
+		setOpenDatePicker(true)
+	}
+
+	const handleToggleSaveRecipe = () => {
+		toggleSaveRecipe()
 	}
 
     const fetchRecipe = useCallback(async (id: number) => {
@@ -399,7 +406,7 @@ export default function RecipeScreen() {
                     <Text style={s.modalText}>{t('Plan date')}</Text>
                     <Button
                         text={dateToDisplay(planDate, i18n.language)}
-                        onPress={() => setOpenDatePicker(true)}
+                        onPress={handleOpenDatePicker}
                         preIcon={require('@/assets/icons/edit-white.png')}
                         style={{ marginBottom: 16, gap: 10 }}
                     />
@@ -522,7 +529,7 @@ export default function RecipeScreen() {
                                 style={s.actionButtonIcon}
                             />
                         </Pressable>
-                        <Pressable style={s.actionButton} onPress={() => toggleSaveRecipe()}>
+                        <Pressable style={s.actionButton} onPress={handleToggleSaveRecipe}>
                             <Image
                                 source={isSaved
                                     ? require('@/assets/icons/ribbon-filled.png')
