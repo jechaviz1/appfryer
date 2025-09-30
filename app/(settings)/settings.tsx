@@ -86,7 +86,7 @@ export default function Settings() {
         [
             { key: 'content-creator', label: t('Content creator settings'), action: () => {}, rightSide: <Image source={require('@/assets/icons/chevron-down-light.png')} style={s.downArrow} /> },
             { key: 'language', label: t('Language'), action: () => router.push('/(settings)/languages'), rightSide: <Text style={s.language}>{langsMap[user?.language as ('en' | 'es' | undefined) ?? 'es']}</Text> },
-            { key: 'dark-mode', label: t('Dark mode'), action: () => Appearance.setColorScheme(isLight() ? 'dark' : 'light'), rightSide: <Switch value={!isLight()} style={{ height: 20 }} onValueChange={() => Appearance.setColorScheme(isLight() ? 'dark' : 'light')} /> },
+            { key: 'dark-mode', label: t('Dark mode'), action: () => Appearance.setColorScheme(isLight() ? 'dark' : 'light'), rightSide: <Switch value={!isLight()} style={{ height: 20 }} trackColor={{ false: '#E5E5E5', true: '#C28040' }} thumbColor={isLight() ? '#FFFFFF' : '#FFFFFF'} onValueChange={() => Appearance.setColorScheme(isLight() ? 'dark' : 'light')} /> },
             { key: 'units', label: t('Units of measurement'), action: () => {}, rightSide: <Image source={require('@/assets/icons/chevron-down-light.png')} style={s.downArrow} /> },
             { key: 'review-app', label: t('Review App'), action: () => openStore(), rightSide: <Image source={require('@/assets/icons/chevron-down-light.png')} style={s.downArrow} /> },
             { key: 'notifications', label: t('Manage notifications'), action: () => router.push('/(settings)/notifications'), rightSide: <Image source={require('@/assets/icons/chevron-down-light.png')} style={s.downArrow} /> },

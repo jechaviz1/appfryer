@@ -8,7 +8,7 @@ import { Button, Text, View } from "@/components/base/BaseComponents"
 import { useAuth } from '@/contexts/authContext'
 import INutritional, { nutrientMap } from '@/interfaces/Nutritional'
 import IIngredinent from '@/interfaces/Ingredient'
-import { isLight, paddings, theme } from '@/constants/Theme'
+import { getBgColor, isLight, paddings, theme } from '@/constants/Theme'
 import { Colors } from '@/constants/Colors'
 import { post } from '@/services/apiRequests'
 import { logError } from '@/services/utils'
@@ -66,7 +66,7 @@ export default function NutritionalValues({ isPremium, recipe, nutrientsInit, se
                         <View style={s.freeImgWrapper}>
                             <Image source={require('@/assets/icons/lock-on-white.png')} style={s.freeOverlayImg}/>
                         </View>
-                        <Text type='caption' style={{ color: Colors.white }}>{t('Coming soon!')}</Text>
+                        <Text type='caption' style={{ color: Colors.white }}>{t('Subscribe to Premium!')}</Text>
                         {/* <Text style={s.freeOverlayText}>{t('Subscribe to see nutritional values and macros for each recipe, adjust quantities and macros, and enjoy an ad-free experience.')}</Text> */}
                     </View>
                 </View>
@@ -341,6 +341,7 @@ export default function NutritionalValues({ isPremium, recipe, nutrientsInit, se
 const s = StyleSheet.create({
     wrapper: {
         marginVertical: 20,
+        backgroundColor: getBgColor(),
     },
     freeWrapper: {
         borderRadius: 14,
@@ -411,7 +412,8 @@ const s = StyleSheet.create({
     
     // Nutritional Section Styles
     nutritionalSection: {
-        paddingHorizontal: 20,
+        marginVertical: 20,
+        paddingHorizontal: 0,
         marginBottom: 32,
         backgroundColor: Colors.mainBGColor,
     },

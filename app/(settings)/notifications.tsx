@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Dimensions, Image, Linking, Pressable, StyleSheet, Switch } from 'react-native'
+import { Dimensions, Image, Linking, Pressable, ScrollView, StyleSheet, Switch, TouchableOpacity } from 'react-native'
 import { useRouter } from 'expo-router'
-import Modal from 'react-native-modal'
 import { useTranslation } from 'react-i18next'
 
 import { Button, Checkbox, ModalTitle, Text, View } from '@/components/base/BaseComponents'
+import Header from '@/components/Header'
 import { useAuth } from '@/contexts/authContext'
 import { useSettings } from '@/contexts/settingsContext'
 import { get, post } from '@/services/apiRequests'
@@ -38,10 +38,25 @@ interface IAPI {
 }
 
 const itemsDetails = {
-    follow: {label: 'Someone starts following you', suffix: 'Follower'},
-    comment: {label: 'Comments to your recipe', suffix: 'CommentOnYourRecipe'},
-    commentLiked: {label: 'Comments to recipe you like', suffix: 'CommentOnLikedRecipe'},
+    follow: {label: 'Someone started following you', suffix: 'Follower'},
+    comment: {label: 'Comments on your recipe', suffix: 'CommentOnYourRecipe'},
+    commentLiked: {label: 'Comments on a recipe you like', suffix: 'CommentOnLikedRecipe'},
     newRecipe: {label: 'New recipe from someone you follow', suffix: 'RecipeFollowedUser'},
+}
+
+const getNotificationIcon = (type: keyof ISettings) => {
+    switch (type) {
+        case 'follow':
+            return require('@/assets/icons/add-friend.png')
+        case 'comment':
+            return require('@/assets/icons/message.png')
+        case 'commentLiked':
+            return require('@/assets/icons/heart.png')
+        case 'newRecipe':
+            return require('@/assets/icons/recipe-book.png')
+        default:
+            return require('@/assets/icons/notification.png')
+    }
 }
 
 export default function NotificationSettings() {
@@ -51,8 +66,9 @@ export default function NotificationSettings() {
     const { t } = useTranslation()
 
     const [isLoaded, setIsLoaded] = useState(false)
-    const [showBreakModal, setShowBreakModal] = useState(false)
+    const [showBreakOptions, setShowBreakOptions] = useState(false)
     const [items, setItems] = useState<ISettings>()
+    const [selectedNotificationType, setSelectedNotificationType] = useState<'email' | 'mobile'>('email')
 
     const updateItems = useCallback((data: IAPI) => {
         setIsLoaded(true)
@@ -80,9 +96,12 @@ export default function NotificationSettings() {
     const windowWidth = Dimensions.get('window').width
 
     const onTakeBreak = useCallback((value: boolean) => {
+        console.log('onTakeBreak', value)
         if (value) {
-            return setShowBreakModal(true)
+            return setShowBreakOptions(true)
         }
+        
+        // Optimistic update
         setUser({ ...user, notificationBreak: value })
 
         post({
@@ -90,24 +109,57 @@ export default function NotificationSettings() {
             data: { disableFor: 'enable' },
             token: user?.token
         })
-    }, [])
+        .catch((error) => {
+            logError(error)
+            // Revert optimistic update on error
+            setUser({ ...user, notificationBreak: !value })
+        })
+    }, [user])
 
     const hide = useCallback(() => {
-        setShowBreakModal(false)
+        setShowBreakOptions(false)
     }, [])
 
     const onChooseBreak = useCallback((period: string) => {
+        // Optimistic update
         setUser({ ...user, notificationBreak: true, notificationBreakValue: period })
+        
         post({
             url: '/profile/settings/notification',
             data: { disableFor: period },
             token: user?.token
         })
-        hide()
-    }, [])
+        .catch((error) => {
+            logError(error)
+            // Revert optimistic update on error
+            setUser({ ...user, notificationBreak: false, notificationBreakValue: undefined })
+        })
+        
+        setShowBreakOptions(false)
+    }, [user])
 
     const onChange = useCallback((name: string, value: boolean) => {
-        setIsLoaded(false)
+        // Optimistic update - update UI immediately
+        if (items) {
+            const fieldName = name.replace(/^(email|mobile)/, '').toLowerCase()
+            const type = fieldName.charAt(0).toLowerCase() + fieldName.slice(1)
+            const notificationType = name.startsWith('email') ? 'email' : 'mobile'
+            
+            // Find the correct item and update it optimistically
+            const updatedItems = { ...items }
+            if (type === 'follower') {
+                updatedItems.follow[notificationType] = value
+            } else if (type === 'commentOnYourRecipe') {
+                updatedItems.comment[notificationType] = value
+            } else if (type === 'commentOnLikedRecipe') {
+                updatedItems.commentLiked[notificationType] = value
+            } else if (type === 'recipeFollowedUser') {
+                updatedItems.newRecipe[notificationType] = value
+            }
+            setItems(updatedItems)
+        }
+
+        // Then make the API call
         post({
             url: '/profile/settings/notification',
             data: {[name]: value},
@@ -116,160 +168,358 @@ export default function NotificationSettings() {
             .then((data: IAPI) => {
                 updateItems(data)
             })
-            .catch(logError)
-    }, [])
+            .catch((error) => {
+                logError(error)
+                // Revert optimistic update on error
+                get({ url: '/profile/settings/notification', token: user?.token })
+                    .then((data: IAPI) => {
+                        updateItems(data)
+                    })
+                    .catch(logError)
+            })
+    }, [items, user?.token])
 
     return (
-        <View style={theme.container}>
-            <Modal
-                isVisible={showBreakModal}
-                style={[theme.modal, s.modal, {backgroundColor: getBgColor()}]}
-                onModalHide={hide}
-                onBackdropPress={hide}
-            >
-                <View style={{ width: '100%' }}>
-                    <Pressable onPress={hide} style={{ alignSelf: 'flex-end' }}>
-                        <Image source={require('@/assets/icons/x.png')} style={{ width: 18, height: 18 }} />
-                    </Pressable>
-                </View>
-
-                <Text type='subtitle' style={{ textAlign: 'center' }}>{t('Want to take a break?')}</Text>
-                <Text style={s.modalText}>{t(`We won’t send you app notifications. 
-Email notifications won’t be affected.`)}</Text>
-
-                <View style={[s.line, {marginTop: 48}]} />
-                <Pressable onPress={() => onChooseBreak('8h')} style={s.modalButton}>
-                    <Text>{t('8 hours')}</Text>
-                </Pressable>
-                <View style={s.line} />
-                <Pressable onPress={() => onChooseBreak('1d')} style={s.modalButton}>
-                    <Text>{t('1 day')}</Text>
-                </Pressable>
-                <View style={s.line} />
-                <Pressable onPress={() => onChooseBreak('1w')} style={s.modalButton}>
-                    <Text>{t('1 week')}</Text>
-                </Pressable>
-                <View style={s.line} />
-
-            </Modal>
+        <View style={s.container}>
 
             <View style={theme.statusBarHeight} />
-            <View style={theme.mainContainer}>
-                <ModalTitle title='Notifications settings' onHide={() => router.canGoBack() ? router.back() : router.navigate('/(settings)/settings')} />
-                <View style={{marginBottom: 180}}>
+            <Header 
+                title={t('Notification Settings')}
+                onBack={() => router.canGoBack() ? router.back() : router.navigate('/(settings)/settings')}
+            />
 
-                    <View style={[s.textWrapper, {width: windowWidth}]}>
-                        <Image source={ require('@/assets/icons/bell.png')} style={{width: 18, height: 18, marginHorizontal: 30}} />
-                        <View>
-                            <Text type='caption'>{t('Open Notification Settings')}</Text>
-                            <Text style={{ width: windowWidth - 100 }}>{t('Make sure Appfryer’s app notifications are turned on:')}</Text>
+            <ScrollView style={s.content}>
+                {/* Notification Settings Card */}
+                <View style={s.notificationCard}>
+                    <View style={s.notificationCardContent}>
+                        <Image source={require('@/assets/icons/notification.png')} style={s.notificationIcon} />
+                        <View style={s.notificationTextContainer}>
+                            <Text style={s.notificationTitle}>{t('Open Notification Settings')}</Text>
+                            <Text style={s.notificationSubtitle}>{t('Make sure Appfryer app notifications are enabled')}</Text>
+                            <TouchableOpacity style={s.configureButton} onPress={() => Linking.openSettings()}>
+                                <Text style={s.configureButtonText}>{t('Configure Notifications')}</Text>
+                            </TouchableOpacity>
                         </View>
-                    </View>
-
-                    <Button
-                        style={{marginBottom: 10}}
-                        textStyle={{fontWeight: '600', fontFamily: 'DMSans-Bold'}}
-                        text={t('Open notification settings')}
-                        onPress={() => Linking.openSettings()}
-                    />
-
-                    <View style={[theme.section, s.breakWrapper]}>
-                        <View>
-                            <Text>{t('Take a break')}</Text>
-                            <Text style={[s.itemText, {color: Colors.neutralGrey}]}>{t('Pause notifications for short time')}</Text>
-                        </View>
-                        
-                        <Switch
-                            value={user?.notificationBreak}
-                            trackColor={Colors.switchTrack}
-                            onValueChange={onTakeBreak}
-                        />
-                    </View>
-
-                    <View style={theme.section}>
-                        { !user?.isVerified && ( <Text type='error' style={s.confirmEmailText}>
-                            {t('Please clicking on link sent to your email address, to confirm it')}
-                        </Text> )}
-                        <View style={s.line} />
-                        {items && Object.keys(items).map(key => {
-                            const isEmailDisabled = !user?.isVerified
-                            const isMobileDisabled = !settings?.notificationToken
-                            return ( <View key={key}>
-                                <View style={s.itemWrapper}>
-                                    <Text style={[s.itemText, {flex: 1}]}>{t(itemsDetails[key as keyof ISettings].label)}</Text>
-                                    <Text type={isEmailDisabled ? 'disabled' : 'default'} style={s.itemText}>{t('Email')}</Text>
-                                    <Checkbox
-                                        disabled={!isLoaded || isEmailDisabled}
-                                        checked={items[key as keyof ISettings].email}
-                                        onPress={() => {
-                                            const field = `email${itemsDetails[key as keyof ISettings].suffix}`
-                                            onChange(field, !items[key as keyof ISettings].email)
-                                        }}
-                                    />
-                                    <Text type={isMobileDisabled ? 'disabled' : 'default'} style={s.itemText}>{t('Mobile')}</Text>
-                                    <Checkbox
-                                        disabled={!isLoaded || isMobileDisabled}
-                                        checked={items[key as keyof ISettings].mobile}
-                                        onPress={() => {
-                                            const field = `mobile${itemsDetails[key as keyof ISettings].suffix}`
-                                            onChange(field, !items[key as keyof ISettings].mobile)
-                                        }}
-                                    />
-                                </View>
-                                <View style={s.line} />
-                            </View> )
-                        })}
                     </View>
                 </View>
-            </View>
+
+                {/* Take a Break Section */}
+                <View style={s.breakSection}>
+                    <View style={s.breakContent}>
+                        <Text style={s.breakTitle}>{t('Take a break')}</Text>
+                        <Text style={s.breakSubtitle}>{t('Pause notifications for a while')}</Text>
+                    </View>
+                    <Switch
+                        value={user?.notificationBreak}
+                        trackColor={{ false: '#E5E5E5', true: '#C28040' }}
+                        thumbColor={user?.notificationBreak ? '#FFFFFF' : '#FFFFFF'}
+                        onValueChange={onTakeBreak}
+                    />
+                </View>
+
+                {/* Notification Type Selector */}
+                <View style={s.pillTabs}>
+                    <TouchableOpacity 
+                        style={[s.pillTab, selectedNotificationType === 'email' ? s.pillTabActive : s.pillTabInactive]}
+                        onPress={() => setSelectedNotificationType('email')}
+                    >
+                        <Text style={[s.pillTabText, selectedNotificationType === 'email' ? s.pillTabTextActive : s.pillTabTextInactive]}>
+                            {t('Email')}
+                        </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity 
+                        style={[s.pillTab, selectedNotificationType === 'mobile' ? s.pillTabActive : s.pillTabInactive]}
+                        onPress={() => setSelectedNotificationType('mobile')}
+                    >
+                        <Text style={[s.pillTabText, selectedNotificationType === 'mobile' ? s.pillTabTextActive : s.pillTabTextInactive]}>
+                            {t('Mobile')}
+                        </Text>
+                    </TouchableOpacity>
+                </View>
+
+                {/* Notification Items */}
+                <View style={s.notificationItems}>
+                    {items && Object.keys(items).map((key, index) => {
+                        const item = items[key as keyof ISettings]
+                        const isEmailDisabled = !user?.isVerified
+                        const isMobileDisabled = !settings?.notificationToken
+                        const isActive = selectedNotificationType === 'email' ? item.email : item.mobile
+                        const isDisabled = selectedNotificationType === 'email' ? isEmailDisabled : isMobileDisabled
+                        
+                        return (
+                            <View key={key} style={s.notificationItem}>
+                                <View style={s.notificationItemContent}>
+                                    <Image 
+                                        source={getNotificationIcon(key as keyof ISettings)} 
+                                        style={s.itemIcon} 
+                                    />
+                                    <Text style={s.itemText}>{t(itemsDetails[key as keyof ISettings].label)}</Text>
+                                </View>
+                                <Switch
+                                    value={isActive}
+                                    disabled={!isLoaded || isDisabled}
+                                    trackColor={{ false: '#E5E5E5', true: '#C28040' }}
+                                    thumbColor={isActive ? '#FFFFFF' : '#FFFFFF'}
+                                    onValueChange={() => {
+                                        const field = `${selectedNotificationType}${itemsDetails[key as keyof ISettings].suffix}`
+                                        onChange(field, !isActive)
+                                    }}
+                                />
+                            </View>
+                        )
+                    })}
+                </View>
+
+                {/* Break Options Section - Always Visible */}
+                {showBreakOptions && (
+                    <View style={s.breakOptionsCard}>
+                        <View style={s.breakOptionsHeader}>
+                            <Text style={s.breakOptionsTitle}>{t('Want to take a break?')}</Text>
+                            <TouchableOpacity onPress={hide} style={s.closeButton}>
+                                <Image source={require('@/assets/icons/close.png')} style={s.closeIcon} />
+                            </TouchableOpacity>
+                        </View>
+                        <Text style={s.breakOptionsText}>{t('We won\'t send you app notifications. Email notifications won\'t be affected.')}</Text>
+                        <View style={s.breakOptionsButtons}>
+                            <TouchableOpacity onPress={() => onChooseBreak('8h')} style={s.breakOptionButton}>
+                                <Text style={s.breakOptionButtonText}>{t('8 Hours')}</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity onPress={() => onChooseBreak('1d')} style={s.breakOptionButton}>
+                                <Text style={s.breakOptionButtonText}>{t('1 Day')}</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity onPress={() => onChooseBreak('1w')} style={s.breakOptionButton}>
+                                <Text style={s.breakOptionButtonText}>{t('1 Week')}</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                )}
+            </ScrollView>
         </View>
     )
 }
 
 const s = StyleSheet.create({
-    modal: {
-        marginTop: Dimensions.get('window').height * 0.60,
-        paddingTop: 16,
-        justifyContent: 'flex-start',
+    container: {
+        flex: 1,
     },
-    modalText: {
+    content: {
+        flex: 1,
+        paddingHorizontal: 25,
+        backgroundColor: getBgColor(),
+        paddingTop: 20,
+    },
+    notificationCard: {
+        backgroundColor: '#ECD8C4',
+        borderRadius: 13,
+        height: 151,
+        padding: 20,
+        marginBottom: 20,
+    },
+    notificationCardContent: {
+        backgroundColor: '#ECD8C4',
+        flexDirection: 'row',
+    },
+    notificationIcon: {
+        width: 24,
+        height: 24,
+        marginTop: 5,
+        marginRight: 20,
+        tintColor: '#C28040',
+    },
+    notificationTextContainer: {
+        flex: 1,
+        backgroundColor: '#ECD8C4',
+    },
+    notificationTitle: {
+        fontFamily: 'Poppins-Medium',
+        fontSize: 14,
+        fontWeight: '500',
+        color: '#1B1A1D',
+    },
+    notificationSubtitle: {
+        fontFamily: 'Poppins',
+        fontSize: 13,
+        fontWeight: '400',
+        color: '#6C7278',
+        lineHeight: 18,
+    },
+    configureButton: {
+        backgroundColor: '#C28040',
+        borderRadius: 11,
+        paddingVertical: 11,
+        paddingHorizontal: 27,
+        width: 210,
+        height: 40,
+        marginTop: 11,
+    },
+    configureButtonText: {
+        color: '#FFFFFF',
+        fontSize: 13,
+        fontWeight: '600',
+        fontFamily: 'Poppins-Medium',
+    },
+    breakSection: {
+        backgroundColor: '#FFFFFF',
+        borderRadius: 10,
+        paddingVertical: 14,
+        paddingHorizontal: 24,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: 33,
+    },
+    breakContent: {
+        flex: 1,
+    },
+    breakTitle: {
+        fontFamily: 'Poppins-Medium',
+        fontWeight: '500',
+        fontSize: 14,
+        letterSpacing: 0,
+        color: '#1B1A1D',
+        marginBottom: 4,
+    },
+    breakSubtitle: {
+        fontFamily: 'Poppins',
+        fontWeight: '400',
+        fontSize: 13,
+        lineHeight: 22,
+        letterSpacing: 0,
+        color: '#919191',
+    },
+    pillTabs: {
+        flexDirection: 'row',
+        backgroundColor: Colors.white,
+        borderRadius: 30,
+        marginBottom: 20,
+    },
+    pillTab: {
+        flex: 1,
+        paddingVertical: 10,
+        alignItems: 'center',
+        borderRadius: 30,
+    },
+    pillTabActive: {
+        backgroundColor: Colors.mainColor,
+    },
+    pillTabInactive: {
+        backgroundColor: 'transparent',
+    },
+    pillTabText: {
+        fontFamily: 'Poppins',
+        fontSize: 15,
+        lineHeight: 22,
+        letterSpacing: 0,
         textAlign: 'center',
-        marginHorizontal: '12%',
-        color: Colors.neutralGrey,
     },
-    line: {
-        width: '100%',
-        height: 1,
-        backgroundColor: Colors.lightGrey,
+    pillTabTextActive: {
+        color: Colors.white,
     },
-    confirmEmailText: {
-        marginBottom: 12,
+    pillTabTextInactive: {
+        color: Colors.grey,
     },
-    modalButton: {
-        width: '100%',
-        height: 38,
-        alignItems: 'center',
-        justifyContent: 'center',
+    notificationItems: {
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 13,
+        backgroundColor: getBgColor(),
     },
-    textWrapper: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginVertical: 32,
-    },
-    breakWrapper: {
+    notificationItem: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        marginBottom: 12,
+        paddingVertical: 3,
+        paddingHorizontal: 16,
+        borderRadius: 10,
+        borderWidth: 1,
+        borderColor: '#EDF1F3',
     },
-    itemWrapper: {
+    notificationItemContent: {
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'space-between',
-        gap: 6,
-        marginVertical: 12,
+        flex: 1,
+    },
+    itemIcon: {
+        width: 20,
+        height: 20,
+        marginRight: 12,
+        tintColor: '#C28040',
     },
     itemText: {
-        fontSize: 11.5,
+        fontFamily: 'Poppins',
+        fontSize: 13,
+        lineHeight: 17,
+        fontWeight: '400',
+        color: '#919191',
+        flex: 1,
+    },
+    breakOptionsCard: {
+        width: 362,
+        backgroundColor: '#F6ECE2',
+        borderRadius: 10,
+        borderWidth: 1,
+        borderColor: '#C28040',
+        marginTop: 25,
+        paddingVertical: 23,
+        paddingHorizontal: 24,
+        alignSelf: 'center',
+    },
+    breakOptionsHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 8,
+        backgroundColor: '#F6ECE2',
+    },
+    breakOptionsTitle: {
+        fontFamily: 'Poppins-Medium',
+        fontWeight: '500',
+        fontSize: 16,
+        letterSpacing: 0,
+        color: '#1B1A1D',
+        flex: 1,
+    },
+    closeButton: {
+        backgroundColor: '#F6ECE2',
+    },
+    closeIcon: {
+        width: 15,
+        height: 15,
+        tintColor: '#C28040',
+    },
+    breakOptionsText: {
+        fontFamily: 'Poppins',
+        fontWeight: '400',
+        fontSize: 14,
+        lineHeight: 20,
+        letterSpacing: 0,
+        color: '#6C7278',
+        marginBottom: 16,
+    },
+    breakOptionsButtons: {
+        backgroundColor: '#F6ECE2',
+        flexDirection: 'row',
+        gap: 10,
+        justifyContent: 'space-between',
+    },
+    breakOptionButton: {
+        width: 96,
+        height: 40,
+        backgroundColor: '#FFFFFF',
+        borderRadius: 30,
+        padding: 10,
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderWidth: 1,
+        borderColor: '#EFF0F6',
+    },
+    breakOptionButtonText: {
+        fontFamily: 'Poppins',
+        fontWeight: '400',
+        fontSize: 14,
+        lineHeight: 18,
+        letterSpacing: 0,
+        color: '#6C7278',
+        textAlign: 'center',
     },
 })

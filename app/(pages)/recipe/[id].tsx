@@ -675,14 +675,16 @@ export default function RecipeScreen() {
                                 <View style={s.ingredientsList}>
                                     {recipe.ingredients?.slice(0, 4).map((ingredient, index) => (
                                         <View key={index} style={s.ingredientCard}>
-                                            <Image
-                                                source={{ uri: ingredient.category?.photo || ingredient.category?.thumb || 'https://via.placeholder.com/50' }} 
-                                                style={s.ingredientImage} 
-                                            />
-                                            <View style={s.ingredientInfo}>
+                                            <Pressable onPress={() => router.push({ pathname: '/(pages)/ingredient', params: { id: ingredient.ingredientId } })}>
+                                                <Image
+                                                    source={{ uri: ingredient.category?.photo || ingredient.category?.thumb || 'https://via.placeholder.com/50' }} 
+                                                    style={s.ingredientImage} 
+                                                />
+                                            </Pressable>
+                                            <Pressable style={s.ingredientInfo} onPress={() => router.push({ pathname: '/(pages)/ingredient', params: { id: ingredient.ingredientId } })}>
                                                 <Text style={s.ingredientName}>{ingredient.ingredientTitle || ingredient.title}</Text>
                                                 <Text style={s.ingredientAmount}>{ingredient.cnt} {ingredient.measureTitle}</Text>
-                                            </View>
+                                            </Pressable>
                                             <Pressable style={[s.ingredientAddButton, index === 1 && s.ingredientAddedButton]}>
                                                 <Text style={[s.addButtonText, index === 1 && s.addedButtonText]}>
                                                     {index === 1 ? t('Added') : t('Add')}
@@ -692,7 +694,9 @@ export default function RecipeScreen() {
                                                     style={[s.addButtonIcon, index === 1 && s.addedButtonIcon]} 
                                                 />
                                             </Pressable>    
-                                            <Image source={require('@/assets/icons/chevron-right-neutral-grey.png')} style={s.navigationArrow} />
+                                            <Pressable onPress={() => router.push({ pathname: '/(pages)/ingredient', params: { id: ingredient.ingredientId } })}>
+                                                <Image source={require('@/assets/icons/chevron-right-neutral-grey.png')} style={s.navigationArrow} />
+                                            </Pressable>
                                         </View>
                                     ))}
                                 </View>
@@ -741,13 +745,15 @@ export default function RecipeScreen() {
                 )}
 
                 {/* Nutritional Values Component */}
-                <NutritionalValues 
-                    isPremium={user?.isPremium || false}
-                    recipe={recipe}
-                    nutrientsInit={recipe?.nutrients}
-                    setRecipe={setRecipe}
-                    onSaveLocal={onSaveLocal}
-                />
+                <View style={s.section}>
+                    <NutritionalValues 
+                        isPremium={true}
+                        recipe={recipe}
+                        nutrientsInit={recipe?.nutrients}
+                        setRecipe={setRecipe}
+                        onSaveLocal={onSaveLocal}
+                    />
+                </View>
 
                 {/* Recipes of the Month Section */}
                 <View style={s.section}>

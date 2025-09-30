@@ -119,20 +119,20 @@ export default function ProviderActions({ children }: { children: React.ReactNod
         if (!user?.token) {
             return
         }
-        post({
-            url: '/locale/translate',
-            data: { phrase: key },
-            token: user?.token,
-        })
-            .then((status: string) => {
-                console.log(`Translation: '${key}': ${status}`)
-                if (status === 'update') {
-                    if (i18n && typeof i18n.reloadResources === 'function') {
-                        i18n.reloadResources()
-                    }
-                }
-            })
-            .catch(logError)
+        // post({
+        //     url: '/locale/translate',
+        //     data: { phrase: key },
+        //     token: user?.token,
+        // })
+        //     .then((status: string) => {
+        //         console.log(`Translation: '${key}': ${status}`)
+        //         if (status === 'update') {
+        //             if (i18n && typeof i18n.reloadResources === 'function') {
+        //                 i18n.reloadResources()
+        //             }
+        //         }
+        //     })
+        //     .catch(logError)
     }, [i18n, user?.token])
 
     const missingKeyHandler = useCallback((lngs: readonly string[], ns: string, key: string) => {
