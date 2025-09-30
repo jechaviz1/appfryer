@@ -844,7 +844,7 @@ const s = StyleSheet.create({
     },
     scrollContainer: {
         flex: 1,
-        backgroundColor: Colors.mainBGColor,
+        backgroundColor: getBgColor(),
     },
 
     // Dark Header (from my-space.tsx)
@@ -1125,7 +1125,7 @@ const s = StyleSheet.create({
     tabsContainer: {
         paddingTop: 19,
         paddingBottom: 32,
-        backgroundColor: Colors.mainBGColor,
+        backgroundColor: getBgColor(),
         borderTopWidth: 1,
         borderTopColor: '#E0E0E0',
     },
@@ -1163,17 +1163,17 @@ const s = StyleSheet.create({
     },
     tabContent: {
         paddingHorizontal: 20,
-        backgroundColor: Colors.mainBGColor,
+        backgroundColor: getBgColor(),
     },
 
     // Ingredients Section
     ingredientsSection: {
         marginBottom: 0,
-        backgroundColor: Colors.mainBGColor,
+        backgroundColor: getBgColor(),
     },
     instructionsSection: {
         marginBottom: 0,
-        backgroundColor: Colors.mainBGColor,
+        backgroundColor: getBgColor(),
     },
     portionSelector: {
         flexDirection: 'row',
@@ -1181,7 +1181,7 @@ const s = StyleSheet.create({
         justifyContent: 'center',
         gap: 12,
         marginVertical: 20,
-        backgroundColor: Colors.mainBGColor,
+        backgroundColor: getBgColor(),
     },
     portionButton: {
         width: 26,
@@ -1216,7 +1216,7 @@ const s = StyleSheet.create({
     },
     ingredientsList: {
         gap: 12,
-        backgroundColor: Colors.mainBGColor,
+        backgroundColor: getBgColor(),
     },
     ingredientCard: {
         flexDirection: 'row',
@@ -1291,7 +1291,7 @@ const s = StyleSheet.create({
         paddingHorizontal: 50,
         gap: 12,
         marginBottom: 32,
-        backgroundColor: Colors.mainBGColor,
+        backgroundColor: getBgColor(),
     },
     cookButton: {
         backgroundColor: '#C28040',
@@ -1358,14 +1358,14 @@ const s = StyleSheet.create({
     section: {
         paddingHorizontal: 24,
         marginBottom: 24,
-        backgroundColor: Colors.mainBGColor,
+        backgroundColor: getBgColor(),
     },
     sectionHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
         marginBottom: 16,
-        backgroundColor: Colors.mainBGColor,
+        backgroundColor: getBgColor(),
     },
     sectionTitle: {
         fontSize: 18,
@@ -1393,7 +1393,7 @@ const s = StyleSheet.create({
         alignItems: 'center',
         marginTop: 16,
         gap: 8,
-        backgroundColor: Colors.mainBGColor,
+        backgroundColor: getBgColor(),
     },
     slideDot: {
         width: 8,
@@ -1403,11 +1403,11 @@ const s = StyleSheet.create({
     categoriesSection: {
         paddingHorizontal: 24,
         marginBottom: 24,
-        backgroundColor: Colors.mainBGColor,
+        backgroundColor: getBgColor(),
     },
     categoriesContainer: {
         marginTop: 16,
-        backgroundColor: Colors.mainBGColor,
+        backgroundColor: getBgColor(),
     },
     modalView: {
         backgroundColor: Colors.white,

@@ -397,7 +397,7 @@ const s = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        backgroundColor: Colors.mainBGColor,
+        backgroundColor: getBgColor(),
         marginBottom: 8,
     },
     factorText: {
@@ -415,7 +415,7 @@ const s = StyleSheet.create({
         marginVertical: 20,
         paddingHorizontal: 0,
         marginBottom: 32,
-        backgroundColor: Colors.mainBGColor,
+        backgroundColor: getBgColor(),
     },
     sectionTitle: {
         fontSize: 18,
@@ -472,7 +472,7 @@ const s = StyleSheet.create({
     
     // Vitamins Section Styles
     vitaminsSection: {
-        backgroundColor: Colors.mainBGColor,
+        backgroundColor: getBgColor(),
     },
     vitaminCard: {
         borderRadius: 10,

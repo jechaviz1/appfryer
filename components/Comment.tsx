@@ -8,6 +8,7 @@ import { Text, View } from '@/components/base/BaseComponents'
 import CommentBox from '@/components/CommentBox'
 import { timeSince } from '@/services/datetime'
 import { Colors } from '@/constants/Colors'
+import { getBgColor } from '@/constants/Theme'
 import { post } from '@/services/apiRequests'
 import { useAuth } from '@/contexts/authContext'
 
@@ -108,7 +109,7 @@ const s = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'flex-start',
         gap: 10,
-        backgroundColor: Colors.mainBGColor,
+        backgroundColor: getBgColor(),
     },
     profileImg: {
         width: 40,
@@ -117,13 +118,13 @@ const s = StyleSheet.create({
     },
     main: {
         flex: 1,
-        backgroundColor: Colors.mainBGColor,
+        backgroundColor: getBgColor(),
     },
     nameDate: {
         flexDirection: 'row',
         alignItems: 'center',
         marginBottom: 5,
-        backgroundColor: Colors.mainBGColor,
+        backgroundColor: getBgColor(),
     },
     name: {
         fontSize: 13,
@@ -141,7 +142,7 @@ const s = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         gap: 4,
-        backgroundColor: Colors.mainBGColor,
+        backgroundColor: getBgColor(),
     },
     interactImg: {
         width: 16,

@@ -1157,11 +1157,11 @@ const s = StyleSheet.create({
         paddingTop: 20,
         paddingBottom: 100,
         gap: 20,
-        backgroundColor: Colors.mainBGColor,
+        backgroundColor: getBgColor(),
     },
     mediaSection: {
         gap: 12,
-        backgroundColor: Colors.mainBGColor,
+        backgroundColor: getBgColor(),
     },
     sectionTitle: {
         fontFamily: 'Poppins-Medium',
@@ -1177,7 +1177,7 @@ const s = StyleSheet.create({
         color: '#6C7278',
     },
     inputSection: {
-        backgroundColor: Colors.mainBGColor,
+        backgroundColor: getBgColor(),
     },
     inputLabel: {
         fontFamily: 'Poppins',
@@ -1245,7 +1245,7 @@ const s = StyleSheet.create({
         flexDirection: 'row',
         flexWrap: 'wrap',
         gap: 8,
-        backgroundColor: Colors.mainBGColor,
+        backgroundColor: getBgColor(),
     },
     tag: {
         flexDirection: 'row',
@@ -1441,7 +1441,7 @@ const s = StyleSheet.create({
         flexWrap: 'wrap',
         gap: 11,
         alignItems: 'flex-start',
-        backgroundColor: Colors.mainBGColor,
+        backgroundColor: getBgColor(),
     },
     mediaItemContainer: {
         position: 'relative',
@@ -1523,7 +1523,7 @@ const s = StyleSheet.create({
         textAlign: 'right',
     },
     inlinePanel: {
-        backgroundColor: Colors.mainBGColor,
+        backgroundColor: getBgColor(),
         borderRadius: 12,
         padding: 12,
         gap: 12,
@@ -1539,7 +1539,7 @@ const s = StyleSheet.create({
         width: 36,
         height: 36,
         borderRadius: 18,
-        backgroundColor: Colors.mainBGColor,
+        backgroundColor: getBgColor(),
         alignItems: 'center',
         justifyContent: 'center',
     },

@@ -128,7 +128,7 @@ export const theme = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        backgroundColor: Colors.mainBGColor
+        backgroundColor: getBgColor()
     },
 
     // Badges
