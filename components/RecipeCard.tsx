@@ -3,6 +3,7 @@ import { LinearGradient } from 'expo-linear-gradient'
 import { useTranslation } from 'react-i18next'
 import { useRouter } from 'expo-router'
 import { Text, View } from '@/components/base/BaseComponents'
+import { useSavedRecipe } from '@/contexts/savedRecipeContext'
 import { Colors } from '@/constants/Colors'
 import { theme } from '@/constants/Theme'
 
@@ -26,6 +27,7 @@ export default function RecipeCard({recipe, bookmarkedRecipes, toggleBookmark, d
 }) {
     const { t } = useTranslation()
     const router = useRouter()
+    const { showSavedRecipeModal } = useSavedRecipe()
 
     const handleRecipePress = () => {
         router.push(`/(pages)/recipe/${recipe.id}`)
@@ -40,7 +42,18 @@ export default function RecipeCard({recipe, bookmarkedRecipes, toggleBookmark, d
     }
 
     const handleBookmarkPress = () => {
-        toggleBookmark && toggleBookmark(recipe.id)
+        if (toggleBookmark) {
+            // Check if this is a save action (not currently bookmarked)
+            const isCurrentlyBookmarked = bookmarkedRecipes?.has(recipe.id) || false
+            if (!isCurrentlyBookmarked) {
+                // This is a save action, show the SavedRecipe modal
+                toggleBookmark(recipe.id)
+                showSavedRecipeModal(recipe.id)
+            } else {
+                // This is an unsave action, just toggle without showing modal
+                toggleBookmark(recipe.id)
+            }
+        }
     }
 
     return (

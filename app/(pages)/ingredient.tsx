@@ -76,18 +76,18 @@ export default function Ingredient() {
                             </View>
                             <View style={s.infoItem}>
                                 <Text style={s.infoLabel}>{t('Origin')}</Text>
-                                <Text style={s.infoValue}>{ingredient!.country || ''}</Text>
+                                <Text style={s.infoValue}>{ingredient!.country || '---'}</Text>
                             </View>
                             <View style={s.infoItem}>
                                 <Text style={s.infoLabel}>{t('Culinary use')}</Text>
-                                <Text style={s.infoValue}>{ingredient!.culinaryUse || ''}</Text>
+                                <Text style={s.infoValue}>{ingredient!.culinaryUse || '---'}</Text>
                             </View>
                         </View>
 
                         {/* Product history */}
                         <View style={s.historyWrapper}>
                             <Text style={s.historyTitle}>{t('Product history')}</Text>
-                            <Text style={s.historyText}>{ingredient!.description}</Text>
+                            <Text style={s.historyText}>{ingredient!.description || '---'}</Text>
                         </View>
                     </View>
                 )
@@ -113,8 +113,8 @@ export default function Ingredient() {
     const cals = Math.floor(ingredient.nutrients.calories || 0)
     const details = [
         { value: `${cals}`, label: 'Calories', icon: require('@/assets/icons/fire.png') },
-        { value: ingredient?.country || '- - -', label: 'Country', icon: require('@/assets/icons/globe.png') },
-        { value: ingredient?.interchangable || '- - -', label: 'Substitute', icon: require('@/assets/icons/interchange.png') },
+        { value: ingredient?.country || '---', label: 'Country', icon: require('@/assets/icons/globe.png') },
+        { value: ingredient?.interchangable || '---', label: 'Substitute', icon: require('@/assets/icons/interchange.png') },
     ]
 
     return (

@@ -3,6 +3,7 @@ import { SettingsProvider } from '@/contexts/settingsContext'
 import { SearchFiltersProvider } from '@/contexts/searchFiltersContext'
 import { AppStateProvider } from '@/contexts/appStateContext'
 import { RecipeProvider } from '@/contexts/recipeContext'
+import { SavedRecipeProvider } from '@/contexts/savedRecipeContext'
 import ProviderActions from '@/components/onLoad/ProviderActions'
 
 export default function Providers({ children }: { children: React.ReactNode }) {
@@ -12,9 +13,11 @@ export default function Providers({ children }: { children: React.ReactNode }) {
                 <SearchFiltersProvider>
                     <AppStateProvider>
                         <RecipeProvider>
-                            <ProviderActions>
-                                {children}
-                            </ProviderActions>
+                            <SavedRecipeProvider>
+                                <ProviderActions>
+                                    {children}
+                                </ProviderActions>
+                            </SavedRecipeProvider>
                         </RecipeProvider>
                     </AppStateProvider>
                 </SearchFiltersProvider>

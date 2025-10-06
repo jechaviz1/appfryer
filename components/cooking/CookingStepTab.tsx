@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { Image, Pressable, StyleSheet } from 'react-native'
-import { RadialSlider } from 'react-native-radial-slider'
 import { useTranslation } from 'react-i18next'
 
 import { Text, View } from "@/components/base/BaseComponents"
@@ -11,6 +10,7 @@ import { useAuth } from '@/contexts/authContext'
 import IRecipe, { IRecipeStep } from '@/interfaces/Recipe'
 import { Colors } from '@/constants/Colors'
 import { theme, isLight } from '@/constants/Theme'
+import RadialSliderWrapper from './RadialSliderWrapper'
 
 interface Props {
     recipe: IRecipe | undefined
@@ -122,7 +122,7 @@ export default function CookingStepTab ({ recipe, setRecipe, onBack, step, stepI
 
             { timer && <View style={s.timerWrapper}>
                 <View style={s.timerSliderWrapper}>
-                    <RadialSlider
+                    <RadialSliderWrapper
                         variant={'radial-circle-slider'}
                         startAngle={90}
                         max={timer.timeInSec}
