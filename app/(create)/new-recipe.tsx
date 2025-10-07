@@ -257,7 +257,7 @@ export default function CreateRecipePage() {
         setCanAddMedia(false)
         setCanGoNext(false)
         get({
-            url: `/recipe/${globQuery.id}`,
+            url: `/api/recipe/${globQuery.id}`,
             token: user?.token,
         })
             .then(r => {
@@ -401,7 +401,7 @@ export default function CreateRecipePage() {
         const uri = Platform.OS === 'ios' ? file.uri!.replace('file://', '') : file.uri!
 
         post({
-            url: `/recipe/${currentRecipe.id}/mediaUpload`,
+            url: `/api/recipe/${currentRecipe.id}/mediaUpload`,
             files: [['mediaFile', {
                 uri: uri,
                 type: file.type,
@@ -424,7 +424,28 @@ export default function CreateRecipePage() {
             .catch(e => {
                 logError(e)
                 setUploading(false)
-                setMediaError(e.response?.data?.message || t('Failed to upload media'))
+                
+                // Handle specific error codes from API documentation
+                const errorCode = e.response?.status
+                const errorMessage = e.response?.data?.message
+                
+                if (errorCode === 403) {
+                    if (errorMessage?.includes('Access denied')) {
+                        setMediaError(t('Access denied. You need ROLE_CREATOR to upload media.'))
+                    } else if (errorMessage?.includes('Recipe cannot be edited')) {
+                        setMediaError(t('Recipe cannot be edited'))
+                    } else if (errorMessage?.includes('Unknown media format')) {
+                        setMediaError(t('Unknown media format'))
+                    } else if (errorMessage?.includes('too large')) {
+                        setMediaError(errorMessage)
+                    } else {
+                        setMediaError(t('Access denied'))
+                    }
+                } else if (errorCode === 404) {
+                    setMediaError(t('Recipe not found'))
+                } else {
+                    setMediaError(errorMessage || t('Failed to upload media'))
+                }
             })
     }, [media, recipe, user?.token, t])
 
@@ -440,12 +461,21 @@ export default function CreateRecipePage() {
 
         if (!activeRecipe) {
             try {
-                const obtainedEmptyRecipe = await post({ url: '/recipe/create', token: user.token })
+                const obtainedEmptyRecipe = await post({ url: '/api/recipe/create', token: user.token })
                 activeRecipe = { ...obtainedEmptyRecipe, id: obtainedEmptyRecipe.recipeId }
                 setRecipe(activeRecipe)
-            } catch (e) {
+            } catch (e: any) {
                 logError(e)
-                setMediaError(t('Failed to create recipe'))
+                
+                // Handle specific error codes from API documentation
+                const errorCode = e.response?.status
+                const errorMessage = e.response?.data?.message
+                
+                if (errorCode === 403) {
+                    setMediaError(t('Access denied. You need ROLE_CREATOR to create recipes.'))
+                } else {
+                    setMediaError(errorMessage || t('Failed to create recipe'))
+                }
                 return
             }
         }
@@ -611,6 +641,28 @@ export default function CreateRecipePage() {
             return
         }
 
+        // Prepare ingredients with proper structure for API
+        const ingredientsPayload = [...mainArr, ...otherArr].map(ing => ({
+            ingredientId: ing.ingredientId,
+            cnt: ing.cnt,
+            measureId: ing.measureId,
+            section: ing.section
+        }))
+
+        // Prepare cooking steps with proper structure for API
+        const cookingStepsPayload = preparedSteps.map(step => ({
+            mediaUuid: step.mediaUuid || null,
+            title: step.title,
+            description: step.description,
+            info: step.info || null,
+            cookingTime: step.cookingTime || null
+        }))
+
+        // Prepare media UUID order (only include uploaded media)
+        const mediaUuidOrder = media
+            .filter(m => m.uuid)
+            .map(m => m.uuid!)
+
         const payload = {
             title,
             description,
@@ -620,14 +672,15 @@ export default function CreateRecipePage() {
             timePreparation: prepTime,
             timeCooking: cookingTime,
             temperature,
-            ingredients: [...mainArr, ...otherArr],
-            cookingSteps: preparedSteps,
-            isPublished: true,
+            mediaUuidOrder,
+            ingredients: ingredientsPayload,
+            cookingSteps: cookingStepsPayload,
+            isPublished: "true", // API expects string, not boolean
         }
 
         const submit = (targetRecipe: any) => {
             post({
-                url: `/recipe/${targetRecipe.id}/edit`,
+                url: `/api/recipe/${targetRecipe.id}/edit`,
                 data: payload,
                 token: user?.token,
             })
@@ -635,7 +688,27 @@ export default function CreateRecipePage() {
                     setRecipe({ ...targetRecipe, ...r, ...payload, media })
                     setShowSuccessModal(true)
                 })
-                .catch(logError)
+                .catch(e => {
+                    logError(e)
+                    
+                    // Handle specific error codes from API documentation
+                    const errorCode = e.response?.status
+                    const errorMessage = e.response?.data?.message
+                    
+                    if (errorCode === 403) {
+                        if (errorMessage?.includes('Access denied')) {
+                            alert(t('Access denied. You need ROLE_CREATOR to edit recipes.'))
+                        } else if (errorMessage?.includes('Recipe cannot be edited')) {
+                            alert(t('Recipe cannot be edited'))
+                        } else {
+                            alert(t('Access denied'))
+                        }
+                    } else if (errorCode === 404) {
+                        alert(t('Recipe not found'))
+                    } else {
+                        alert(errorMessage || t('Failed to save recipe'))
+                    }
+                })
         }
 
         if (!recipe) {
@@ -643,13 +716,25 @@ export default function CreateRecipePage() {
                 alert(t('Please login first'))
                 return
             }
-            post({ url: '/recipe/create', token: user.token })
+            post({ url: '/api/recipe/create', token: user.token })
                 .then((obtainedEmptyRecipe) => {
                     const createdRecipe = { ...obtainedEmptyRecipe, id: obtainedEmptyRecipe.recipeId }
                     setRecipe(createdRecipe)
                     submit(createdRecipe)
                 })
-                .catch(logError)
+                .catch(e => {
+                    logError(e)
+                    
+                    // Handle specific error codes from API documentation
+                    const errorCode = e.response?.status
+                    const errorMessage = e.response?.data?.message
+                    
+                    if (errorCode === 403) {
+                        alert(t('Access denied. You need ROLE_CREATOR to create recipes.'))
+                    } else {
+                        alert(errorMessage || t('Failed to create recipe'))
+                    }
+                })
             return
         }
 
