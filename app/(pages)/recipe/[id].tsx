@@ -31,6 +31,7 @@ import IFolder from '@/interfaces/Folder'
 import { Colors, weeklyColors } from '@/constants/Colors'
 import { theme, isLight, getBgColor } from '@/constants/Theme'
 import Header from '@/components/Header'
+import CustomTabBar from '@/components/CustomTabBar'
 
 const { width: screenWidth } = Dimensions.get('window')
 
@@ -839,6 +840,7 @@ export default function RecipeScreen() {
                     }
                 </View> */}
             </ScrollView>
+            <CustomTabBar />
         </View>
     )
 }

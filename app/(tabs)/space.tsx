@@ -366,8 +366,8 @@ export default function MySpaceScreen() {
                         {items.map((item: IIngredientForShoppingList) => {
                             // Get appropriate emoji based on ingredient name or category
                             const getEmoji = (name: string, categoryTitle?: string) => {
-                                const lowerName = name.toLowerCase()
-                                const lowerCategory = categoryTitle?.toLowerCase() || ''
+                                const lowerName = (name || '').toLowerCase()
+                                const lowerCategory = (categoryTitle || '').toLowerCase()
                                 
                                 // Category-based emojis
                                 if (lowerCategory.includes('cheese')) return '🧀'

@@ -11,6 +11,7 @@ import { get } from '@/services/apiRequests'
 import { Colors } from '@/constants/Colors'
 import { IIngredinentInfo } from '@/interfaces/Ingredient'
 import NutritionalValues from '@/components/NutritionalValues'
+import CustomTabBar from '@/components/CustomTabBar'
 
 export default function Ingredient() {
     const globQuery = useGlobalSearchParams()
@@ -146,6 +147,7 @@ export default function Ingredient() {
                     {activeTab === 0 ? renderTab({ item: 'info', index: 0 }) : renderTab({ item: 'nutritional', index: 1 })}
                 </View>
             </ScrollView>
+            <CustomTabBar />
         </View>
     )
 }
