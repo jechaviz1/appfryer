@@ -12,6 +12,9 @@ export interface IWeeklyFeed {
     type: string
     rating: number | null
     time: number
+    mealDate?: string
+    mealType?: string
+    recipe?: any
 }
 
 export default function WeeklyFeedItem({recipe}: {recipe: IWeeklyFeed}) {

@@ -1,9 +1,10 @@
 import { useCallback, useState } from 'react'
-import { Image, Pressable, StyleSheet, FlatList } from "react-native"
+import { Image, Pressable, StyleSheet, FlatList, Dimensions } from "react-native"
 import { useRouter } from 'expo-router'
 import { useFocusEffect } from '@react-navigation/native'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useTranslation } from 'react-i18next'
+import Modal from "react-native-modal"
 
 import { ScrollView, Text, View } from "@/components/base/BaseComponents"
 import ImageLibrary from '@/components/ImageLibrary'
@@ -19,6 +20,8 @@ import IIngredinent from '@/interfaces/Ingredient'
 import IRecipe from '@/interfaces/Recipe'
 import { logError } from '@/services/utils'
 import Header from '@/components/Header'
+import IFolder from '@/interfaces/Folder'
+import Constants from 'expo-constants'
 
 interface IInterest {
     id?: number
@@ -31,7 +34,12 @@ interface IExtendedRecipeCard extends IRecipeCard {
     avgRating?: number
 }
 
-export default function RecipeLists() {
+interface Props {
+    isVisible: boolean
+    onHide: () => void
+}
+
+export default function RecipeLists({ isVisible, onHide }: Props) {
     const { user } = useAuth()
     const router = useRouter()
     const { t } = useTranslation()
@@ -144,157 +152,116 @@ export default function RecipeLists() {
     }, [disableSaveAction])
 
     return (
-        <View style={s.container}>
-            { showFolders && <Folders
-                isVisible={showFolders}
-                onHide={() => setShowFolders(false)}
-            /> }
-            
-            <View style={theme.statusBarHeight} />
-            
-            {/* Dark Header */}
-            <Header
-                title={t('Saved recipes')}
-                onBack={() => router.back()}
-                rightIconSource={require('@/assets/icons/add.png')}
-            />
-
-            {/* Category Tabs */}
-            <View style={s.categoriesSection}>
-                <FlatList
-                    data={interests}
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-                    renderItem={({ item }) => (
-                        <Pressable 
-                            style={[s.categoryItem, item.checked && s.categoryItemSelected]}
-                            onPress={() => toggleInterest(item)}
-                        >
-                            <Text style={[s.categoryText, item.checked && s.categoryTextSelected]}>
-                                {item.title}
-                            </Text>
-                        </Pressable>
-                    )}
-                    keyExtractor={(item) => item.title}
-                    contentContainerStyle={s.categoriesList}
+        <Modal
+            isVisible={isVisible}
+            onBackdropPress={onHide}
+            style={[theme.modal]}
+            coverScreen={true}
+            hasBackdrop={false}
+        >
+            <View style={s.container}>
+                { showFolders && <Folders
+                    isVisible={showFolders}
+                    onHide={() => setShowFolders(false)}
+                /> }
+                
+                {/* Dark Header */}
+                <Header
+                    title={t('Saved recipes')}
+                    onBack={onHide}
+                    rightIconSource={require('@/assets/icons/add.png')}
+                    onRightPress={() => setShowFolders(true)}
                 />
-            </View>
 
-            {/* Main Content */}
-            <ScrollView style={s.mainContent} showsVerticalScrollIndicator={false}>
-                {/* Saved recipes */}
-                <View style={s.section}>
-                    <View style={s.recipesContainer}>
-                        {savedRecipes.map(recipe => (
+                {/* Category Tabs */}
+                <View style={s.categoriesSection}>
+                    <FlatList
+                        data={interests}
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        renderItem={({ item }) => (
                             <Pressable 
-                                key={recipe.id} 
-                                style={s.recipeCard}
-                                onPress={() => router.push({
-                                    pathname: `/(pages)/recipe/${recipe.id}` as "(pages)/recipe/[:id]"
-                                })}
+                                style={[s.categoryItem, item.checked && s.categoryItemSelected]}
+                                onPress={() => toggleInterest(item)}
                             >
-                                <View style={s.recipeImageContainer}>
-                                    <Image 
-                                        source={recipe.image ? { uri: recipe.image } : ImageLibrary.recipe}
-                                        style={s.recipeImage}
-                                    />
-                                    <View style={s.playButton}>
-                                        <Image source={require('@/assets/icons/video-play.png')} style={s.playIcon} />
-                                    </View>
-                                </View>
-                                <View style={s.recipeContent}>
-                                    <View style={s.recipeHeader}>
-                                        <Text style={s.recipeTitle}>{recipe.title}</Text>
-                                        <Pressable 
-                                            style={s.bookmarkBtn}
-                                            onPress={() => !disableSaveAction && toggleSaveRecipe(recipe.id)}
-                                            disabled={disableSaveAction}
-                                        >
-                                            <Image 
-                                                source={require('@/assets/icons/ribbon-filled.png')} 
-                                                style={[
-                                                    s.bookmarkBtnIcon,
-                                                    disableSaveAction && { opacity: 0.5 }
-                                                ]} 
-                                            />
-                                        </Pressable>
-                                    </View>
-                                    <Text style={s.ingredientsText}>
-                                        {recipe.ingredientsCount} {recipe.ingredientsCount === 1 ? t('ingredient') : t('ingredients')}
-                                    </Text>
-                                    <View style={s.bottomRow}>
-                                        <View style={s.authorContainer}>
-                                            <Image source={require('@/assets/icons/person-round.png')} style={s.authorIcon} />
-                                            <Text style={s.authorText}>{recipe.profileName}</Text>
-                                        </View>
-                                        <View style={s.ratingContainer}>
-                                            <Text style={s.ratingText}>{recipe.avgRating?.toFixed(1) || '0.0'}</Text>
-                                            <Text style={s.starIcon}>⭐</Text>
-                                        </View>
-                                    </View>
-                                </View>
+                                <Text style={[s.categoryText, item.checked && s.categoryTextSelected]}>
+                                    {item.title}
+                                </Text>
                             </Pressable>
-                        ))}
-                    </View>
+                        )}
+                        keyExtractor={(item) => item.title}
+                        contentContainerStyle={s.categoriesList}
+                    />
                 </View>
 
-                {/* Weekly plan */}
-                {/* <View style={s.section}>
-                    <View style={s.sectionHeader}>
-                        <Text style={s.sectionTitle}>{t('Weekly plan')}</Text>
-                        <Pressable onPress={() => router.push('/(pages)/weekly-plan')}>
-                            <Text style={s.seeAllText}>{t('See All')}</Text>
-                        </Pressable>
-                    </View>
-                    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={s.horizontalScroll}>
-                        {weeklyPlan.map((recipe, index) => (
-                            <WeeklyFeedItem key={index} recipe={recipe} />
-                        ))}
-                    </ScrollView>
-                </View> */}
-
-                {/* Shopping list */}
-                {/* <View style={s.section}>
-                    <View style={s.sectionHeader}>
-                        <Text style={s.sectionTitle}>{t('Shopping list')}</Text>
-                        <Pressable onPress={() => router.push('/(pages)/shopping-list')}>
-                            <Text style={s.seeAllText}>{t('See All')}</Text>
-                        </Pressable>
-                    </View>
-
-                    {shoppingList && shoppingList[0] && (
-                        <View style={s.shoppingListContainer}>
-                            <Text style={s.recipeTitle}>{shoppingList[0].recipeTitle || t('General')}</Text>
-                            {shoppingList[0].ingredients.map((item: IIngredientForShoppingList) => (
-                                <ChoiceItem
-                                    key={item.id}
-                                    id={item.ingredientId}
-                                    img={ImageLibrary.icons[item.category.icon as keyof typeof ImageLibrary.icons] || item.category.thumb}
-                                    text={item.ingredientTitle}
-                                    onPress={() => !isSentReq && toggleSelectedIngredientByRecipe(item)}
-                                    info
-                                    quantity={`${item.cnt || ''} ${item.measureTitle || ''}`}
-                                    checked={item.isChecked}
-                                />
+                {/* Main Content */}
+                <ScrollView style={s.mainContent} showsVerticalScrollIndicator={false}>
+                    {/* Saved recipes */}
+                    <View style={s.section}>
+                        <View style={s.recipesContainer}>
+                            {savedRecipes.map(recipe => (
+                                <Pressable 
+                                    key={recipe.id} 
+                                    style={s.recipeCard}
+                                    onPress={() => router.push({
+                                        pathname: `/(pages)/recipe/${recipe.id}` as "(pages)/recipe/[:id]"
+                                    })}
+                                >
+                                    <View style={s.recipeImageContainer}>
+                                        <Image 
+                                            source={recipe.image ? { uri: recipe.image } : ImageLibrary.recipe}
+                                            style={s.recipeImage}
+                                        />
+                                        <View style={s.playButton}>
+                                            <Image source={require('@/assets/icons/video-play.png')} style={s.playIcon} />
+                                        </View>
+                                    </View>
+                                    <View style={s.recipeContent}>
+                                        <View style={s.recipeHeader}>
+                                            <Text style={s.recipeTitle}>{recipe.title}</Text>
+                                            <Pressable 
+                                                style={s.bookmarkBtn}
+                                                onPress={() => !disableSaveAction && toggleSaveRecipe(recipe.id)}
+                                                disabled={disableSaveAction}
+                                            >
+                                                <Image 
+                                                    source={require('@/assets/icons/ribbon-filled.png')} 
+                                                    style={[
+                                                        s.bookmarkBtnIcon,
+                                                        disableSaveAction && { opacity: 0.5 }
+                                                    ]} 
+                                                />
+                                            </Pressable>
+                                        </View>
+                                        <Text style={s.ingredientsText}>
+                                            {recipe.ingredientsCount} {recipe.ingredientsCount === 1 ? t('ingredient') : t('ingredients')}
+                                        </Text>
+                                        <View style={s.bottomRow}>
+                                            <View style={s.authorContainer}>
+                                                <Image source={require('@/assets/icons/person-round.png')} style={s.authorIcon} />
+                                                <Text style={s.authorText}>{recipe.profileName}</Text>
+                                            </View>
+                                            <View style={s.ratingContainer}>
+                                                <Text style={s.ratingText}>{recipe.avgRating?.toFixed(1) || '0.0'}</Text>
+                                                <Text style={s.starIcon}>⭐</Text>
+                                            </View>
+                                        </View>
+                                    </View>
+                                </Pressable>
                             ))}
                         </View>
-                    )} */}
+                    </View>
 
-                    {/* Adding ingredient */}
-                    {/* <Pressable onPress={() => !isSentReq && setShowAddIngredient(true)} style={s.addIngredientButton}>
-                        <Text style={s.addIngredientText}>{t('Add an ingredient')}</Text>
-                    </Pressable>
-                </View> */}
+                    {showAddIngredient && <AddIngredientModal
+                        isVisible={showAddIngredient}
+                        hideAndClear={() => setShowAddIngredient(false)}
+                        onSubmit={onAddIngredient}
+                    /> }
 
-                {showAddIngredient && <AddIngredientModal
-                    isVisible={showAddIngredient}
-                    hideAndClear={() => setShowAddIngredient(false)}
-                    onSubmit={onAddIngredient}
-                /> }
-
-                <View style={{ marginTop: 80 }} />
-            </ScrollView>
-        </View>
+                    <View style={{ marginTop: 80 }} />
+                </ScrollView>
+            </View>
+        </Modal>
     )
 }
 
@@ -302,6 +269,12 @@ const s = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#F8F5F0',
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        height: Dimensions.get('window').height - Constants.statusBarHeight - 74,
     },
     header: {
         backgroundColor: '#4F4240',

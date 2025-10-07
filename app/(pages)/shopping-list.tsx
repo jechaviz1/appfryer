@@ -93,7 +93,7 @@ export default function ShoppingList() {
         <View style={theme.container}>
             <View style={theme.statusBarHeight} />
             <View style={theme.mainContainer}>
-                <ModalTitle title={t('Shopping list')} onHide={() => router.canGoBack() ? router.back() : router.navigate('/(tabs)/my-space')} />
+                <ModalTitle title={t('Shopping list')} onHide={() => router.canGoBack() ? router.back() : router.navigate('/(tabs)/my_space')} />
                 <ScrollView style={s.container}>
 
                     {/* Choose mode */}

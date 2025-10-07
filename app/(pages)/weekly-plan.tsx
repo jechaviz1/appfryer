@@ -309,7 +309,7 @@ export default function WeeklyPlan() {
 
             <View style={theme.statusBarHeight} />
             <View style={theme.mainContainer}>
-                <ModalTitle title={t('Weekly plan')} onHide={() => router.canGoBack() ? router.back() : router.navigate('/(tabs)/my-space')} />
+                <ModalTitle title={t('Weekly plan')} onHide={() => router.canGoBack() ? router.back() : router.navigate('/(tabs)/my_space')} />
                 {/* Week */}
                 <View style={s.weekWrapper}>
                     <Pressable

@@ -64,7 +64,7 @@ export default function RecipesFeed() {
         <View style={theme.container}>
             <View style={theme.statusBarHeight} />
             <View style={theme.mainContainer}>
-                <ModalTitle title={title} onHide={() => router.canGoBack() ? router.back() : router.navigate('/(tabs)/my-space')} />
+                <ModalTitle title={title} onHide={() => router.canGoBack() ? router.back() : router.navigate('/(tabs)/my_space')} />
                 <ScrollView style={{marginBottom: 180}}>
                     <View style={s.recipes}>
                         {recipes.map(recipe => (

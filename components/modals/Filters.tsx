@@ -262,7 +262,7 @@ export default function Filters({ isVisible, onHide, page, personId, onSubmit }:
     return (
         <Modal
             isVisible={isVisible}
-            style={[theme.modal, s.modalView, {backgroundColor: getBgColor(), marginTop: window.height * 0.15}]}
+            style={[theme.modal, s.modalView, {backgroundColor: '#FFFFFF', marginTop: window.height * 0.15}]}
             onModalHide={hideAndClear}
             onBackdropPress={hideAndClear}
         >

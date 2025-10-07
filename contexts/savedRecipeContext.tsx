@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react'
 import SavedRecipe from '@/components/modals/SavedRecipe'
 import IFolder from '@/interfaces/Folder'
+import RecipeLists from '@/components/modals/RecipeLists'
 
 interface SavedRecipeContextType {
     showSavedRecipeModal: (recipeId: number, folders?: IFolder[]) => void
@@ -38,13 +39,17 @@ export function SavedRecipeProvider({ children }: SavedRecipeProviderProps) {
         <SavedRecipeContext.Provider value={{ showSavedRecipeModal, hideSavedRecipeModal }}>
             {children}
             {isVisible && recipeId && (
-                <SavedRecipe
+                <RecipeLists
                     isVisible={isVisible}
-                    recipeId={recipeId}
                     onHide={hideSavedRecipeModal}
-                    inFolders={folders}
-                    onUpdateFolders={handleUpdateFolders}
                 />
+                // <SavedRecipe
+                //     isVisible={isVisible}
+                //     recipeId={recipeId}
+                //     onHide={hideSavedRecipeModal}
+                //     inFolders={folders}
+                //     onUpdateFolders={handleUpdateFolders}
+                // />
             )}
         </SavedRecipeContext.Provider>
     )

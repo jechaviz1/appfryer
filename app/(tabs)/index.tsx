@@ -19,15 +19,33 @@ import { Colors } from '@/constants/Colors'
 import { useRouter } from 'expo-router'
 import { MediaType } from '@/interfaces/Media'
 
-const weeklyDays = [
-    { id: 1, day: 'Sun', date: '23', selected: false },
-    { id: 2, day: 'Mon', date: '24', selected: false },
-    { id: 3, day: 'Tue', date: '25', selected: true },
-    { id: 4, day: 'Wed', date: '26', selected: false },
-    { id: 5, day: 'Thu', date: '27', selected: false },
-    { id: 6, day: 'Fri', date: '28', selected: false },
-    { id: 7, day: 'Sat', date: '29', selected: false },
-]
+// Generate current week dates
+const getCurrentWeek = () => {
+    const today = new Date()
+    const currentDay = today.getDay() // 0 = Sunday, 1 = Monday, etc.
+    const startOfWeek = new Date(today)
+    startOfWeek.setDate(today.getDate() - currentDay) // Start from Sunday
+    
+    const weekDays = []
+    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+    
+    for (let i = 0; i < 7; i++) {
+        const date = new Date(startOfWeek)
+        date.setDate(startOfWeek.getDate() + i)
+        
+        weekDays.push({
+            id: i + 1,
+            day: dayNames[i],
+            date: date.getDate().toString(),
+            selected: i === currentDay,
+            fullDate: date
+        })
+    }
+    
+    return weekDays
+}
+
+const weeklyDays = getCurrentWeek()
 
 export default function HomeScreen() {
     const router = useRouter()
@@ -246,152 +264,153 @@ export default function HomeScreen() {
     return (
         <View style={theme.container}>
             <View style={theme.statusBarHeight} />
-            <ScrollView style={theme.mainContainer}>
+            <ScrollView>
                 <Notifications isVisible={showNotifications} onHide={() => setShowNotifications(false)} />
-
-                {/* Header Section */}
-                <View style={s.header}>
-                    <View style={s.greetingSection}>
-                        <Text style={[s.greeting, { color: isLight() ? Colors.grey : Colors.lightGrey }]}>{t('Hello,')}</Text>
-                        <Text style={s.userName}>{user?.fullname || t('User')}</Text>
+                <View style={theme.mainContainer}>
+                    {/* Header Section */}
+                    <View style={s.header}>
+                        <View style={s.greetingSection}>
+                            <Text style={[s.greeting, { color: isLight() ? Colors.grey : Colors.lightGrey }]}>{t('Hello,')}</Text>
+                            <Text style={s.userName}>{user?.fullname || t('User')}</Text>
+                        </View>
+                        <Pressable onPress={handleNotificationPress}>
+                            <Image source={avatar} style={s.profileImage} />
+                            { appState.isNewNotifications && <View style={s.notificationMarker} />}
+                        </Pressable>
                     </View>
-                    <Pressable onPress={handleNotificationPress}>
-                        <Image source={avatar} style={s.profileImage} />
-                        { appState.isNewNotifications && <View style={s.notificationMarker} />}
+
+                    {/* Search Bar */}
+                    <Search page="home" onSearch={handleSearchResults} />
+
+                    {/* Categories */}
+                    <Categories style={s.categoriesSection} />
+
+                    {/* Hero Banner */}
+                    <Pressable style={s.heroBanner} onPress={handleQuizPress}>
+                        <Image
+                            source={require('@/assets/images/quiz-banner.png')}
+                            style={s.heroBannerImage}
+                            resizeMode="cover"
+                        />
+                        <View style={s.heroBannerOverlay}>
+                            <View style={s.heroBannerContent}>
+                                <View style={s.heroLeftSection}>
+                                </View>
+                                <View style={s.heroRightSection}>
+                                    <View style={s.heroIconContainer}>
+                                        <Image 
+                                            source={require('@/assets/images/quiz-icon.png')} 
+                                            style={s.heroBowlIcon}
+                                            resizeMode="contain"
+                                        />
+                                    </View>
+                                    <Text type="subtitle" style={s.heroText}>{t('What would you like to eat?')}</Text>
+                                </View>
+                            </View>
+                        </View>
                     </Pressable>
-                </View>
 
-                {/* Search Bar */}
-                <Search page="home" onSearch={handleSearchResults} />
-
-                {/* Categories */}
-                <Categories style={s.categoriesSection} />
-
-                {/* Hero Banner */}
-                <Pressable style={s.heroBanner} onPress={handleQuizPress}>
-                    <Image
-                        source={require('@/assets/images/quiz-banner.png')}
-                        style={s.heroBannerImage}
-                        resizeMode="cover"
-                    />
-                    <View style={s.heroBannerOverlay}>
-                        <View style={s.heroBannerContent}>
-                            <View style={s.heroLeftSection}>
+                    {/* Recommendations Section */}
+                    <View style={s.section}>
+                        <View style={s.sectionHeader}>
+                            <Text style={s.sectionTitle}>{t('Recommendations for you')}</Text>
+                            <Pressable onPress={handleSeeAllRecommendations}>
+                                <Text style={s.seeAllText}>{t('See all')}</Text>
+                            </Pressable>
+                        </View>
+                        {recipesForYou.length === 0 ? (
+                            <View style={s.emptyState}>
+                                <Text style={s.emptyStateText}>
+                                    {user?.token ? t('Loading recommendations...') : t('Please sign in to see recommendations')}
+                                </Text>
                             </View>
-                            <View style={s.heroRightSection}>
-                                <View style={s.heroIconContainer}>
-                                    <Image 
-                                        source={require('@/assets/images/quiz-icon.png')} 
-                                        style={s.heroBowlIcon}
-                                        resizeMode="contain"
-                                    />
-                                </View>
-                                <Text type="subtitle" style={s.heroText}>{t('What would you like to eat?')}</Text>
+                        ) : (
+                            <>
+                                <FlatList
+                                    ref={recommendationsFlatListRef}
+                                    data={recipesForYou}
+                                    horizontal
+                                    showsHorizontalScrollIndicator={false}
+                                    renderItem={renderRecipeCard}
+                                    keyExtractor={(item) => item.id.toString()}
+                                    contentContainerStyle={s.recipesList}
+                                    pagingEnabled={true}
+                                    onMomentumScrollEnd={handleRecommendationsScrollEnd}
+                                />
+                                {recipesForYou.length > 1 && (
+                                    <View style={s.slidePaginationDots}>
+                                        {recipesForYou.map((_, index) => (
+                                            <Pressable 
+                                                key={index}
+                                                style={[s.slideDot, recommendationsSlideIndex === index ? s.dotActive : s.dotInactive]}
+                                                onPress={() => handleRecommendationDotPress(index)}
+                                            />
+                                        ))}
+                                    </View>
+                                )}
+                            </>
+                        )}
+                    </View>
+                    
+                    {/* Weekly Plan Section */}
+                    <View style={s.section}>
+                        <View style={s.sectionHeader}>
+                            <Text style={s.sectionTitle}>{t('Weekly plan')}</Text>
+                            <Pressable onPress={handleSeeAllWeeklyPlan}>
+                                <Text style={s.seeAllText}>{t('See all')}</Text>
+                            </Pressable>
+                        </View>
+                        <FlatList
+                            data={weeklyDays}
+                            horizontal
+                            showsHorizontalScrollIndicator={false}
+                            renderItem={renderDayItem}
+                            keyExtractor={(item) => item.id.toString()}
+                            contentContainerStyle={s.daysList}
+                        />
+                    </View>
+
+                    {/* Trending Recipes Section */}
+                    <View style={s.section}>
+                        <View style={s.sectionHeader}>
+                            <Text style={s.sectionTitle}>{t('Trending recipes')}</Text>
+                            <Pressable onPress={handleSeeAllTrending}>
+                                <Text style={s.seeAllText}>{t('See all')}</Text>
+                            </Pressable>
+                        </View>
+                        {recipesOfMonth.length === 0 ? (
+                            <View style={s.emptyState}>
+                                <Text style={s.emptyStateText}>
+                                    {user?.token ? t('Loading trending recipes...') : t('Please sign in to see trending recipes')}
+                                </Text>
                             </View>
-                        </View>
+                        ) : (
+                            <>
+                                <FlatList
+                                    ref={trendingFlatListRef}
+                                    data={recipesOfMonth}
+                                    horizontal
+                                    showsHorizontalScrollIndicator={false}
+                                    renderItem={renderRecipeCard}
+                                    keyExtractor={(item) => item.id.toString()}
+                                    contentContainerStyle={s.recipesList}
+                                    pagingEnabled={true}
+                                    onMomentumScrollEnd={handleTrendingScrollEnd}
+                                />
+                                {recipesOfMonth.length > 1 && (
+                                    <View style={s.slidePaginationDots}>
+                                        {recipesOfMonth.map((_, index) => (
+                                            <Pressable 
+                                                key={index}
+                                                style={[s.slideDot, trendingSlideIndex === index ? s.dotActive : s.dotInactive]}
+                                                onPress={() => handleTrendingDotPress(index)}
+                                            />
+                                        ))}
+                                    </View>
+                                )}
+                            </>
+                        )}
                     </View>
-                </Pressable>
-
-                {/* Recommendations Section */}
-                <View style={s.section}>
-                    <View style={s.sectionHeader}>
-                        <Text style={s.sectionTitle}>{t('Recommendations for you')}</Text>
-                        <Pressable onPress={handleSeeAllRecommendations}>
-                            <Text style={s.seeAllText}>{t('See all')}</Text>
-                        </Pressable>
-                    </View>
-                    {recipesForYou.length === 0 ? (
-                        <View style={s.emptyState}>
-                            <Text style={s.emptyStateText}>
-                                {user?.token ? t('Loading recommendations...') : t('Please sign in to see recommendations')}
-                            </Text>
-                        </View>
-                    ) : (
-                        <>
-                            <FlatList
-                                ref={recommendationsFlatListRef}
-                                data={recipesForYou}
-                                horizontal
-                                showsHorizontalScrollIndicator={false}
-                                renderItem={renderRecipeCard}
-                                keyExtractor={(item) => item.id.toString()}
-                                contentContainerStyle={s.recipesList}
-                                pagingEnabled={true}
-                                onMomentumScrollEnd={handleRecommendationsScrollEnd}
-                            />
-                            {recipesForYou.length > 1 && (
-                                <View style={s.slidePaginationDots}>
-                                    {recipesForYou.map((_, index) => (
-                                        <Pressable 
-                                            key={index}
-                                            style={[s.slideDot, recommendationsSlideIndex === index ? s.dotActive : s.dotInactive]}
-                                            onPress={() => handleRecommendationDotPress(index)}
-                                        />
-                                    ))}
-                                </View>
-                            )}
-                        </>
-                    )}
-                </View>
-                
-                {/* Weekly Plan Section */}
-                <View style={s.section}>
-                    <View style={s.sectionHeader}>
-                        <Text style={s.sectionTitle}>{t('Weekly plan')}</Text>
-                        <Pressable onPress={handleSeeAllWeeklyPlan}>
-                            <Text style={s.seeAllText}>{t('See all')}</Text>
-                        </Pressable>
-                    </View>
-                    <FlatList
-                        data={weeklyDays}
-                        horizontal
-                        showsHorizontalScrollIndicator={false}
-                        renderItem={renderDayItem}
-                        keyExtractor={(item) => item.id.toString()}
-                        contentContainerStyle={s.daysList}
-                    />
-                </View>
-
-                {/* Trending Recipes Section */}
-                <View style={s.section}>
-                    <View style={s.sectionHeader}>
-                        <Text style={s.sectionTitle}>{t('Trending recipes')}</Text>
-                        <Pressable onPress={handleSeeAllTrending}>
-                            <Text style={s.seeAllText}>{t('See all')}</Text>
-                        </Pressable>
-                    </View>
-                    {recipesOfMonth.length === 0 ? (
-                        <View style={s.emptyState}>
-                            <Text style={s.emptyStateText}>
-                                {user?.token ? t('Loading trending recipes...') : t('Please sign in to see trending recipes')}
-                            </Text>
-                        </View>
-                    ) : (
-                        <>
-                            <FlatList
-                                ref={trendingFlatListRef}
-                                data={recipesOfMonth}
-                                horizontal
-                                showsHorizontalScrollIndicator={false}
-                                renderItem={renderRecipeCard}
-                                keyExtractor={(item) => item.id.toString()}
-                                contentContainerStyle={s.recipesList}
-                                pagingEnabled={true}
-                                onMomentumScrollEnd={handleTrendingScrollEnd}
-                            />
-                            {recipesOfMonth.length > 1 && (
-                                <View style={s.slidePaginationDots}>
-                                    {recipesOfMonth.map((_, index) => (
-                                        <Pressable 
-                                            key={index}
-                                            style={[s.slideDot, trendingSlideIndex === index ? s.dotActive : s.dotInactive]}
-                                            onPress={() => handleTrendingDotPress(index)}
-                                        />
-                                    ))}
-                                </View>
-                            )}
-                        </>
-                    )}
                 </View>
             </ScrollView>
         </View>
@@ -580,7 +599,6 @@ const s = StyleSheet.create({
         paddingHorizontal: 3,
         paddingVertical: 3,
         width: 46,
-        height: 85,
     },
     dayItemSelected: {
         backgroundColor: Colors.mainColor,
@@ -600,6 +618,8 @@ const s = StyleSheet.create({
         color: '#B5B5B5',
         fontFamily: 'Poppins-SemiBold',
         padding: 10,
+        minWidth: 38,
+        textAlign: 'center',
     },
     dateTextSelected: {
         backgroundColor: Colors.white,
