@@ -6,7 +6,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useTranslation } from 'react-i18next'
 import * as AppleAuth from 'expo-apple-authentication'
 
-import { Button, Checkbox, IconButton, Text, TextInput, View } from '@/components/base/BaseComponents'
+import { Button, Checkbox, Text, TextInput, View } from '@/components/base/BaseComponents'
 import Languages from '@/components/modals/Languages'
 import Preferences from '@/components/modals/Preferences'
 import { validateEmail, validatePassword } from '@/services/validators'
@@ -84,6 +84,38 @@ export default function LoginScreen() {
         setPasswordError('')
         return true
     }, [password])
+
+    const handleEmailChange = (text: string) => {
+        setEmail(text)
+        setEmailError('')
+        setLoginError('')
+    }
+
+    const handlePasswordChange = (text: string) => {
+        setPassword(text)
+        setPasswordError('')
+        setLoginError('')
+    }
+
+    const handleRememberMeToggle = () => {
+        setRememberMe(!rememberMe)
+    }
+
+    const handleForgotPassword = () => {
+        router.push('/(auth)/forgot-password')
+    }
+
+    const handleGoogleSignIn = () => {
+        router.push('/(auth)/signup')
+    }
+
+    const handleFacebookSignIn = () => {
+        router.push('/(auth)/signup')
+    }
+
+    const handleSignUp = () => {
+        router.push('/(auth)/signup')
+    }
 
     const tryToLogin = () => {
         if (!onBlurEmail() || !onBlurPassword()) {
@@ -248,11 +280,7 @@ export default function LoginScreen() {
                                 textContentType='emailAddress'
                                 value={email}
                                 styleContainer={theme.authInputContainer}
-                                onChangeText={text => {
-                                    setEmail(text)
-                                    setEmailError('')
-                                    setLoginError('')
-                                }}
+                                onChangeText={handleEmailChange}
                                 onBlur={onBlurEmail}
                             />
                             {emailError !== '' && <Text type='error' style={theme.authErrorText}>{emailError}</Text>}
@@ -264,11 +292,7 @@ export default function LoginScreen() {
                                 value={password}
                                 secureTextEntry
                                 styleContainer={theme.authInputContainer}
-                                onChangeText={text => {
-                                    setPassword(text)
-                                    setPasswordError('')
-                                    setLoginError('')
-                                }}
+                                onChangeText={handlePasswordChange}
                                 onBlur={onBlurPassword}
                             />
                             {passwordError !== '' && <Text type='error' style={theme.authErrorText}>{passwordError}</Text>}
@@ -278,11 +302,11 @@ export default function LoginScreen() {
                             <Checkbox
                                 type='square'
                                 text={t('Remember me')}
-                                onPress={() => setRememberMe(!rememberMe)}
+                                onPress={handleRememberMeToggle}
                                 checked={rememberMe}
                                 style={theme.authCheckbox}
                             />
-                            <Pressable onPress={() => router.push('/(auth)/forgot-password')}>
+                            <Pressable onPress={handleForgotPassword}>
                                 <Text type='link' style={s.forgotPasswordText}>{t('Forgot Password?')}</Text>
                             </Pressable>
                         </View>
@@ -305,14 +329,14 @@ export default function LoginScreen() {
 
                         {/* Social Login Buttons */}
                         <View style={theme.authSocialButtonsContainer}>
-                            <Pressable onPress={() => router.push('/(auth)/signup')}  style={theme.authSocialButton}>
+                            <Pressable onPress={handleGoogleSignIn}  style={theme.authSocialButton}>
                                 <Image 
                                     source={googleIcon} 
                                     style={theme.authSocialIcon}
                                 />
                                 <Text style={theme.authSocialButtonText}>{t('Sign In with Google')}</Text>
                             </Pressable>
-                            <Pressable onPress={() => router.push('/(auth)/signup')}  style={theme.authSocialButton}>
+                            <Pressable onPress={handleFacebookSignIn}  style={theme.authSocialButton}>
                                 <Image 
                                     source={facebookIcon} 
                                     style={theme.authSocialIcon}
@@ -328,7 +352,7 @@ export default function LoginScreen() {
                                     buttonStyle={AppleAuth.AppleAuthenticationButtonStyle.WHITE_OUTLINE}
                                     cornerRadius={10}
                                     style={s.appleButton}
-                                    onPress={() => onAppleButtonPress()}
+                                    onPress={onAppleButtonPress}
                                 />
                             </View>
                         )}
@@ -336,7 +360,7 @@ export default function LoginScreen() {
                         {/* Sign Up Link */}
                         <View style={theme.authLinkContainer}>
                             <Text style={theme.authSecondaryText}>{t('Don\'t have an account yet?')} </Text>
-                            <Text type='link' onPress={() => router.push('/(auth)/signup')} style={theme.authLinkText}>{t('Sign Up')}</Text>
+                            <Text type='link' onPress={handleSignUp} style={theme.authLinkText}>{t('Sign Up')}</Text>
                         </View>
                     </View>
                 </View>

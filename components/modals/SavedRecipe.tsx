@@ -12,6 +12,7 @@ import { logError } from "@/services/utils"
 import IFolder from "@/interfaces/Folder"
 import { Colors } from "@/constants/Colors"
 import { theme, getBgColor, isLight } from "@/constants/Theme"
+import Header from '@/components/Header'
 
 interface Props {
     isVisible: boolean
@@ -125,98 +126,129 @@ export default function SavedRecipe({ isVisible, recipeId, onHide, inFolders = [
         <Modal
             isVisible={isVisible}
             onBackdropPress={onClose}
-            style={[theme.modal, s.modal, {backgroundColor: getBgColor()}]}
+            style={[theme.modal, s.modal]}
         >
-            <KeyboardAwareScrollView>
-                <View style={{ width: '100%' }}>
-                    <Pressable onPress={onClose} style={{ alignSelf: 'flex-end' }}>
-                        <Image source={xIcon} style={{ width: 18, height: 18 }} />
-                    </Pressable>
-                </View>
-                <View style={s.savedWrapper}>
-                    <View style={s.savedCircle}>
-                        <Image source={savedImg} style={{ width: 36, height: 36 }} />
+            <View style={s.container}>
+                {/* <View style={theme.statusBarHeight} /> */}
+                
+                {/* Dark Header */}
+                <Header
+                    title={t('Saved recipes')}
+                    onBack={onClose}
+                />
+
+                <KeyboardAwareScrollView style={s.mainContent} showsVerticalScrollIndicator={false}>
+                    {/* Success Message */}
+                    <View style={s.successSection}>
+                        <View style={s.savedCircle}>
+                            <Image source={savedImg} style={s.savedIcon} />
+                        </View>
+                        <Text style={s.successTitle}>{t('New recipe has been saved')}</Text>
+                        <Text style={s.successSubtitle}>
+                            {t('Also you can save it to your own folder(s)')}
+                        </Text>
                     </View>
+
+                    {/* Folders Section */}
+                    <View style={s.foldersSection}>
+                        <Text style={s.sectionTitle}>{t('Choose folders')}</Text>
+                        <View style={s.foldersContainer}>
+                            {folders.map((folder, index) => {
+                                const isMarked = markedFolders.find((f: IFolder) => f.id === folder.id)
+                                return (
+                                    <Pressable
+                                        key={index}
+                                        style={[s.folderItem, isMarked && s.folderItemSelected]}
+                                        onPress={() => toggleFolder(folder)}
+                                    >
+                                        <Text style={[s.folderText, isMarked && s.folderTextSelected]}>
+                                            {folder.title}
+                                        </Text>
+                                    </Pressable>
+                                )
+                            })}
+                        </View>
+                    </View>
+
+                    {/* Add New Folder */}
+                    {!showNewFolder && (
+                        <Pressable onPress={() => setShowNewFolder(true)} style={s.addFolderButton}>
+                            <Text style={s.addFolderText}>{t('Add new folder')}</Text>
+                        </Pressable>
+                    )}
+
+                    {showNewFolder && (
+                        <View style={s.newFolderSection}>
+                            <TextInput
+                                value={newFolder}
+                                onChangeText={text => {
+                                    setNewFolder(text)
+                                    setNewFolderError('')
+                                }}
+                                placeholder={t('New folder name')}
+                                styleContainer={s.newFolderInput}
+                            />
+                            {newFolderError && <Text style={s.newFolderError}>{newFolderError}</Text>}
+                        </View>
+                    )}
+                </KeyboardAwareScrollView>
+
+                {/* Action Buttons */}
+                <View style={s.actionButtons}>
+                    {showNewFolder ? (
+                        <View style={s.newFolderBtns}>
+                            <Button
+                                text={t('Cancel')}
+                                onPress={() => {
+                                    resetNewFolder()
+                                    setShowNewFolder(false)
+                                }}
+                                size="large"
+                                style={s.cancelButton}
+                            />
+                            <Button
+                                text={t('Add new folder')}
+                                onPress={onAddNewFolder}
+                                size="large"
+                                style={s.addButton}
+                            />
+                        </View>
+                    ) : (
+                        <Button
+                            text={t('Save')}
+                            onPress={onSave}
+                            size="large"
+                            style={s.saveButton}
+                        />
+                    )}
                 </View>
-                <Text type='subtitle' style={{ textAlign: 'center' }}>{t('New recipe has been saved')}</Text>
-                <Text style={[s.text, {color: isLight() ? Colors.grey : Colors.lightGrey}]}>
-                    {t('Also you can save it to your own folder(s)')}
-                </Text>
-
-                <View style={s.items}>
-                {folders.map((folder, index) => {
-                    const isMarked = markedFolders.find((f: IFolder) => f.id === folder.id)
-                    return <Button
-                        key={index}
-                        text={folder.title}
-                        shape="round"
-                        size="small"
-                        style={[
-                            s.itemBtn,
-                            {backgroundColor: isLight() ? '#F5F5F5' : '#F5F5F510'},
-                            isMarked ? s.itemSelected : {}
-                        ]}
-                        textStyle={isMarked ? s.itemTextSelected : {color: isLight() ? '#000000A6' : '#FFFFFFA6'}}
-                        onPress={() => toggleFolder(folder)}
-                    /> }
-                )}
-                </View>
-
-                { !showNewFolder && <Pressable onPress={() => setShowNewFolder(true)}>
-                    <Text type='link' style={s.addCategoryText}>{t('Add new folder')}</Text>
-                </Pressable> }
-
-                { showNewFolder && <TextInput
-                    value={newFolder}
-                    onChangeText={text => {
-                        setNewFolder(text)
-                        setNewFolderError('')
-                    }}
-                    placeholder={t('New folder name')}
-                    styleContainer={s.newFolderInput}
-                /> }
-
-                {newFolderError && <Text style={s.newFolderError}>{newFolderError}</Text>}
-            </KeyboardAwareScrollView>
-
-            {/* close down the buttons */}
-            {showNewFolder
-            ? <View style={s.newFolderBtns}>
-                <Button
-                    text={t('Cancel')}
-                    onPress={() => {
-                        resetNewFolder()
-                        setShowNewFolder(false)
-                    }}
-                    size="large"
-                    style={{ width: '48%' }}
-                />
-                <Button
-                    text={t('Add new folder')}
-                    onPress={onAddNewFolder}
-                    size="large"
-                    style={{ width: '48%' }}
-                />
             </View>
-            : <Button
-                text={t('Save')}
-                onPress={onSave}
-                size="large"
-            />}
         </Modal>
     )
 }
 
 const s = StyleSheet.create({
     modal: {
-        marginTop: Dimensions.get('window').height * 0.25,
-        paddingTop: 16,
-        justifyContent: 'flex-start',
+        margin: 0,
+        padding: 0,
+        // backgroundColor: getBgColor()
     },
-    savedWrapper: {
+    container: {
+        flex: 1,
+        backgroundColor: '#F8F5F0',
+    },
+    mainContent: {
+        flex: 1,
+        paddingHorizontal: 24,
+        backgroundColor: getBgColor(),
+    },
+    successSection: {
         alignItems: 'center',
-        marginTop: 26,
-        marginBottom: 40,
+        paddingVertical: 40,
+        backgroundColor: 'white',
+        marginHorizontal: -24,
+        marginBottom: 24,
+        borderRadius: 0,
     },
     savedCircle: {
         width: 96,
@@ -225,35 +257,80 @@ const s = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         backgroundColor: '#C3803A1A',
+        marginBottom: 20,
     },
-    text: {
+    savedIcon: {
+        width: 36,
+        height: 36,
+    },
+    successTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#333333',
+        textAlign: 'center',
+        marginBottom: 8,
+        fontFamily: 'Poppins-Bold',
+    },
+    successSubtitle: {
+        fontSize: 14,
+        color: '#6C7278',
         textAlign: 'center',
         paddingHorizontal: 32,
-        marginTop: 6,
-        marginBottom: 32,
+        fontFamily: 'Poppins',
     },
-    items: {
+    foldersSection: {
+        marginBottom: 24,
+    },
+    sectionTitle: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        color: '#333333',
+        marginBottom: 15,
+        fontFamily: 'Poppins-Bold',
+    },
+    foldersContainer: {
         flexDirection: 'row',
         flexWrap: 'wrap',
-        marginTop: 8,
-        gap: 8,
+        gap: 10,
     },
-    itemBtn: {
-        paddingHorizontal: 15,
-        width: 'auto',
+    folderItem: {
+        backgroundColor: Colors.white,
+        alignItems: 'center',
+        borderRadius: 50,
+        paddingHorizontal: 16,
+        paddingVertical: 6.5,
+        minWidth: 67,
+        borderColor: '#EFF0F6',
+        borderWidth: 1,
     },
-    itemTextSelected: {
-        fontWeight: 500,
-        fontFamily: 'DMSans-Medium',
+    folderItemSelected: {
+        backgroundColor: '#F6ECE2',
+        borderColor: Colors.mainColor,
+        borderWidth: 1,
     },
-    itemSelected: {
-        backgroundColor: Colors.mainColor,
+    folderText: {
+        fontSize: 13,
+        color: '#6C7278',
+        fontFamily: 'Poppins',
+        textAlign: 'center',
+        lineHeight: 18,
     },
-    addCategoryText: {
-        fontWeight: 500,
-        fontFamily: 'DMSans-Medium',
-        marginTop: 16,
-        marginBottom: 32,
+    folderTextSelected: {
+        color: Colors.mainColor,
+    },
+    addFolderButton: {
+        alignItems: 'center',
+        paddingVertical: 16,
+        marginBottom: 20,
+    },
+    addFolderText: {
+        color: '#C79F7B',
+        fontSize: 14,
+        fontWeight: '500',
+        fontFamily: 'Poppins-Medium',
+    },
+    newFolderSection: {
+        marginBottom: 20,
     },
     newFolderInput: {
         marginVertical: 13,
@@ -261,10 +338,27 @@ const s = StyleSheet.create({
     newFolderError: {
         marginBottom: 12,
         color: Colors.mainColor,
+        fontSize: 12,
+        fontFamily: 'Poppins',
+    },
+    actionButtons: {
+        paddingHorizontal: 24,
+        paddingBottom: 24,
+        backgroundColor: getBgColor(),
     },
     newFolderBtns: {
         flexDirection: 'row',
         justifyContent: 'space-between',
+        gap: 12,
+    },
+    cancelButton: {
+        flex: 1,
+        backgroundColor: '#F5F5F5',
+    },
+    addButton: {
+        flex: 1,
+    },
+    saveButton: {
         width: '100%',
     },
 })

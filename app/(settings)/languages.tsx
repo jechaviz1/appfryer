@@ -4,7 +4,7 @@ import { useRouter } from 'expo-router'
 import { useTranslation } from 'react-i18next'
 
 import { Button, ModalTitle, ScrollView, Text, View } from "@/components/base/BaseComponents"
-import { theme } from '@/constants/Theme'
+import { getBgColor, theme } from '@/constants/Theme'
 import { Colors } from '@/constants/Colors'
 import { useAuth } from '@/contexts/authContext'
 import { get, post } from '@/services/apiRequests'
@@ -74,6 +74,7 @@ export default function Languages() {
 const s = StyleSheet.create({
     langs: {
         gap: 16,
+        backgroundColor: getBgColor(),
     },
     line: {
         width: '100%',

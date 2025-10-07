@@ -8,7 +8,7 @@ import { useAuth } from '@/contexts/authContext'
 import { Text, View } from "@/components/base/BaseComponents"
 import ProfileScreen from '@/components/ProfileScreen'
 import { get, post } from '@/services/apiRequests'
-import { theme, isLight } from '@/constants/Theme'
+import { theme, isLight, getBgColor } from '@/constants/Theme'
 import IRecipe from '@/interfaces/Recipe'
 import { logError } from '@/services/utils'
 import AsyncStorage from '@react-native-async-storage/async-storage'
@@ -57,6 +57,6 @@ export default function ProfileTabScreen() {
 
 const s = StyleSheet.create({
     container: {
-        backgroundColor: Colors.mainBGColor
+        backgroundColor: getBgColor()
     },
 })

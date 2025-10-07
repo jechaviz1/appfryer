@@ -4,7 +4,6 @@ import { useRouter, useGlobalSearchParams } from 'expo-router'
 import * as Linking from 'expo-linking'
 import Modal from 'react-native-modal'
 import DatePicker from 'react-native-date-picker'
-// import * as Sharing from 'expo-sharing'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useTranslation } from 'react-i18next'
 import { LinearGradient } from 'expo-linear-gradient'
@@ -127,6 +126,14 @@ export default function RecipeScreen() {
 				disableBookmarkAction={disableBookmarkActionCards}
 			/>
 		)
+	}
+
+	const handleOpenDatePicker = () => {
+		setOpenDatePicker(true)
+	}
+
+	const handleToggleSaveRecipe = () => {
+		toggleSaveRecipe()
 	}
 
     const fetchRecipe = useCallback(async (id: number) => {
@@ -399,7 +406,7 @@ export default function RecipeScreen() {
                     <Text style={s.modalText}>{t('Plan date')}</Text>
                     <Button
                         text={dateToDisplay(planDate, i18n.language)}
-                        onPress={() => setOpenDatePicker(true)}
+                        onPress={handleOpenDatePicker}
                         preIcon={require('@/assets/icons/edit-white.png')}
                         style={{ marginBottom: 16, gap: 10 }}
                     />
@@ -522,7 +529,7 @@ export default function RecipeScreen() {
                                 style={s.actionButtonIcon}
                             />
                         </Pressable>
-                        <Pressable style={s.actionButton} onPress={() => toggleSaveRecipe()}>
+                        <Pressable style={s.actionButton} onPress={handleToggleSaveRecipe}>
                             <Image
                                 source={isSaved
                                     ? require('@/assets/icons/ribbon-filled.png')
@@ -675,14 +682,16 @@ export default function RecipeScreen() {
                                 <View style={s.ingredientsList}>
                                     {recipe.ingredients?.slice(0, 4).map((ingredient, index) => (
                                         <View key={index} style={s.ingredientCard}>
-                                            <Image
-                                                source={{ uri: ingredient.category?.photo || ingredient.category?.thumb || 'https://via.placeholder.com/50' }} 
-                                                style={s.ingredientImage} 
-                                            />
-                                            <View style={s.ingredientInfo}>
+                                            <Pressable onPress={() => router.push({ pathname: '/(pages)/ingredient', params: { id: ingredient.ingredientId } })}>
+                                                <Image
+                                                    source={{ uri: ingredient.category?.photo || ingredient.category?.thumb || 'https://via.placeholder.com/50' }} 
+                                                    style={s.ingredientImage} 
+                                                />
+                                            </Pressable>
+                                            <Pressable style={s.ingredientInfo} onPress={() => router.push({ pathname: '/(pages)/ingredient', params: { id: ingredient.ingredientId } })}>
                                                 <Text style={s.ingredientName}>{ingredient.ingredientTitle || ingredient.title}</Text>
                                                 <Text style={s.ingredientAmount}>{ingredient.cnt} {ingredient.measureTitle}</Text>
-                                            </View>
+                                            </Pressable>
                                             <Pressable style={[s.ingredientAddButton, index === 1 && s.ingredientAddedButton]}>
                                                 <Text style={[s.addButtonText, index === 1 && s.addedButtonText]}>
                                                     {index === 1 ? t('Added') : t('Add')}
@@ -692,7 +701,9 @@ export default function RecipeScreen() {
                                                     style={[s.addButtonIcon, index === 1 && s.addedButtonIcon]} 
                                                 />
                                             </Pressable>    
-                                            <Image source={require('@/assets/icons/chevron-right-neutral-grey.png')} style={s.navigationArrow} />
+                                            <Pressable onPress={() => router.push({ pathname: '/(pages)/ingredient', params: { id: ingredient.ingredientId } })}>
+                                                <Image source={require('@/assets/icons/chevron-right-neutral-grey.png')} style={s.navigationArrow} />
+                                            </Pressable>
                                         </View>
                                     ))}
                                 </View>
@@ -741,13 +752,15 @@ export default function RecipeScreen() {
                 )}
 
                 {/* Nutritional Values Component */}
-                <NutritionalValues 
-                    isPremium={user?.isPremium || false}
-                    recipe={recipe}
-                    nutrientsInit={recipe?.nutrients}
-                    setRecipe={setRecipe}
-                    onSaveLocal={onSaveLocal}
-                />
+                <View style={s.section}>
+                    <NutritionalValues 
+                        isPremium={true}
+                        recipe={recipe}
+                        nutrientsInit={recipe?.nutrients}
+                        setRecipe={setRecipe}
+                        onSaveLocal={onSaveLocal}
+                    />
+                </View>
 
                 {/* Recipes of the Month Section */}
                 <View style={s.section}>
@@ -838,7 +851,7 @@ const s = StyleSheet.create({
     },
     scrollContainer: {
         flex: 1,
-        backgroundColor: Colors.mainBGColor,
+        backgroundColor: getBgColor(),
     },
 
     // Dark Header (from my-space.tsx)
@@ -1119,7 +1132,7 @@ const s = StyleSheet.create({
     tabsContainer: {
         paddingTop: 19,
         paddingBottom: 32,
-        backgroundColor: Colors.mainBGColor,
+        backgroundColor: getBgColor(),
         borderTopWidth: 1,
         borderTopColor: '#E0E0E0',
     },
@@ -1157,17 +1170,17 @@ const s = StyleSheet.create({
     },
     tabContent: {
         paddingHorizontal: 20,
-        backgroundColor: Colors.mainBGColor,
+        backgroundColor: getBgColor(),
     },
 
     // Ingredients Section
     ingredientsSection: {
         marginBottom: 0,
-        backgroundColor: Colors.mainBGColor,
+        backgroundColor: getBgColor(),
     },
     instructionsSection: {
         marginBottom: 0,
-        backgroundColor: Colors.mainBGColor,
+        backgroundColor: getBgColor(),
     },
     portionSelector: {
         flexDirection: 'row',
@@ -1175,7 +1188,7 @@ const s = StyleSheet.create({
         justifyContent: 'center',
         gap: 12,
         marginVertical: 20,
-        backgroundColor: Colors.mainBGColor,
+        backgroundColor: getBgColor(),
     },
     portionButton: {
         width: 26,
@@ -1210,7 +1223,7 @@ const s = StyleSheet.create({
     },
     ingredientsList: {
         gap: 12,
-        backgroundColor: Colors.mainBGColor,
+        backgroundColor: getBgColor(),
     },
     ingredientCard: {
         flexDirection: 'row',
@@ -1285,7 +1298,7 @@ const s = StyleSheet.create({
         paddingHorizontal: 50,
         gap: 12,
         marginBottom: 32,
-        backgroundColor: Colors.mainBGColor,
+        backgroundColor: getBgColor(),
     },
     cookButton: {
         backgroundColor: '#C28040',
@@ -1352,14 +1365,14 @@ const s = StyleSheet.create({
     section: {
         paddingHorizontal: 24,
         marginBottom: 24,
-        backgroundColor: Colors.mainBGColor,
+        backgroundColor: getBgColor(),
     },
     sectionHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
         marginBottom: 16,
-        backgroundColor: Colors.mainBGColor,
+        backgroundColor: getBgColor(),
     },
     sectionTitle: {
         fontSize: 18,
@@ -1387,7 +1400,7 @@ const s = StyleSheet.create({
         alignItems: 'center',
         marginTop: 16,
         gap: 8,
-        backgroundColor: Colors.mainBGColor,
+        backgroundColor: getBgColor(),
     },
     slideDot: {
         width: 8,
@@ -1397,11 +1410,11 @@ const s = StyleSheet.create({
     categoriesSection: {
         paddingHorizontal: 24,
         marginBottom: 24,
-        backgroundColor: Colors.mainBGColor,
+        backgroundColor: getBgColor(),
     },
     categoriesContainer: {
         marginTop: 16,
-        backgroundColor: Colors.mainBGColor,
+        backgroundColor: getBgColor(),
     },
     modalView: {
         backgroundColor: Colors.white,

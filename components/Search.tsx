@@ -26,6 +26,10 @@ export default function Search({page, onSearch, personId, sendOnBlankFiltersEmpt
     const { user } = useAuth()
     const { t } = useTranslation()
 
+    const handleShowFilters = () => {
+        setShowFilters(true)
+    }
+
     const getFeed = () => {
         let data = {...searchFilters?.[page]}
         if (searchVal !== '') {
@@ -83,7 +87,7 @@ export default function Search({page, onSearch, personId, sendOnBlankFiltersEmpt
             </View>
             <Pressable
                 style={s.filterButton}
-                onPress={() => setShowFilters(true)}
+                onPress={handleShowFilters}
             >
                 <Image
                     style={s.filterIcon}

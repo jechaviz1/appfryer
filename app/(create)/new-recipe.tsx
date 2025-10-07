@@ -1,4 +1,4 @@
-import { type ReactNode, useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Dimensions, Image, Keyboard, Platform, Pressable, StyleSheet } from 'react-native'
 import { Asset, ImagePickerResponse } from 'react-native-image-picker'
 import { useGlobalSearchParams, useRouter } from 'expo-router'
@@ -95,13 +95,21 @@ function IngredientRow({
         setIngredientInner({ ...(ing as IIngredinent), ingredientId: (ing as any).id, section })
     }, [section])
 
+    const handleDisplayModal = () => {
+        setDisplayModal(true)
+    }
+
+    const handleMeasureSubmit = (m: any) => {
+        setMeasure(m.id)
+    }
+
     return (
         <View style={[s.ingredientRow, isPopupOpen ? s.ingredientRowActive : undefined]}>
             {displayModal && (
                 <Measures
                     isVisible={displayModal}
                     onHide={() => setDisplayModal(false)}
-                    onSubmit={(m) => setMeasure(m.id)}
+                    onSubmit={handleMeasureSubmit}
                 />
             )}
 
@@ -138,7 +146,7 @@ function IngredientRow({
                 shape='square'
                 disabled={!ingredientInner}
                 style={s.measureBtn}
-                onPress={() => setDisplayModal(true)}
+                onPress={handleDisplayModal}
             />
 
             <Pressable onPress={onDelete}>
@@ -310,6 +318,70 @@ export default function CreateRecipePage() {
         setMediaError('')
         setMedia(prev => prev.filter((_, i) => i !== index))
     }, [])
+
+    const handleRemoveMedia = (index: number) => {
+        removeMedia(index)
+    }
+
+    const handleRemoveCategory = (categoryId: number) => {
+        setSelectedCategories(selectedCategories.filter(id => id !== categoryId))
+    }
+
+    const handleRemoveTag = (tagId: number) => {
+        setSelectedTags(selectedTags.filter(id => id !== tagId))
+    }
+
+    const handleTogglePortionsDropdown = () => {
+        setShowPortionsDropdown(prev => !prev)
+    }
+
+    const handleShowPrepTimeModal = () => {
+        setShowPrepTimeModal(true)
+    }
+
+    const handleShowCookingTimeModal = () => {
+        setShowCookingTimeModal(true)
+    }
+
+    const handleShowTempModal = () => {
+        setShowTempModal(true)
+    }
+
+    const handleClosePrepTimeModal = () => {
+        setShowPrepTimeModal(false)
+    }
+
+    const handleCloseCookingTimeModal = () => {
+        setShowCookingTimeModal(false)
+    }
+
+    const handleCloseTempModal = () => {
+        setShowTempModal(false)
+    }
+
+    const handleAddMainIngredient = () => {
+        onAddIngredient('main')
+    }
+
+    const handleAddOtherIngredient = () => {
+        onAddIngredient('other')
+    }
+
+    const handleCloseIngredientsModal = () => {
+        setShowIngredientsModal(false)
+    }
+
+    const handleSelectPortions = (val: number) => {
+        setPortions(val)
+        setShowPortionsDropdown(false)
+    }
+
+    const handleShowIngredientsModal = () => {
+        if (mainIngredients.length === 0) {
+            setMainIngredients([null])
+        }
+        setShowIngredientsModal(true)
+    }
 
     const handleSelectedMedia = useCallback((uploadedMedia: ImagePickerResponse, activeRecipe?: { [key: string]: any } | null) => {
         if (!uploadedMedia?.assets || uploadedMedia.assets.length === 0 || !uploadedMedia.assets[0].uri) {
@@ -674,7 +746,7 @@ export default function CreateRecipePage() {
                                         <Image source={{ uri: item.uri || item.url }} style={s.mediaItem} />
                                     )}
                                     {!uploading && canGoNext && (
-                                        <Pressable style={s.closeBtn} onPress={() => removeMedia(index)}>
+                                        <Pressable style={s.closeBtn} onPress={() => handleRemoveMedia(index)}>
                                             <Image source={require('@/assets/icons/x-white.png')} style={s.closeIcon} />
                                         </Pressable>
                                     )}
@@ -819,7 +891,7 @@ export default function CreateRecipePage() {
                                 return cat ? (
                                     <View key={cat.id} style={s.tag}>
                                         <Text style={s.tagText}>{cat.title}</Text>
-                                        <Pressable onPress={() => setSelectedCategories(selectedCategories.filter(id => id !== cat.id))}>
+                                        <Pressable onPress={() => handleRemoveCategory(cat.id)}>
                                             <Image source={require('@/assets/icons/circle-x-2.png')} style={s.tagCloseIcon} />
                                         </Pressable>
                                     </View>
@@ -897,7 +969,7 @@ export default function CreateRecipePage() {
                                 return tg ? (
                                     <View key={tg.id} style={s.tag}>
                                         <Text style={s.tagText}>{tg.title}</Text>
-                                        <Pressable onPress={() => setSelectedTags(selectedTags.filter(id => id !== tg.id))}>
+                                        <Pressable onPress={() => handleRemoveTag(tg.id)}>
                                             <Image source={require('@/assets/icons/circle-x-2.png')} style={s.tagCloseIcon} />
                                         </Pressable>
                                     </View>
@@ -912,7 +984,7 @@ export default function CreateRecipePage() {
                     <Text style={s.inputLabel}>{t('Number of servings')}</Text>
                     <Pressable
                         style={s.dropdownContainer}
-                        onPress={() => setShowPortionsDropdown(prev => !prev)}
+                        onPress={handleTogglePortionsDropdown}
                     >
                         <Text style={[s.newInputText, {flex:1}]}>{`${portions} ${t('Servings')}`}</Text>
                         <Image source={require('@/assets/icons/chevron-down-light.png')} style={s.dropdownIcon} />
@@ -924,10 +996,7 @@ export default function CreateRecipePage() {
                                 <Pressable
                                     key={val}
                                     style={s.dropdownItem}
-                                    onPress={() => {
-                                        setPortions(val)
-                                        setShowPortionsDropdown(false)
-                                    }}
+                                    onPress={() => handleSelectPortions(val)}
                                 >
                                     <Text style={s.dropdownItemText}>{`${val} ${t('Servings')}`}</Text>
                                 </Pressable>
@@ -939,7 +1008,7 @@ export default function CreateRecipePage() {
                 {/* Preparation Time Section */}
                 <View style={s.inputSection}>
                     <Text style={s.inputLabel}>{t('Preparation time')}</Text>
-                    <Pressable style={s.dropdownContainer} onPress={() => setShowPrepTimeModal(true)}>
+                    <Pressable style={s.dropdownContainer} onPress={handleShowPrepTimeModal}>
                         <Text style={[s.newInputText, {flex:1}]}>{timeFromMinutes(prepTime)}</Text>
                     </Pressable>
                 </View>
@@ -947,7 +1016,7 @@ export default function CreateRecipePage() {
                 {/* Cooking Time Section */}
                 <View style={s.inputSection}>
                     <Text style={s.inputLabel}>{t('Cooking time')}</Text>
-                    <Pressable style={s.dropdownContainer} onPress={() => setShowCookingTimeModal(true)}>
+                    <Pressable style={s.dropdownContainer} onPress={handleShowCookingTimeModal}>
                         <Text style={[s.newInputText, {flex:1}]}>{timeFromMinutes(cookingTime)}</Text>
                     </Pressable>
                 </View>
@@ -955,7 +1024,7 @@ export default function CreateRecipePage() {
                 {/* Temperature Section */}
                 <View style={s.inputSection}>
                     <Text style={s.inputLabel}>{t('Temperature')}</Text>
-                    <Pressable style={s.dropdownContainer} onPress={() => setShowTempModal(true)}>
+                    <Pressable style={s.dropdownContainer} onPress={handleShowTempModal}>
                         <Text style={[s.newInputText, {flex:1}]}>{`${temperature}°C`}</Text>
                     </Pressable>
                 </View>
@@ -964,12 +1033,7 @@ export default function CreateRecipePage() {
                 <View style={s.inputSection}>
                     <Pressable
                         style={s.ingredientsButton}
-                        onPress={() => {
-                            if (mainIngredients.length === 0) {
-                                setMainIngredients([null])
-                            }
-                            setShowIngredientsModal(true)
-                        }}
+                        onPress={handleShowIngredientsModal}
                     >
                         <Text style={s.ingredientsButtonText}>{t('Enter ingredients and quantities')}</Text>
                         <Image source={require('@/assets/icons/chevron-right-neutral-grey.png')} style={s.chevronIcon} />
@@ -1018,7 +1082,7 @@ export default function CreateRecipePage() {
                             maximumTrackTintColor={Colors.lightGrey}
                             thumbStyle={s.thumb}
                         />
-                        <Button text={t('OK')} onPress={()=>setShowPrepTimeModal(false)} style={{marginTop:20}} />
+                        <Button text={t('OK')} onPress={handleClosePrepTimeModal} style={{marginTop:20}} />
                     </View>
                 </Modal>
             )}
@@ -1037,7 +1101,7 @@ export default function CreateRecipePage() {
                             maximumTrackTintColor={Colors.lightGrey}
                             thumbStyle={s.thumb}
                         />
-                        <Button text={t('OK')} onPress={()=>setShowCookingTimeModal(false)} style={{marginTop:20}} />
+                        <Button text={t('OK')} onPress={handleCloseCookingTimeModal} style={{marginTop:20}} />
                     </View>
                 </Modal>
             )}
@@ -1056,7 +1120,7 @@ export default function CreateRecipePage() {
                             maximumTrackTintColor={Colors.lightGrey}
                             thumbStyle={s.thumb}
                         />
-                        <Button text={t('OK')} onPress={()=>setShowTempModal(false)} style={{marginTop:20}} />
+                        <Button text={t('OK')} onPress={handleCloseTempModal} style={{marginTop:20}} />
                     </View>
                 </Modal>
             )}
@@ -1079,7 +1143,7 @@ export default function CreateRecipePage() {
                                         measures={measures}
                                     />
                                 ))}
-                                <Pressable onPress={() => onAddIngredient('main')}>
+                                <Pressable onPress={() => handleAddMainIngredient()}>
                                     <Text type='link'>{t('Add new')}</Text>
                                 </Pressable>
 
@@ -1096,12 +1160,12 @@ export default function CreateRecipePage() {
                                         measures={measures}
                                     />
                                 ))}
-                                <Pressable onPress={() => onAddIngredient('other')}>
+                                <Pressable onPress={() => handleAddOtherIngredient()}>
                                     <Text type='link'>{t('Add new')}</Text>
                                 </Pressable>
                             </View>
                         </ScrollView>
-                        <Button text={t('Done')} disabled={!canConfirmIngredients} onPress={()=>setShowIngredientsModal(false)} style={{marginTop:20}} />
+                        <Button text={t('Done')} disabled={!canConfirmIngredients} onPress={handleCloseIngredientsModal} style={{marginTop:20}} />
                     </View>
                 </Modal>
             )}
@@ -1157,11 +1221,11 @@ const s = StyleSheet.create({
         paddingTop: 20,
         paddingBottom: 100,
         gap: 20,
-        backgroundColor: Colors.mainBGColor,
+        backgroundColor: getBgColor(),
     },
     mediaSection: {
         gap: 12,
-        backgroundColor: Colors.mainBGColor,
+        backgroundColor: getBgColor(),
     },
     sectionTitle: {
         fontFamily: 'Poppins-Medium',
@@ -1177,7 +1241,7 @@ const s = StyleSheet.create({
         color: '#6C7278',
     },
     inputSection: {
-        backgroundColor: Colors.mainBGColor,
+        backgroundColor: getBgColor(),
     },
     inputLabel: {
         fontFamily: 'Poppins',
@@ -1245,7 +1309,7 @@ const s = StyleSheet.create({
         flexDirection: 'row',
         flexWrap: 'wrap',
         gap: 8,
-        backgroundColor: Colors.mainBGColor,
+        backgroundColor: getBgColor(),
     },
     tag: {
         flexDirection: 'row',
@@ -1441,7 +1505,7 @@ const s = StyleSheet.create({
         flexWrap: 'wrap',
         gap: 11,
         alignItems: 'flex-start',
-        backgroundColor: Colors.mainBGColor,
+        backgroundColor: getBgColor(),
     },
     mediaItemContainer: {
         position: 'relative',
@@ -1523,7 +1587,7 @@ const s = StyleSheet.create({
         textAlign: 'right',
     },
     inlinePanel: {
-        backgroundColor: Colors.mainBGColor,
+        backgroundColor: getBgColor(),
         borderRadius: 12,
         padding: 12,
         gap: 12,
@@ -1539,7 +1603,7 @@ const s = StyleSheet.create({
         width: 36,
         height: 36,
         borderRadius: 18,
-        backgroundColor: Colors.mainBGColor,
+        backgroundColor: getBgColor(),
         alignItems: 'center',
         justifyContent: 'center',
     },

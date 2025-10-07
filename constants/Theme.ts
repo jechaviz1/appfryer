@@ -128,7 +128,7 @@ export const theme = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        backgroundColor: Colors.mainBGColor
+        backgroundColor: getBgColor()
     },
 
     // Badges
@@ -163,6 +163,7 @@ export const theme = StyleSheet.create({
         width: '99%',
         marginTop: 20,
         marginBottom: 16,
+        backgroundColor: 'transparent',
     },
     modalTopbarInner: {
         flexDirection: 'row',
@@ -170,6 +171,7 @@ export const theme = StyleSheet.create({
         alignItems: 'center',
         gap: 16,
         width: '100%',
+        backgroundColor: 'transparent',
     },
 
     // pages

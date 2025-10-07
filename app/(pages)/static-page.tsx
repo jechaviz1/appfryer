@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react"
-import { Pressable, Image, StyleSheet } from "react-native"
+import { StyleSheet } from "react-native"
 import { useGlobalSearchParams, useRouter } from "expo-router"
 import { useTranslation } from "react-i18next"
 
 import { ScrollView, Text, View } from "@/components/base/BaseComponents"
-import { isLight, theme } from "@/constants/Theme"
+import { getBgColor, theme } from "@/constants/Theme"
+import Header from "@/components/Header"
 import { useAppState, IStaticPage } from "@/contexts/appStateContext"
 import { useAuth } from "@/contexts/authContext"
 import { get } from "@/services/apiRequests"
@@ -76,29 +77,16 @@ export default function CustomPage() {
     }, [isLoaded, appState.staticPages])
     
 
-    const backIconLight = require('@/assets/icons/arrow-left.png')
-    const backIconDark = require('@/assets/icons/arrow-left-light.png')
-
     return (
-        <View style={theme.container}>
+        <View style={[theme.container, { flex: 1, paddingHorizontal: 0 }]}>
             <View style={theme.statusBarHeight} />
-            <ScrollView style={theme.mainContainer}>
-                <View style={[theme.titleContainer, {marginBottom: 32}]}>
-                    <Pressable
-                        onPress={() => router.canGoBack() ? router.back() : router.navigate('/(settings)/settings')}
-                        style={s.topbarInner}
-                    >
-                        <Image
-                            source={isLight() ? backIconLight : backIconDark}
-                            style={{ width: 16, height: 16 }}
-                        />
-                        <Text type="subtitle">{title}</Text>
-                    </Pressable>
-                </View>
-                <View style={s.main}>
-                    <View style={theme.section}>
-                        {content.split('\n').map((t, i) => <Text key={i}>{t}</Text>)}
-                    </View>
+            <Header 
+                title={title}
+                onBack={() => router.canGoBack() ? router.back() : router.navigate('/(settings)/settings')}
+            />
+            <ScrollView style={s.main}>
+                <View style={s.section}>
+                    {content.split('\n').map((t, i) => <Text key={i}>{t}</Text>)}
                 </View>
             </ScrollView>
         </View>
@@ -106,16 +94,14 @@ export default function CustomPage() {
 }
 
 const s = StyleSheet.create({
-    topbarInner: {
-        flexDirection: 'row',
-        justifyContent: 'flex-start',
-        alignItems: 'center',
-        gap: 16,
-        width: '100%',
-    },
     main: {
+        backgroundColor: getBgColor(),
+        flex: 1,
         width: '100%',
         gap: 16,
-        paddingBottom: 80,
+    },
+    section: {
+        padding: 25,
+        backgroundColor: getBgColor(),
     },
 })

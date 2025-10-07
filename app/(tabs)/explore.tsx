@@ -245,50 +245,51 @@ export default function SearchScreen() {
     return (
         <View style={theme.container}>
             <View style={theme.statusBarHeight} />
-            <ScrollView style={theme.mainContainer}>
-                {/* Search Section */}
-                <Search page="explore" onSearch={handleSearchResults} />
+            <ScrollView>
+                <View style={theme.mainContainer}>
+                    {/* Search Section */}
+                    <Search page="explore" onSearch={handleSearchResults} />
 
-                {/* Category Tabs */}
-                <View style={s.categoriesSection}>
-                    <FlatList
-                        data={categoryTabs}
-                        horizontal
-                        showsHorizontalScrollIndicator={false}
-                        renderItem={({ item }) => (
-                            <Pressable 
-                                style={[s.categoryItem, item.selected && s.categoryItemSelected]}
-                                onPress={() => handleCategorySelect(item.id)}
-                            >
-                                <Text style={[s.categoryText, item.selected && s.categoryTextSelected]}>
-                                    {item.title}
-                                </Text>
-                            </Pressable>
-                        )}
-                        keyExtractor={(item) => item.id.toString()}
-                        contentContainerStyle={s.categoriesList}
-                    />
-                </View>
-
-                {/* Recipe Feed */}
-                <View style={s.feedSection}>
-                    {recipesForYou.length > 0 ? (
+                    {/* Category Tabs */}
+                    <View style={s.categoriesSection}>
                         <FlatList
-                            data={recipesForYou}
-                            renderItem={renderRecipeCard}
+                            data={categoryTabs}
+                            horizontal
+                            showsHorizontalScrollIndicator={false}
+                            renderItem={({ item }) => (
+                                <Pressable 
+                                    style={[s.categoryItem, item.selected && s.categoryItemSelected]}
+                                    onPress={() => handleCategorySelect(item.id)}
+                                >
+                                    <Text style={[s.categoryText, item.selected && s.categoryTextSelected]}>
+                                        {item.title}
+                                    </Text>
+                                </Pressable>
+                            )}
                             keyExtractor={(item) => item.id.toString()}
-                            showsVerticalScrollIndicator={false}
-                            scrollEnabled={false}
-                            contentContainerStyle={s.recipesList}
+                            contentContainerStyle={s.categoriesList}
                         />
-                    ) : (
-                        <View style={s.emptyState}>
-                            <Text style={s.emptyStateText}>{t('No recipes available')}</Text>
-                            <Text style={s.emptyStateSubtext}>{t('Come back later to see new recipes')}</Text>
-                        </View>
-                    )}
-                </View>
+                    </View>
 
+                    {/* Recipe Feed */}
+                    <View style={s.feedSection}>
+                        {recipesForYou.length > 0 ? (
+                            <FlatList
+                                data={recipesForYou}
+                                renderItem={renderRecipeCard}
+                                keyExtractor={(item) => item.id.toString()}
+                                showsVerticalScrollIndicator={false}
+                                scrollEnabled={false}
+                                contentContainerStyle={s.recipesList}
+                            />
+                        ) : (
+                            <View style={s.emptyState}>
+                                <Text style={s.emptyStateText}>{t('No recipes available')}</Text>
+                                <Text style={s.emptyStateSubtext}>{t('Come back later to see new recipes')}</Text>
+                            </View>
+                        )}
+                    </View>
+                </View>
             </ScrollView>
         </View>
     )

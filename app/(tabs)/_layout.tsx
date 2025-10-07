@@ -271,7 +271,7 @@ export default function TabLayout() {
                     }}
                 />
                 <Tabs.Screen
-                    name="my-space"
+                    name="space"
                     options={{
                         title: t('My Space'),
                         tabBarIcon: ({ focused }) => (
@@ -309,14 +309,6 @@ const s = StyleSheet.create({
         paddingTop: 14,
         paddingBottom: 14,
         backgroundColor: '#FFFFFF',
-        shadowColor: "#000",
-        shadowOffset: {
-            width: 1,
-            height: 1,
-        },
-        shadowOpacity: 0.25,
-        shadowRadius: 4,
-        elevation: 10,
     },
     tabBarLabel: {
         fontFamily: 'Poppins',

@@ -109,5 +109,6 @@ const s = StyleSheet.create({
         flexDirection: 'column',
         gap: 12,
         marginBottom: 16,
+        backgroundColor: getBgColor(),
     },
 })

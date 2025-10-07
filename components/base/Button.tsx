@@ -47,6 +47,10 @@ export function Button ({
         small: 14,
     }
 
+    const handleDisabledPress = () => {
+        // Do nothing when disabled
+    }
+
     return (
         <Pressable
             style={[
@@ -59,7 +63,7 @@ export function Button ({
                 },
                 style
             ]}
-            onPress={disabled ? () => {} : onPress}
+            onPress={disabled ? handleDisabledPress : onPress}
         >
             { preIcon && <Image
                 source={preIcon}

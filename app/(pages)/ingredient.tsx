@@ -1,10 +1,11 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
-import { FlatList, Image, Pressable, StyleSheet, useWindowDimensions } from 'react-native'
-import { useGlobalSearchParams } from 'expo-router'
+import { useCallback, useEffect, useState } from 'react'
+import { Image, Pressable, StyleSheet, useWindowDimensions } from 'react-native'
+import { router, useGlobalSearchParams } from 'expo-router'
 import { useTranslation } from 'react-i18next'
 
 import { BackButton, ScrollView, Text, View } from "@/components/base/BaseComponents"
-import { theme, paddings, isLight } from '@/constants/Theme'
+import Header from '@/components/Header'
+import { theme, paddings, isLight, getBgColor } from '@/constants/Theme'
 import { useAuth } from '@/contexts/authContext'
 import { get } from '@/services/apiRequests'
 import { Colors } from '@/constants/Colors'
@@ -20,20 +21,13 @@ export default function Ingredient() {
     const [ingredient, setIngredient] = useState<IIngredinentInfo>()
     const [activeTab, setActiveTab] = useState(0)
 
-    const tabsRef = useRef<FlatList>(null)
-
     useEffect(() => {
         get({ url: `/ingredient/${globQuery.id}`, token: user?.token })
             .then(ingredient => setIngredient(ingredient))
             .catch(e => console.error(e.response.data))
     }, [])
 
-    useEffect(() => {
-        tabsRef.current?.scrollToIndex({
-            index: activeTab,
-            animated: true,
-        })
-    }, [activeTab])
+    // Using pill-tabs like ProfileScreen; no FlatList scroll sync needed
 
     const width = windowWidth - paddings * 2
 
@@ -44,20 +38,56 @@ export default function Ingredient() {
                     return null
                 }
                 return (
-                    <View style={[theme.section, {gap: 18, width}]}>
-                        <View style={s.infoRow}>
-                            <Text>{t('Name')}</Text>
-                            <Text style={s.infoValue}>{ingredient!.title}</Text>
+                    <View style={[s.infoWrapper, {width}]}>
+                        {/* Title */}
+                        <Text type="subtitle" style={s.title}>{ingredient!.title}</Text>
+
+                        {/* Category chip */}
+                        <View style={[s.categoryRow, {marginTop: 8}]}> 
+                            <Text style={s.categoryLabel}>{t('Category')}</Text>
+                            <View style={s.categoryChip}>
+                                <Text style={s.categoryText}>{ingredient!.category.title}</Text>
+                            </View>
                         </View>
-                        <View style={s.line} />
-                        <View style={s.infoRow}>
-                            <Text>{t('Category')}</Text>
-                            <Text style={s.infoValue}>{ingredient!.category.title}</Text>
+
+                        {/* Description */}
+                        <Text style={s.ingredientDescriptionText}>
+                            {ingredient!.description}
+                        </Text>
+
+                        {/* Details cards */}
+                        <View style={s.ingredientDetailsWrapper}>
+                            {details.map((detail, index) => (
+                                <View key={index} style={s.detailWrapper}>
+                                    <View style={s.detailIconWrapper}>
+                                        <Image source={detail.icon} style={s.detailIcon}/>
+                                    </View>
+                                    <Text style={s.detailValue}>{detail.value}</Text>
+                                    <Text style={s.detailCaption}>{t(detail.label)}</Text>
+                                </View>
+                            ))}
                         </View>
-                        <View style={s.line} />
-                        <View>
-                            <Text>{t('Description')}</Text>
-                            <Text style={s.infoValue}>{ingredient!.description}</Text>
+
+                        {/* Info rows (pill cards) */}
+                        <View style={s.infoList}>
+                            <View style={s.infoItem}>
+                                <Text style={s.infoLabel}>{t('Season')}</Text>
+                                <Text style={s.infoValue}>{ingredient!.season || t('All year')}</Text>
+                            </View>
+                            <View style={s.infoItem}>
+                                <Text style={s.infoLabel}>{t('Origin')}</Text>
+                                <Text style={s.infoValue}>{ingredient!.country || '---'}</Text>
+                            </View>
+                            <View style={s.infoItem}>
+                                <Text style={s.infoLabel}>{t('Culinary use')}</Text>
+                                <Text style={s.infoValue}>{ingredient!.culinaryUse || '---'}</Text>
+                            </View>
+                        </View>
+
+                        {/* Product history */}
+                        <View style={s.historyWrapper}>
+                            <Text style={s.historyTitle}>{t('Product history')}</Text>
+                            <Text style={s.historyText}>{ingredient!.description || '---'}</Text>
                         </View>
                     </View>
                 )
@@ -67,24 +97,6 @@ export default function Ingredient() {
                 }
                 return (
                     <NutritionalValues isPremium={user?.isPremium || false} nutrientsInit={ingredient!.nutrients} />
-                )
-            case 'origin':
-                if (activeTab !== 2) {
-                    return null
-                }
-                return (
-                    <View style={[theme.section, {gap: 18, width}]}>
-                        <Text style={s.infoValue}>{ingredient!.country}</Text>
-                    </View>
-                )
-            case 'culinaryUses':
-                if (activeTab !== 3) {
-                    return null
-                }
-                return (
-                    <View style={[theme.section, {gap: 18, width}]}>
-                        <Text style={s.infoValue}>{ingredient!.culinaryUse}</Text>
-                    </View>
                 )
         }
         return (
@@ -100,76 +112,38 @@ export default function Ingredient() {
 
     const cals = Math.floor(ingredient.nutrients.calories || 0)
     const details = [
-        { value: `${cals} ${t('kcal')}`, icon: require('@/assets/icons/fire.png') },
-        { value: ingredient?.country || '', icon: require('@/assets/icons/globe.png') },
-        { value: ingredient?.interchangable || '', icon: require('@/assets/icons/interchange.png') },
-        { value: ingredient?.season || t('All year'), icon: require('@/assets/icons/leaf.png') },
+        { value: `${cals}`, label: 'Calories', icon: require('@/assets/icons/fire.png') },
+        { value: ingredient?.country || '---', label: 'Country', icon: require('@/assets/icons/globe.png') },
+        { value: ingredient?.interchangable || '---', label: 'Substitute', icon: require('@/assets/icons/interchange.png') },
     ]
-
-    const tabs = [
-        { item: t('Info'), index: 0 },
-        { item: t('Nutritional properties'), index: 1 },
-        { item: t('Origin'), index: 2 },
-        { item: t('Culinary uses'), index: 3 },
-    ]
-
-    const greyTextColor = isLight() ? Colors.grey : Colors.lightGrey
 
     return (
         <View style={theme.container}>
             <View style={theme.statusBarHeight} />
-            <ScrollView style={theme.mainContainer}>
-                <View style={theme.titleImageWrapper}>
-                    <Image source={{ uri: ingredient.category.photo }} style={theme.titleImage} />
-                    <BackButton />
-                </View>
-                <Text type="subtitle">{ingredient.title}</Text>
-                <Text style={[s.ingredientDescriptionText, {color: isLight() ? Colors.grey : Colors.lightGrey }]}>{ingredient.description}</Text>
-
-                <View style={s.ingredientDetailsWrapper}>
-                    {details.map((detail, index) => (
-                        <View key={index} style={s.detailWrapper}>
-                            <View style={s.detailIconWrapper}>
-                                <Image source={detail.icon} style={s.detailIcon}/>
-                            </View>
-                            <Text style={{textAlign: 'center'}}>{detail.value}</Text>
-                        </View>
-                        
-                    ))}
+            <Header
+                title={t('Ingredient Details')}
+                onBack={() => router.back()}
+                rightIconSource={require('@/assets/icons/share.png')}
+                onRightPress={() => {}}
+            />
+            <ScrollView>
+                <View style={s.titleImageWrapper}>
+                    <Image source={{ uri: ingredient.category.photo }} style={s.titleImage} />
                 </View>
 
-                {/* Tabs */}
-                <ScrollView style={s.tabs} horizontal>
-                    {tabs.map(tab => (
-                        <Pressable
-                            key={tab.index}
-                            style={[
-                                theme.tabCaptionWrapper, s.tab,
-                                activeTab === tab.index ? theme.activeTab : {},
-                            ]}
-                            onPress={() => setActiveTab(tab.index)}
-                        >
-                            <Text style={[
-                                theme.tabCaption,
-                                { color: activeTab === tab.index ? Colors.mainColor : greyTextColor }
-                            ]}>
-                                {tab.item}
-                            </Text>
+                <View style={[theme.mainContainer, s.tabsContainer]}>
+                    {/* Pill Tabs (ProfileScreen style) */}
+                    <View style={s.pillTabs}>
+                        <Pressable style={[s.pillTab, activeTab === 0 ? s.pillTabActive : s.pillTabInactive]} onPress={() => setActiveTab(0)}>
+                            <Text style={[s.pillTabText, activeTab === 0 ? s.pillTabTextActive : s.pillTabTextInactive]}>{t('Information')}</Text>
                         </Pressable>
-                    ))}
-                </ScrollView>
-                <View style={{ marginBottom: 80 }}>
-                    <FlatList
-                        ref={tabsRef}
-                        data={['info', 'nutritional', 'origin', 'culinaryUses']}
-                        renderItem={renderTab}
-                        initialScrollIndex={activeTab}
-                        horizontal
-                        style={theme.tabsFlatList}
-                        pagingEnabled
-                        scrollEnabled={false}
-                        showsHorizontalScrollIndicator={false}
-                    />
+                        <Pressable style={[s.pillTab, activeTab === 1 ? s.pillTabActive : s.pillTabInactive]} onPress={() => setActiveTab(1)}>
+                            <Text style={[s.pillTabText, activeTab === 1 ? s.pillTabTextActive : s.pillTabTextInactive]}>{t('Nutritional properties')}</Text>
+                        </Pressable>
+                    </View>
+
+                    {/* Tab Content */}
+                    {activeTab === 0 ? renderTab({ item: 'info', index: 0 }) : renderTab({ item: 'nutritional', index: 1 })}
                 </View>
             </ScrollView>
         </View>
@@ -177,52 +151,195 @@ export default function Ingredient() {
 }
 
 const s = StyleSheet.create({
+    scrollView: {
+        paddingBottom: 30,
+    },
+    titleImageWrapper: {
+        position: 'relative',
+    },
+    titleImage: {
+        width: '100%',
+        height: 275,
+    },
+    title: {
+        fontFamily: 'Poppins-SemiBold',
+        fontWeight: '600',
+        fontSize: 20,
+        letterSpacing: 0,
+        color: '#000000',
+    },
+    categoryLabel: {
+        fontFamily: 'Poppins-Medium',
+        fontWeight: '500',
+        fontSize: 16,
+        letterSpacing: 0,
+        color: '#1B1A1D',
+    },
     ingredientDescriptionText: {
-        fontSize: 14,
+        fontFamily: 'Poppins',
+        fontWeight: '400',
+        fontSize: 16,
+        lineHeight: 22,
+        letterSpacing: 0,
+        color: Colors.greyTextColor,
         marginTop: 6,
+    },
+    categoryRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: getBgColor(),
+        gap: 10,
+    },
+    categoryChip: {
+        paddingHorizontal: 10,
+        paddingVertical: 5,
+        borderRadius: 18,
+        backgroundColor: '#F6ECE2',
+    },
+    categoryText: {
+        color: Colors.mainColor,
+        fontSize: 12,
+    },
+    tabsContainer: {
+        paddingTop: 0,
+    },
+    infoWrapper: {
+        backgroundColor: getBgColor(),
+        marginVertical: 20,
     },
     ingredientDetailsWrapper: {
         marginTop: 20,
         flexDirection: 'row',
         justifyContent: 'space-between',
+        backgroundColor: getBgColor(),
+        marginBottom: 16,
+        gap: 16,
     },
     detailWrapper: {
         alignItems: 'center',
+        backgroundColor: Colors.white,
+        paddingVertical: 8,
+        paddingHorizontal: 18,
+        borderRadius: 12,
+        width: '31%',
     },
     detailIconWrapper: {
-        width: 54,
-        height: 54,
-        borderRadius: 999,
-        backgroundColor: Colors.mainColorLight,
+        width: 40,
+        height: 40,
+        borderRadius: 20,
         alignItems: 'center',
         justifyContent: 'center',
-        marginBottom: 6,
     },
     detailIcon: {
-        width: 25,
-        height: 25,
+        width: 20,
+        height: 20,
     },
-    tabs: {
+    detailValue: {
+        fontFamily: 'Poppins-Medium',
+        fontWeight: '500',
+        fontSize: 16,
+        letterSpacing: 0,
+        textAlign: 'center',
+        color: '#000000',
+    },
+    detailCaption: {
+        fontFamily: 'Poppins',
+        fontWeight: '400',
+        fontSize: 13,
+        letterSpacing: 0,
+        textAlign: 'center',
+        color: Colors.greyTextColor,
+    },
+    infoList: {
+        gap: 10,
+        backgroundColor: getBgColor(),
+    },
+    infoItem: {
+        width: '100%',
+        minHeight: 44,
+        backgroundColor: Colors.white,
+        borderRadius: 12,
+        paddingHorizontal: 14,
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        flexDirection: 'row',
+    },
+    infoLabel: {
+        fontFamily: 'Poppins-Medium',
+        fontWeight: '500',
+        fontSize: 15,
+        letterSpacing: 0,
+        color: '#1B1A1D',
+    },
+    infoValue: {
+        fontFamily: 'Poppins',
+        fontWeight: '400',
+        fontSize: 15,
+        letterSpacing: 0,
+        textAlign: 'right',
+        color: Colors.greyTextColor,
+        maxWidth: '78%',
+    },
+    pillTabs: {
+        flexDirection: 'row',
+        backgroundColor: Colors.white,
         marginTop: 20,
         marginBottom: 10,
-        gap: 10,
+        borderRadius: 30,
     },
-    tab: {
-        paddingHorizontal: 20,
+    pillTab: {
+        flex: 1,
+        paddingVertical: 10,
+        alignItems: 'center',
+        borderRadius: 30,
+    },
+    pillTabActive: {
+        backgroundColor: Colors.mainColor,
+    },
+    pillTabInactive: {
+        backgroundColor: 'transparent',
+    },
+    pillTabText: {
+        fontFamily: 'Poppins',
+        fontSize: 15,
+        lineHeight: 22,
+        letterSpacing: 0,
+        textAlign: 'center',
+    },
+    pillTabTextActive: {
+        color: Colors.white,
+    },
+    pillTabTextInactive: {
+        color: Colors.grey,
     },
     infoRow: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
         gap: 16,
+        marginBottom: 16,
     },
-    infoValue: {
-        color: Colors.grey,
-        maxWidth: '78%',
+    historyWrapper: {
+        marginTop: 10,
+        backgroundColor: Colors.white,
+        borderRadius: 12,
+        padding: 15,
+        marginBottom: 115,
     },
-    line: {
-        width: '100%',
-        height: 1,
-        backgroundColor: Colors.lightGrey,
+    historyTitle: {
+        fontFamily: 'Poppins-Medium',
+        fontWeight: '500',
+        fontSize: 16,
+        letterSpacing: 0,
+        color: '#1B1A1D',
+        marginBottom: 6,
+    },
+    historyText: {
+        fontFamily: 'Poppins',
+        fontWeight: '400',
+        fontSize: 16,
+        lineHeight: 22,
+        letterSpacing: 0,
+        color: Colors.greyTextColor,
     },
 })

@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage'
 
-import { get } from "@/services/apiRequests"
+import { get, post } from "@/services/apiRequests"
 import { IMeasure } from "@/interfaces/Ingredient"
 import { IShoppingListItemByRecipe } from "@/interfaces/ShoppingList"
 import { logError } from "@/services/utils"
@@ -45,4 +45,89 @@ export const fetchLanguages = (setLanguages: React.Dispatch<React.SetStateAction
             setLanguages(langs)
         })
         .catch(logError)
+}
+
+// Shopping List API Functions
+export const addIngredientsFromRecipe = (
+    ids: number[],
+    portions: number,
+    token: string
+): Promise<IShoppingListItemByRecipe[]> => {
+    return post({
+        url: '/shoppingList/add/recipeIngredients',
+        data: { ids, portions },
+        token
+    })
+}
+
+export const addIngredientManually = (
+    ingredientId: number,
+    measureId: number,
+    cnt: number,
+    token: string
+): Promise<IShoppingListItemByRecipe[]> => {
+    return post({
+        url: '/shoppingList/add/ingredient',
+        data: { ingredientId, measureId, cnt },
+        token
+    })
+}
+
+export const markIngredientAsChecked = (
+    id: number,
+    token: string
+): Promise<any> => {
+    return post({
+        url: `/shoppingList/check/${id}`,
+        token
+    })
+}
+
+export const markIngredientAsUnchecked = (
+    id: number,
+    token: string
+): Promise<any> => {
+    return post({
+        url: `/shoppingList/uncheck/${id}`,
+        token
+    })
+}
+
+export const deleteAllCheckedIngredients = (
+    token: string
+): Promise<IShoppingListItemByRecipe[]> => {
+    return post({
+        url: '/shoppingList/delete/checked',
+        token
+    })
+}
+
+// Weekly Plan API Functions
+export const fetchWeeklyPlan = (
+    mealDateFrom?: string,
+    mealDateTo?: string,
+    token?: string
+): Promise<any[]> => {
+    return post({
+        url: '/plan',
+        data: { mealDateFrom, mealDateTo },
+        token
+    })
+}
+
+export const editWeeklyPlan = (
+    actions: Array<{
+        action: 'add' | 'edit' | 'delete'
+        id?: number
+        mealDate?: string
+        mealType?: 'breakfast' | 'lunch' | 'snack' | 'dinner'
+        recipeId?: number
+    }>,
+    token: string
+): Promise<any[]> => {
+    return post({
+        url: '/plan/edit',
+        data: actions,
+        token
+    })
 }

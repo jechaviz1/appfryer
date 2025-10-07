@@ -316,7 +316,7 @@ const s = StyleSheet.create({
     },
     tabsContainer: {
         paddingHorizontal: paddings,
-        backgroundColor: Colors.mainBGColor,
+        backgroundColor: getBgColor(),
     },
     avatar: {
         width: 94,
