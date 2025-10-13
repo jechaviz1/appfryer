@@ -8,7 +8,7 @@ import Notification, { INotification } from "@/components/Notification"
 
 import { post } from "@/services/apiRequests"
 import { useAuth } from "@/contexts/authContext"
-import { theme, getBgColor } from "@/constants/Theme"
+import { theme, getBgColor, getCardBackground } from "@/constants/Theme"
 
 export default function Notifications({ isVisible, onHide }: {isVisible: boolean, onHide: () => void}) {
     const { user } = useAuth()
@@ -82,6 +82,7 @@ const s = StyleSheet.create({
     modalContent: {
         marginTop: 10,
         width: '100%',
+        backgroundColor: getBgColor(),
     },
     section: {
         alignItems: 'center',
@@ -90,10 +91,11 @@ const s = StyleSheet.create({
         gap: 20,
         marginTop: 15,
         marginBottom: 15,
+        backgroundColor: getBgColor(),
     },
     sectionTitle: {
         alignSelf: 'flex-start',
         fontSize: 17,
-        fontFamily: 'DMSans-Bold',
+        fontFamily: 'Poppins-Bold',
     },
 })

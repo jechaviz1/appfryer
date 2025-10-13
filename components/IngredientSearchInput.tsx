@@ -11,6 +11,8 @@ import { useAuth } from "@/contexts/authContext"
 import { get, post } from "@/services/apiRequests"
 import { logError, isNeedToUpdate } from "@/services/utils"
 import { Colors } from "@/constants/Colors"
+import { getCardBackground, getTextColor, getBorderColor } from "@/constants/Theme"
+import { useTheme } from '@/contexts/themeContext'
 
 interface Props {
     placeholder?: string
@@ -32,6 +34,9 @@ export default function IngredientSearchInput({
     const inputRef = useRef(null)
     const { user } = useAuth()
     const { t } = useTranslation()
+    const { isDark } = useTheme()
+
+    const s = createStyles(isDark)
 
     const [val, setVal] = useState<string>('')
     const [ingredients, setIngredients] = useState<IIngredinent[]>([])
@@ -146,7 +151,7 @@ export default function IngredientSearchInput({
                             }
                             style={{width: 22, height: 22}}
                         />
-                        <Text style={{flex: 1}}>{ing.title}</Text>
+                        <Text style={{flex: 1, color: getTextColor()}}>{ing.title}</Text>
                     </Pressable>
                 ))}
             </ScrollView> }
@@ -154,17 +159,18 @@ export default function IngredientSearchInput({
     )
 }
 
-const s = StyleSheet.create({
+const createStyles = (isDark: boolean) => StyleSheet.create({
     container: {
         position: 'relative',
         flex: 1,
         overflow: 'visible',
+        backgroundColor: getCardBackground(),
     },
     containerActive: {
         zIndex: 1000,
     },
     inputContainer: {
-        backgroundColor: '#00000008',
+        backgroundColor: isDark ? '#374151' : '#00000008',
         borderWidth: 0,
         // flex: 1,
     },
@@ -175,8 +181,8 @@ const s = StyleSheet.create({
         zIndex: 1000,
         width: '100%',
         maxHeight: 220,
-        backgroundColor: '#ffffff',
-        borderColor: Colors.lightGrey,
+        backgroundColor: getCardBackground(),
+        borderColor: getBorderColor(),
         borderWidth: 1,
         borderRadius: 10,
     },

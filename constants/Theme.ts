@@ -6,7 +6,27 @@ export const paddings = 24
 
 export const isLight = () => Appearance.getColorScheme() === 'light'
 export function getBgColor() {
-    return isLight() ? Colors.mainBGColor : Colors.dark.background
+    return isLight() ? Colors.light.sectionBackground : Colors.dark.sectionBackground
+}
+
+export function getCardBackground() {
+    return isLight() ? Colors.light.cardBackground : Colors.dark.cardBackground
+}
+
+export function getTextColor() {
+    return isLight() ? Colors.light.text : Colors.dark.text
+}
+
+export function getSecondaryTextColor() {
+    return isLight() ? Colors.light.secondaryText : Colors.dark.secondaryText
+}
+
+export function getBorderColor() {
+    return isLight() ? Colors.light.borderColor : Colors.dark.borderColor
+}
+
+export function getShadowColor() {
+    return isLight() ? Colors.light.shadowColor : Colors.dark.shadowColor
 }
 
 const bottomMargin = 46

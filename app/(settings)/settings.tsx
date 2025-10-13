@@ -13,8 +13,9 @@ import PersonalInfo from '@/components/modals/PersonalInfo'
 import ChangePassword from '@/components/modals/ChangePassword'
 import { useSettings } from "@/contexts/settingsContext"
 import { useAuth } from "@/contexts/authContext"
+import { useTheme } from "@/contexts/themeContext"
 import { Colors } from "@/constants/Colors"
-import { theme, isLight, getBgColor } from '@/constants/Theme'
+import { theme, isLight, getBgColor, getCardBackground, getTextColor, getSecondaryTextColor, getBorderColor } from '@/constants/Theme'
 import { logError } from "@/services/utils"
 
 interface SettingsItem {
@@ -40,6 +41,9 @@ export default function Settings() {
 
     const { user, setUser } = useAuth()
     const { settings, setSettings } = useSettings()
+    const { isDark, toggleTheme } = useTheme()
+    
+    const s = createStyles(isDark)
 
     const [showPreferences, setShowPreferences] = useState<boolean>(false)
     const [showPersonalInfo, setShowPersonalInfo] = useState<boolean>(false)
@@ -79,17 +83,13 @@ export default function Settings() {
         router.navigate('/(auth)/login')
     }, [])
 
-    const rightChevronLight = require('@/assets/icons/chevron-right-neutral-grey.png')
-    const rightChevronDark = require('@/assets/icons/chevron-right-light-grey.png')
-    const rightArrow = isLight() ? rightChevronLight : rightChevronDark
-    const gradientColors = ['#d6a674', Colors.mainColor]
-    const rightArrowElem = <Image source={rightArrow} style={s.rightArrow} />
+    const rightArrow = require('@/assets/icons/chevron-right-neutral-grey.png')
 
     const getItems = useCallback((): SettingsItem[][] => [
         [
             { key: 'content-creator', label: t('Content creator settings'), action: () => {}, rightSide: <Image source={require('@/assets/icons/chevron-down-light.png')} style={s.downArrow} /> },
             { key: 'language', label: t('Language'), action: () => router.push('/(settings)/languages'), rightSide: <Text style={s.language}>{langsMap[user?.language as ('en' | 'es' | undefined) ?? 'es']}</Text> },
-            { key: 'dark-mode', label: t('Dark mode'), action: () => Appearance.setColorScheme(isLight() ? 'dark' : 'light'), rightSide: <Switch value={!isLight()} style={{ height: 20 }} trackColor={{ false: '#E5E5E5', true: '#C28040' }} thumbColor={isLight() ? '#FFFFFF' : '#FFFFFF'} onValueChange={() => Appearance.setColorScheme(isLight() ? 'dark' : 'light')} /> },
+            { key: 'dark-mode', label: t('Dark mode'), action: () => toggleTheme(), rightSide: <Switch value={isDark} style={{ height: 20 }} trackColor={{ false: '#E5E5E5', true: '#C28040' }} thumbColor={isDark ? '#FFFFFF' : '#FFFFFF'} onValueChange={toggleTheme} /> },
             { key: 'units', label: t('Units of measurement'), action: () => {}, rightSide: <Image source={require('@/assets/icons/chevron-down-light.png')} style={s.downArrow} /> },
             { key: 'review-app', label: t('Review App'), action: () => openStore(), rightSide: <Image source={require('@/assets/icons/chevron-down-light.png')} style={s.downArrow} /> },
             { key: 'notifications', label: t('Manage notifications'), action: () => router.push('/(settings)/notifications'), rightSide: <Image source={require('@/assets/icons/chevron-down-light.png')} style={s.downArrow} /> },
@@ -195,14 +195,14 @@ export default function Settings() {
     )
 }
 
-const s = StyleSheet.create({
+const createStyles = (isDark: boolean) => StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#F8F5F0',
+        backgroundColor: getBgColor(),
     },
     mainContainer: {
         flex: 1,
-        backgroundColor: '#F8F5F0',
+        backgroundColor: getBgColor(),
     },
     main: {
         width: '100%',
@@ -211,7 +211,7 @@ const s = StyleSheet.create({
         backgroundColor: getBgColor(),
     },
     profileSection: {
-        backgroundColor: '#ECD8C4',
+        backgroundColor: isDark ? Colors.dark.cardBackground : '#ECD8C4',
         borderRadius: 13,
         padding: 13,
         flexDirection: 'row',
@@ -222,18 +222,18 @@ const s = StyleSheet.create({
     },
     profileInfo: {
         flex: 1,
-        backgroundColor: '#ECD8C4',
+        backgroundColor: 'transparent',
     },
     profileName: {
         fontFamily: 'Poppins-Medium',
         fontSize: 16,
         fontWeight: '500',
-        color: '#1B1A1D',
+        color: getTextColor(),
     },
     profileEmail: {
         fontFamily: 'Poppins',
         fontSize: 14,
-        color: '#6C7278',
+        color: getSecondaryTextColor(),
         marginTop: 2,
     },
     avatar: {
@@ -264,14 +264,14 @@ const s = StyleSheet.create({
         gap: 13,
     },
     menuItem: {
-        backgroundColor: '#FFFFFF',
+        backgroundColor: getCardBackground(),
         flexDirection: 'row',
         alignItems: 'center',
         paddingHorizontal: 12,
         paddingVertical: 14,
         borderRadius: 10,
         borderWidth: 1,
-        borderColor: '#EDF1F3',
+        borderColor: getBorderColor(),
     },
     menuItemFirst: {
         paddingTop: 16,
@@ -284,7 +284,7 @@ const s = StyleSheet.create({
         fontFamily: 'Poppins',
         flex: 1,
         fontSize: 15,
-        color: '#919191',
+        color: getSecondaryTextColor(),
     },
     language: {
         fontFamily: 'Poppins',

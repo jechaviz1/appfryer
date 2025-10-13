@@ -4,17 +4,19 @@ import { useGlobalSearchParams, useRouter } from "expo-router"
 import { useTranslation } from "react-i18next"
 
 import { ScrollView, Text, View } from "@/components/base/BaseComponents"
-import { getBgColor, theme } from "@/constants/Theme"
+import { getBgColor, theme, getCardBackground, getTextColor, getSecondaryTextColor, getBorderColor } from "@/constants/Theme"
 import Header from "@/components/Header"
 import { useAppState, IStaticPage } from "@/contexts/appStateContext"
 import { useAuth } from "@/contexts/authContext"
 import { get } from "@/services/apiRequests"
 import { logError } from "@/services/utils"
+import { useTheme } from '@/contexts/themeContext'
 
 export default function CustomPage() {
     const { i18n } = useTranslation()
     const router = useRouter()
     const { name } = useGlobalSearchParams()
+    const { isDark } = useTheme()
 
     const [ isLoaded, setLoaded ] = useState(false)
     const [ title, setTitle ] = useState('')
@@ -22,6 +24,8 @@ export default function CustomPage() {
 
     const { user } = useAuth()
     const { appState, setAppState } = useAppState()
+
+    const s = createStyles(isDark)
 
     const fetchPages = () => {
         const url = '/public/pages/' + i18n.language
@@ -78,7 +82,7 @@ export default function CustomPage() {
     
 
     return (
-        <View style={[theme.container, { flex: 1, paddingHorizontal: 0 }]}>
+        <View style={[theme.container, { backgroundColor: getBgColor(), flex: 1, paddingHorizontal: 0 }]}>
             <View style={theme.statusBarHeight} />
             <Header 
                 title={title}
@@ -86,14 +90,18 @@ export default function CustomPage() {
             />
             <ScrollView style={s.main}>
                 <View style={s.section}>
-                    {content.split('\n').map((t, i) => <Text key={i}>{t}</Text>)}
+                    {content.split('\n').map((t, i) => (
+                        <Text key={i} style={s.contentText}>
+                            {t}
+                        </Text>
+                    ))}
                 </View>
             </ScrollView>
         </View>
     )
 }
 
-const s = StyleSheet.create({
+const createStyles = (isDark: boolean) => StyleSheet.create({
     main: {
         backgroundColor: getBgColor(),
         flex: 1,
@@ -102,6 +110,15 @@ const s = StyleSheet.create({
     },
     section: {
         padding: 25,
-        backgroundColor: getBgColor(),
+        backgroundColor: getCardBackground(),
+        margin: 20,
+        borderRadius: 12,
+    },
+    contentText: {
+        color: getTextColor(),
+        fontSize: 16,
+        lineHeight: 24,
+        fontFamily: 'Poppins',
+        marginBottom: 12,
     },
 })

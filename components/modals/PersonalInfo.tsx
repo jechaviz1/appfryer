@@ -7,8 +7,9 @@ import { useTranslation } from "react-i18next"
 import { ModalTitle, Text, TextInput, View, Button } from "@/components/base/BaseComponents"
 import { validateName, validateEmail } from "@/services/validators"
 import { useAuth } from "@/contexts/authContext"
-import { theme, getBgColor } from "@/constants/Theme"
+import { theme, getBgColor, getCardBackground, getTextColor, getSecondaryTextColor, getBorderColor } from "@/constants/Theme"
 import { post } from "@/services/apiRequests"
+import { useTheme } from '@/contexts/themeContext'
 
 export default function PersonalInfo({ isVisible, onHide }: { isVisible: boolean, onHide: () => void }) {
     const person = require('@/assets/icons/login-person.png')
@@ -17,6 +18,9 @@ export default function PersonalInfo({ isVisible, onHide }: { isVisible: boolean
 
     const { user, setUser } = useAuth()
     const { t } = useTranslation()
+    const { isDark } = useTheme()
+
+    const s = createStyles(isDark)
 
     const [oldFullname, setOldFullname] = useState<string>('')
     const [oldEmail, setOldEmail] = useState<string>('')
@@ -163,10 +167,11 @@ export default function PersonalInfo({ isVisible, onHide }: { isVisible: boolean
     )
 }
 
-const s = StyleSheet.create({
+const createStyles = (isDark: boolean) => StyleSheet.create({
     loginFieldsContainer: {
         flexDirection: 'column',
         gap: 12,
         marginBottom: 16,
+        backgroundColor: getBgColor(),
     },
 })

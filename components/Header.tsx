@@ -4,6 +4,8 @@ import { useRouter } from 'expo-router'
 
 import { Text, View } from '@/components/base/BaseComponents'
 import { Colors } from '@/constants/Colors'
+import { getBgColor, getCardBackground, getTextColor, getSecondaryTextColor, getBorderColor } from '@/constants/Theme'
+import { useTheme } from '@/contexts/themeContext'
 
 interface HeaderProps {
     title: string
@@ -23,6 +25,9 @@ export default function Header({
     containerStyle,
 }: HeaderProps) {
     const router = useRouter()
+    const { isDark } = useTheme()
+    
+    const s = createStyles(isDark)
 
     return (
         <View style={[s.header, containerStyle]}> 
@@ -41,9 +46,9 @@ export default function Header({
     )
 }
 
-const s = StyleSheet.create({
+const createStyles = (isDark: boolean) => StyleSheet.create({
     header: {
-        backgroundColor: '#4F4240',
+        backgroundColor: isDark ? '#1f2937' : '#4F4240',
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',

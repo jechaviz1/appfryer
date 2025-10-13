@@ -10,6 +10,8 @@ import { post } from '@/services/apiRequests'
 import { logError } from '@/services/utils'
 import { useAuth } from '@/contexts/authContext'
 import { useSearchFilters } from "@/contexts/searchFiltersContext"
+import { getBgColor, getCardBackground, getTextColor, getSecondaryTextColor, getBorderColor } from '@/constants/Theme'
+import { useTheme } from '@/contexts/themeContext'
 
 interface SearchProps {
     page: string
@@ -25,6 +27,9 @@ export default function Search({page, onSearch, personId, sendOnBlankFiltersEmpt
     const { searchFilters } = useSearchFilters()
     const { user } = useAuth()
     const { t } = useTranslation()
+    const { isDark } = useTheme()
+    
+    const s = createStyles(isDark)
 
     const handleShowFilters = () => {
         setShowFilters(true)
@@ -98,14 +103,14 @@ export default function Search({page, onSearch, personId, sendOnBlankFiltersEmpt
     )
 }
 
-const s = StyleSheet.create({
+const createStyles = (isDark: boolean) => StyleSheet.create({
     container: {
         flexDirection: 'row',
         alignItems: 'center',
         gap: 12,
-        marginBottom: 20,
         borderRadius: 16,
         position: 'relative',
+        backgroundColor: isDark ? '#2d3748' : getCardBackground(),
     },
     searchContainer: {
         flex: 1,
@@ -113,29 +118,31 @@ const s = StyleSheet.create({
         alignItems: 'center',
         borderRadius: 16,
         paddingHorizontal: 16,
+        backgroundColor: isDark ? '#2d3748' : getCardBackground(),
     },
     searchIcon: {
         width: 18,
         height: 18,
-        tintColor: '#A3A3A3',
+        tintColor: getSecondaryTextColor(),
     },
     searchInput: {
         flex: 1,
-        color: Colors.black,
+        color: getTextColor(),
         borderWidth: 0,
         paddingHorizontal: 10,
         height: 42,
+        backgroundColor: 'transparent',
     },
     searchTextInput: {
         fontSize: 15,
         lineHeight: 21,
         fontFamily: 'Poppins',
-        color: Colors.greyTextColor,
+        color: getSecondaryTextColor(),
     },
     filterButton: {
         width: 32,
         height: 32,
-        backgroundColor: '#F6ECE2',
+        backgroundColor: isDark ? '#374151' : '#F6ECE2',
         borderRadius: 16,
         alignItems: 'center',
         justifyContent: 'center',
@@ -144,5 +151,6 @@ const s = StyleSheet.create({
     filterIcon: {
         width: 20,
         height: 20,
+        tintColor: getSecondaryTextColor(),
     },
 })

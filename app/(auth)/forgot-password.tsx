@@ -9,11 +9,15 @@ import { Button, Text, TextInput, View } from '@/components/base/BaseComponents'
 import { validateEmail } from '@/services/validators'
 import { post } from '@/services/apiRequests'
 import { logError } from '@/services/utils'
-import { theme } from '@/constants/Theme'
+import { theme, getBgColor, getCardBackground, getTextColor, getSecondaryTextColor, getBorderColor } from '@/constants/Theme'
+import { useTheme } from '@/contexts/themeContext'
 
 export default function ForgotPasswordScreen() {
     const router = useRouter()
     const { t } = useTranslation()
+    const { isDark } = useTheme()
+    
+    const s = createStyles(isDark)
 
     const [email, setEmail] = useState<string>('')
     const [emailError, setEmailError] = useState<string>('')
@@ -132,7 +136,7 @@ export default function ForgotPasswordScreen() {
     )
 }
 
-const s = StyleSheet.create({
+const createStyles = (isDark: boolean) => StyleSheet.create({
     successText: {
         fontSize: 14,
         fontFamily: 'Poppins-Medium',

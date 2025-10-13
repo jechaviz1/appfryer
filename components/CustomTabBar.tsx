@@ -5,6 +5,8 @@ import { useTranslation } from 'react-i18next'
 
 import TabBarIcons from '@/components/TabBarIcons'
 import { Colors } from '@/constants/Colors'
+import { useTheme } from '@/contexts/themeContext'
+import { getCardBackground, getSecondaryTextColor } from '@/constants/Theme'
 
 interface CustomTabBarProps {
     activeTab?: string
@@ -13,6 +15,9 @@ interface CustomTabBarProps {
 export default function CustomTabBar({ activeTab }: CustomTabBarProps) {
     const router = useRouter()
     const { t } = useTranslation()
+    const { isDark } = useTheme()
+    
+    const s = createStyles(isDark)
 
     const tabs = [
         {
@@ -77,14 +82,14 @@ export default function CustomTabBar({ activeTab }: CustomTabBarProps) {
                         ) : (
                             <Image
                                 source={activeTab === tab.name ? tab.activeIcon : tab.icon}
-                                style={[s.iconSize, { tintColor: activeTab === tab.name ? Colors.mainColor : '#6C7278' }]}
+                                style={[s.iconSize, { tintColor: activeTab === tab.name ? Colors.mainColor : getSecondaryTextColor() }]}
                             />
                         )}
                     </View>
                     {tab.title && (
                         <Text style={[
                             s.tabBarLabel,
-                            { color: activeTab === tab.name ? Colors.mainColor : '#6C7278' }
+                            { color: activeTab === tab.name ? Colors.mainColor : getSecondaryTextColor() }
                         ]}>
                             {tab.title}
                         </Text>
@@ -95,13 +100,15 @@ export default function CustomTabBar({ activeTab }: CustomTabBarProps) {
     )
 }
 
-const s = StyleSheet.create({
+const createStyles = (isDark: boolean) => StyleSheet.create({
     tabBar: {
+        position: 'absolute',
+        bottom: 0,
         width: '100%',
         height: 74,
         paddingTop: 14,
         paddingBottom: 14,
-        backgroundColor: '#FFFFFF',
+        backgroundColor: getCardBackground(),
         display: 'flex',
         flexDirection: 'row',
         alignItems: 'center',
@@ -127,7 +134,7 @@ const s = StyleSheet.create({
         justifyContent: 'center',
     },
     plusButton: {
-        borderRadius: 22,
+        borderRadius: 23,
         width: 46,
         height: 46,
         alignItems: 'center',

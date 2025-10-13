@@ -10,8 +10,9 @@ import Challenges from '@/components/Challenges'
 import Achievements from '@/components/Achievements'
 import { post } from '@/services/apiRequests'
 import { useAuth } from '@/contexts/authContext'
-import { theme, paddings, isLight, getBgColor } from '@/constants/Theme'
+import { theme, paddings, isLight, getBgColor, getCardBackground, getTextColor, getSecondaryTextColor, getBorderColor } from '@/constants/Theme'
 import { Colors } from '@/constants/Colors'
+import { useTheme } from '@/contexts/themeContext'
 import IRecipe, { RecipeStatus } from '@/interfaces/Recipe'
 import RecipeCard from './RecipeCard'
 import { MediaType } from '@/interfaces/Media'
@@ -26,6 +27,9 @@ export default function ProfileScreen({page, person, initRecipes}: IProfileScree
     const router = useRouter()
     const { user, setUser } = useAuth()
     const { t } = useTranslation()
+    const { isDark } = useTheme()
+    
+    const s = createStyles(isDark)
 
     const [activeTab, setActiveTab] = useState<number>(0)
     const [avatar, setAvatar] = useState<any>(null)
@@ -165,9 +169,9 @@ export default function ProfileScreen({page, person, initRecipes}: IProfileScree
         if (tab.item === 'recipes') {
             const recipeCards = modifyRecipesForCards(recipes)
             return (
-                <View style={[theme.tabInner, {flexDirection: 'column', justifyContent: 'flex-start', width: window.width - paddings * 2}]}> 
+                <View style={[{ backgroundColor: getBgColor(), alignItems: 'center',flexDirection: 'column', justifyContent: 'flex-start', width: window.width - paddings * 2 }]}> 
                     <Search page={page} onSearch={setRecipes} personId={person?.id} />
-                    <View style={s.section}>
+                    <View style={[s.section, { marginTop: 20 }]}>
                         <View style={s.sectionHeader}>
                             <Text style={s.sectionTitle}>{t('My recipes')}</Text>
                             <Pressable onPress={() => router.navigate('/(tabs)/explore')}>
@@ -191,7 +195,7 @@ export default function ProfileScreen({page, person, initRecipes}: IProfileScree
         }
 
         return (
-            <View style={[theme.tabInner, { width: window.width - paddings * 2, flexDirection: 'column', justifyContent: 'flex-start'}]}> 
+            <View style={[theme.tabInner, { backgroundColor: getBgColor(), width: window.width - paddings * 2, flexDirection: 'column', justifyContent: 'flex-start'}]}> 
                 {/* Challenges Section */}
                 <View style={s.section}>
                     <View style={s.sectionHeader}>
@@ -309,7 +313,7 @@ export default function ProfileScreen({page, person, initRecipes}: IProfileScree
     )
 }
 
-const s = StyleSheet.create({
+const createStyles = (isDark: boolean) => StyleSheet.create({
     profileContainer: {
         paddingBottom: 16,
         paddingHorizontal: paddings,
@@ -338,7 +342,7 @@ const s = StyleSheet.create({
         fontFamily: 'Poppins-SemiBold',
         fontSize: 18,
         letterSpacing: 0,
-        color: '#000000',
+        color: getTextColor(),
         marginBottom: 4,
     },
     email: {
@@ -364,7 +368,7 @@ const s = StyleSheet.create({
     },
     sectionTitle: {
         fontSize: 16,
-        color: Colors.black,
+        color: getTextColor(),
         fontFamily: 'Poppins-Medium',
         fontWeight: '500',
         backgroundColor: getBgColor(),
@@ -385,14 +389,14 @@ const s = StyleSheet.create({
         fontSize: 16,
         letterSpacing: 0,
         textAlign: 'center',
-        color: '#000000',
+        color: getTextColor(),
     },
     statLabel: {
         fontFamily: 'Poppins',
         fontSize: 13,
         letterSpacing: 0,
         textAlign: 'center',
-        color: '#6C7278',
+        color: getSecondaryTextColor(),
     },
     stats: {
         marginTop: 18,
@@ -406,7 +410,7 @@ const s = StyleSheet.create({
     statDivider: {
         width: 1,
         height: 45,
-        backgroundColor: '#E0E0E0',
+        backgroundColor: getBorderColor(),
     },
     recipesWrapper: {
         marginTop: 20,
@@ -419,15 +423,16 @@ const s = StyleSheet.create({
     },
     pillTabs: {
         flexDirection: 'row',
-        backgroundColor: Colors.white,
+        backgroundColor: isDark ? '#374151' : '#f3f4f6',
         marginVertical: 24,
         borderRadius: 30,
     },
     pillTab: {
         flex: 1,
-        paddingVertical: 10,
+        paddingVertical: 12,
+        paddingHorizontal: 16,
         alignItems: 'center',
-        borderRadius: 30,
+        borderRadius: 26,
     },
     pillTabActive: {
         backgroundColor: Colors.mainColor,
@@ -446,6 +451,6 @@ const s = StyleSheet.create({
         color: Colors.white,
     },
     pillTabTextInactive: {
-        color: Colors.grey,
+        color: isDark ? '#9ca3af' : '#6b7280',
     },
 })

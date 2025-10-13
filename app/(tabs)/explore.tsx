@@ -13,8 +13,9 @@ import { useAuth } from '@/contexts/authContext'
 import { get, post } from '@/services/apiRequests'
 import { logError } from '@/services/utils'
 import { useSearchFilters } from '@/contexts/searchFiltersContext'
-import { theme, isLight, getBgColor } from '@/constants/Theme'
+import { theme, isLight, getBgColor, getCardBackground, getTextColor, getSecondaryTextColor, getBorderColor, getShadowColor } from '@/constants/Theme'
 import { Colors } from "@/constants/Colors"
+import { useTheme } from '@/contexts/themeContext'
 import IPrefItem from '@/interfaces/PrefItem'
 import IRecipe from '@/interfaces/Recipe'
 import { MediaType} from '@/interfaces/Media'
@@ -45,8 +46,10 @@ export default function SearchScreen() {
     const router = useRouter()
     const { user } = useAuth()
     const { t } = useTranslation()
+    const { isDark } = useTheme()
     
     const { searchFilters, setSearchFilters } = useSearchFilters()
+    const s = createStyles(isDark)
     const [fridgeProds, setFridgeProds] = useState<IPrefItem[]>([])
     const [seasonalProds, setSeasonalProds] = useState<IPrefItem[]>([])
     const [showFilters, setShowFilters] = useState<boolean>(false)
@@ -243,10 +246,10 @@ export default function SearchScreen() {
     }
 
     return (
-        <View style={theme.container}>
+        <View style={s.container}>
             <View style={theme.statusBarHeight} />
             <ScrollView>
-                <View style={theme.mainContainer}>
+                <View style={s.mainContainer}>
                     {/* Search Section */}
                     <Search page="explore" onSearch={handleSearchResults} />
 
@@ -295,7 +298,18 @@ export default function SearchScreen() {
     )
 }
 
-const s = StyleSheet.create({
+const createStyles = (isDark: boolean) => StyleSheet.create({
+    // Container
+    container: {
+        flex: 1,
+        backgroundColor: getBgColor(),
+    },
+    mainContainer: {
+        flex: 1,
+        backgroundColor: getBgColor(),
+        paddingHorizontal: 20,
+        paddingTop: 20,
+    },
     // Search Section - EXACTLY same as home page
     searchSection: {
         flexDirection: 'row',
@@ -310,15 +324,18 @@ const s = StyleSheet.create({
         alignItems: 'center',
         borderRadius: 16,
         paddingHorizontal: 16,
+        backgroundColor: isDark ? '#2d3748' : getCardBackground(),
+        borderWidth: 1,
+        borderColor: getBorderColor(),
     },
     searchIcon: {
         width: 18,
         height: 18,
-        tintColor: '#8a8a8a',
+        tintColor: getSecondaryTextColor(),
     },
     searchInput: {
         flex: 1,
-        color: Colors.black,
+        color: getTextColor(),
         borderWidth: 0,
         paddingHorizontal: 10,
         height: 42,
@@ -326,12 +343,12 @@ const s = StyleSheet.create({
     searchTextInput: {
         fontSize: 16,
         fontFamily: 'Poppins',
-        color: Colors.greyTextColor,
+        color: getSecondaryTextColor(),
     },
     filterButton: {
         width: 32,
         height: 32,
-        backgroundColor: '#F6ECE2',
+        backgroundColor: isDark ? '#374151' : '#F6ECE2',
         borderRadius: 16,
         alignItems: 'center',
         justifyContent: 'center',
@@ -340,11 +357,12 @@ const s = StyleSheet.create({
     filterIcon: {
         width: 20,
         height: 20,
-        tintColor: '#8a8a8a',
+        tintColor: getSecondaryTextColor(),
     },
 
     // Categories Section - EXACTLY same as home page
     categoriesSection: {
+        marginTop: 20,
         marginBottom: 24,
         backgroundColor: getBgColor(),
     },
@@ -353,23 +371,23 @@ const s = StyleSheet.create({
     },
     categoryItem: {
         color: '#6C7278',
-        backgroundColor: Colors.white,
+        backgroundColor: getCardBackground(),
         alignItems: 'center',
         borderRadius: 50,
         paddingHorizontal: 16,
         paddingVertical: 6.5,
         minWidth: 67,
-        borderColor: '#EFF0F6',
+        borderColor: getBorderColor(),
         borderWidth: 1,
     },
     categoryItemSelected: {
-        backgroundColor: '#F6ECE2',
+        backgroundColor: isDark ? '#374151' : '#F6ECE2',
         borderColor: Colors.mainColor,
         borderWidth: 1,
     },
     categoryText: {
         fontSize: 13,
-        color: '#6C7278',
+        color: getSecondaryTextColor(),
         fontFamily: 'Poppins-Medium',
         textAlign: 'center',
         lineHeight: 18,
@@ -379,7 +397,8 @@ const s = StyleSheet.create({
     },
     // Feed Section
     feedSection: {
-        marginBottom: 24,
+        flex: 1,
+        marginBottom: 74,
         backgroundColor: getBgColor(),
     },
     recipesList: {
@@ -389,7 +408,7 @@ const s = StyleSheet.create({
     searchResultsTitle: {
         fontSize: 18,
         fontWeight: 'bold',
-        color: Colors.black,
+        color: getTextColor(),
         fontFamily: 'Poppins-Bold',
         marginBottom: 16,
         paddingHorizontal: 4,
@@ -402,14 +421,14 @@ const s = StyleSheet.create({
     emptyStateText: {
         fontSize: 18,
         fontWeight: 'bold',
-        color: Colors.grey,
+        color: getTextColor(),
         fontFamily: 'Poppins-Bold',
         marginBottom: 8,
         textAlign: 'center',
     },
     emptyStateSubtext: {
         fontSize: 14,
-        color: Colors.greyTextColor,
+        color: getSecondaryTextColor(),
         fontFamily: 'Poppins',
         textAlign: 'center',
     },
