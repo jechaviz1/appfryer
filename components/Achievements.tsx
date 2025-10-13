@@ -4,7 +4,8 @@ import { useTranslation } from 'react-i18next'
 
 import { ScrollView, Text, View } from '@/components/base/BaseComponents'
 import { Colors } from '@/constants/Colors'
-import { getBgColor, theme } from '@/constants/Theme'
+import { getBgColor, getCardBackground, getTextColor, getSecondaryTextColor, getBorderColor, theme } from '@/constants/Theme'
+import { useTheme } from '@/contexts/themeContext'
 
 interface IAchievement {
     id: number
@@ -49,6 +50,9 @@ type Variant = 'default' | 'compact' | 'badges'
 
 export default function Achievements({style, title, variant = 'default', showCheck = true}: {style?: any, title?: string, variant?: Variant, showCheck?: boolean}) {
     const { t } = useTranslation()
+    const { isDark } = useTheme()
+    
+    const s = createStyles(isDark)
 
     const [achievements, setAchievements] = useState<IAchievement[]>([])
 
@@ -146,7 +150,7 @@ export default function Achievements({style, title, variant = 'default', showChe
     )
 }
 
-const s = StyleSheet.create({
+const createStyles = (isDark: boolean) => StyleSheet.create({
     container: {
         marginTop: 20,
     },
@@ -156,7 +160,7 @@ const s = StyleSheet.create({
         fontSize: 15,
         lineHeight: 22,
         letterSpacing: 0,
-        color: '#000000',
+        color: getSecondaryTextColor(),
         marginBottom: 12,
     },
     achievementRow: {
@@ -213,7 +217,7 @@ const s = StyleSheet.create({
     card: {
         width: 144,
         borderRadius: 12,
-        backgroundColor: Colors.white,
+        backgroundColor: getCardBackground(),
         padding: 14,
         alignItems: 'center',
     },
@@ -256,7 +260,7 @@ const s = StyleSheet.create({
         width: 60,
         height: 60,
         borderRadius: 30,
-        backgroundColor: Colors.white,
+        backgroundColor: getCardBackground(),
         alignItems: 'center',
         justifyContent: 'center',
         position: 'relative',
@@ -269,7 +273,7 @@ const s = StyleSheet.create({
     compactCard: {
         width: 144,
         borderRadius: 12,
-        backgroundColor: Colors.white,
+        backgroundColor: getCardBackground(),
         padding: 14,
         alignItems: 'center',
         position: 'relative',

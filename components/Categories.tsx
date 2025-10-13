@@ -10,26 +10,29 @@ import { Text, View } from '@/components/base/BaseComponents'
 import { get } from '@/services/apiRequests'
 import { useAuth } from "@/contexts/authContext"
 import { Colors } from '@/constants/Colors'
-import { theme } from '@/constants/Theme'
+import { theme, getBgColor, getCardBackground, getTextColor, getSecondaryTextColor, getBorderColor } from '@/constants/Theme'
 import { logError, isNeedToUpdate } from "@/services/utils"
+import { useTheme } from '@/contexts/themeContext'
+
 
 interface CategoryProps {
     category: ICategory
     onPress?: () => void
+    styles: any
 }
 
-function Category({category, onPress}: CategoryProps) {
+function Category({category, onPress, styles}: CategoryProps) {
     return (
         <Pressable 
-            style={s.categoryItem}
+            style={styles.categoryItem}
             onPress={onPress}
         >
             {category.icon && category.icon.trim() !== '' ? (
-                <Image source={{uri: category.icon}} style={s.categoryIcon} />
+                <Image source={{uri: category.icon}} style={styles.categoryIcon} />
             ) : (
-                <View style={[s.categoryIcon, s.placeholderIcon]} />
+                <View style={[styles.categoryIcon, styles.placeholderIcon]} />
             )}
-            <Text style={s.categoryText}>
+            <Text style={styles.categoryText}>
                 {category.title}
             </Text>
         </Pressable>
@@ -40,6 +43,9 @@ export default function Categories({style}: {style?: any}) {
     const router = useRouter()
     const { user } = useAuth()
     const { t } = useTranslation()
+    const { isDark } = useTheme()
+    
+    const s = createStyles(isDark)
 
     const [categories, setCategories] = useState<ICategory[]>([])
 
@@ -78,6 +84,7 @@ export default function Categories({style}: {style?: any}) {
         <Category
             key={item.id}
             category={item}
+            styles={s}
             onPress={() => router.push({pathname: '/(pages)/feed', params: {title: item.title, filterCategories: item.id}})}
         />
     )
@@ -96,7 +103,7 @@ export default function Categories({style}: {style?: any}) {
     )
 }
 
-const s = StyleSheet.create({
+const createStyles = (isDark: boolean) => StyleSheet.create({
     container: {
 
     },
@@ -106,7 +113,7 @@ const s = StyleSheet.create({
     },
     categoryItem: {
         alignItems: 'center',
-        backgroundColor: '#FCEEE1',
+        backgroundColor: isDark ? '#374151' : '#FCEEE1',
         borderRadius: 10,
         paddingHorizontal: 5,
         paddingVertical: 10,
@@ -126,7 +133,7 @@ const s = StyleSheet.create({
     },
     categoryText: {
         fontSize: 16,
-        color: '#4F4240',
+        color: isDark ? Colors.dark.text : '#4F4240',
         fontFamily: 'Poppins-Medium',
         textAlign: 'center',
         lineHeight: 18,
@@ -159,6 +166,6 @@ const s = StyleSheet.create({
         color: Colors.white,
     },
     placeholderIcon: {
-        backgroundColor: '#E0E0E0', // A neutral color for the placeholder
+        backgroundColor: isDark ? '#4b5563' : '#E0E0E0', // A neutral color for the placeholder
     },
 })

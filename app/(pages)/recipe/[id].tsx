@@ -28,8 +28,9 @@ import IMedia, { MediaType } from '@/interfaces/Media'
 import IRecipe from '@/interfaces/Recipe'
 import { logError } from '@/services/utils'
 import IFolder from '@/interfaces/Folder'
+import { theme, isLight, getBgColor, getCardBackground, getTextColor, getSecondaryTextColor, getBorderColor, getShadowColor } from '@/constants/Theme'
+import { useTheme } from '@/contexts/themeContext'
 import { Colors, weeklyColors } from '@/constants/Colors'
-import { theme, isLight, getBgColor } from '@/constants/Theme'
 import Header from '@/components/Header'
 import CustomTabBar from '@/components/CustomTabBar'
 
@@ -41,6 +42,9 @@ export default function RecipeScreen() {
     const router = useRouter()
     const { i18n, t } = useTranslation()
     const { appState, setAppState } = useAppState()
+    const { isDark } = useTheme()
+    
+    const s = createStyles(isDark)
     const { height } = useWindowDimensions()
 
     const [isFetched, setFetched] = useState<boolean>(false)
@@ -505,7 +509,7 @@ export default function RecipeScreen() {
             <ScrollView style={s.scrollContainer} showsVerticalScrollIndicator={false}>
                 {/* Main Image Section */}
                 <View style={s.imageSection}>
-                                <Image
+                    <Image
                         source={titleImageUrl ? { uri: titleImageUrl } : require('@/assets/images/icon.png')} 
                         style={s.mainImage} 
                     />
@@ -845,20 +849,21 @@ export default function RecipeScreen() {
     )
 }
 
-const s = StyleSheet.create({
+const createStyles = (isDark: boolean) => StyleSheet.create({
     // Container
     container: {
         flex: 1,
-        backgroundColor: Colors.white,
+        backgroundColor: getBgColor(),
     },
     scrollContainer: {
         flex: 1,
         backgroundColor: getBgColor(),
+        marginBottom: 74,
     },
 
     // Dark Header (from my-space.tsx)
     header: {
-        backgroundColor: '#4F4240',
+        backgroundColor: isDark ? '#1f2937' : '#4F4240',
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
@@ -943,7 +948,7 @@ const s = StyleSheet.create({
         width: 40,
         height: 40,
         borderRadius: 20,
-        backgroundColor: Colors.white,
+        backgroundColor: getCardBackground(),
         alignItems: 'center',
         justifyContent: 'center',
     },
@@ -970,7 +975,7 @@ const s = StyleSheet.create({
         backgroundColor: Colors.mainColor,
     },
     dotInactive: {
-        backgroundColor: '#e0e0e0',
+        backgroundColor: isDark ? Colors.dark.borderColor : '#e0e0e0',
     },
 
     // Tags
@@ -980,13 +985,13 @@ const s = StyleSheet.create({
         paddingHorizontal: 24,
         paddingTop: 19,
         paddingBottom: 16,
-        backgroundColor: Colors.white,
+        backgroundColor: getBgColor(),
     },
     tag: {
         width: 110,
         height: 32,
         borderRadius: 18,
-        backgroundColor: '#F6ECE2',
+        backgroundColor: isDark ? '#374151' : '#F6ECE2',
         padding: 10,
         justifyContent: 'center',
         alignItems: 'center',
@@ -1005,6 +1010,7 @@ const s = StyleSheet.create({
         alignItems: 'center',
         paddingHorizontal: 20,
         paddingBottom: 16,
+        backgroundColor: getBgColor(),
         gap: 6,
     },
     usageIcon: {
@@ -1026,13 +1032,13 @@ const s = StyleSheet.create({
         paddingHorizontal: 20,
         paddingBottom: 20,
         gap: 6,
-        backgroundColor: Colors.white,
+        backgroundColor: getBgColor(),
     },
     authorInfo: {
         flexDirection: 'row',
         alignItems: 'center',
         gap: 6,
-        backgroundColor: Colors.white,
+        backgroundColor: getBgColor(),
     },
     byText: {
         
@@ -1040,18 +1046,20 @@ const s = StyleSheet.create({
     userIcon: {
         width: 16,
         height: 16,
-        tintColor: Colors.grey,
+        tintColor: getSecondaryTextColor(),
     },
     authorText: {
-        color: Colors.grey,
+        color: getSecondaryTextColor(),
         fontSize: 14,
     },
     ratingContainer: {
         flexDirection: 'row',
         alignItems: 'center',
+        backgroundColor: 'transparent',
         gap: 4,
     },
     starsContainer: {
+        backgroundColor: 'transparent',
         flexDirection: 'row',
         gap: 2,
     },
@@ -1060,7 +1068,7 @@ const s = StyleSheet.create({
         height: 16,
     },
     ratingText: {
-        color: Colors.grey,
+        color: getSecondaryTextColor(),
         fontSize: 14,
         fontWeight: '500',
     },
@@ -1070,10 +1078,10 @@ const s = StyleSheet.create({
         fontFamily: 'Poppins-SemiBold',
         fontSize: 20,
         lineHeight: 25, // 100% of font size
-        color: '#000000',
+        color: getTextColor(),
         paddingHorizontal: 20,
         paddingBottom: 8,
-        backgroundColor: Colors.white,
+        backgroundColor: getBgColor(),
     },
 
     // Recipe Description
@@ -1082,10 +1090,10 @@ const s = StyleSheet.create({
         fontWeight: '400',
         fontSize: 16,
         lineHeight: 22,
-        color: '#6C7278',
+        color: getSecondaryTextColor(),
         paddingHorizontal: 20,
         paddingBottom: 24,
-        backgroundColor: Colors.white,
+        backgroundColor: getBgColor(),
     },
 
     // Key Metrics
@@ -1094,24 +1102,26 @@ const s = StyleSheet.create({
         justifyContent: 'space-around',
         alignItems: 'center',
         paddingHorizontal: 20,
+        backgroundColor: getBgColor(),
         paddingBottom: 15,
     },
     metricItem: {
         alignItems: 'center',
         gap: 4,
+        backgroundColor: getBgColor(),
         flex: 1,
     },
     verticalLine: {
         width: 1,
         height: 75,
-        backgroundColor: '#E0E0E0',
+        backgroundColor: getBorderColor(),
         marginHorizontal: 8,
     },
     metricIcon: {
         width: 15,
         height: 15,
         marginBottom: 2,
-        tintColor: '#4F4240',
+        tintColor: getSecondaryTextColor(),
     },
     metricValue: {
         fontFamily: 'Poppins',
@@ -1119,7 +1129,7 @@ const s = StyleSheet.create({
         fontSize: 16,
         lineHeight: 22, // 100% of font size
         textAlign: 'center',
-        color: Colors.black,
+        color: getTextColor(),
     },
     metricLabel: {
         fontFamily: 'Poppins',
@@ -1127,7 +1137,7 @@ const s = StyleSheet.create({
         fontSize: 13,
         lineHeight: 18, // 100% of font size
         textAlign: 'center',
-        color: '#6C7278',
+        color: getSecondaryTextColor(),
     },
 
     // Tabs
@@ -1136,12 +1146,12 @@ const s = StyleSheet.create({
         paddingBottom: 32,
         backgroundColor: getBgColor(),
         borderTopWidth: 1,
-        borderTopColor: '#E0E0E0',
+        borderTopColor: getBorderColor(),
     },
     tabsHeader: {
         flexDirection: 'row',
         marginBottom: 16,
-        backgroundColor: Colors.white,
+        backgroundColor: getCardBackground(),
         borderRadius: 12,
         marginHorizontal: 20,
         padding: 4,
@@ -1168,7 +1178,7 @@ const s = StyleSheet.create({
         color: Colors.white,
     },
     inactiveTabText: {
-        color: Colors.grey,
+        color: getSecondaryTextColor(),
     },
     tabContent: {
         paddingHorizontal: 20,
@@ -1196,7 +1206,7 @@ const s = StyleSheet.create({
         width: 26,
         height: 26,
         borderRadius: 13,
-        backgroundColor: '#F6ECE2',
+        backgroundColor: isDark ? '#374151' : '#F6ECE2',
         alignItems: 'center',
         justifyContent: 'center',
     },
@@ -1211,14 +1221,14 @@ const s = StyleSheet.create({
         fontWeight: '400',
         fontSize: 14,
         lineHeight: 18,
-        color: '#1B1A1D',
+        color: getTextColor(),
         textAlign: 'center',
     },
     portionContainer: {
         width: 117,
         height: 40,
         borderRadius: 30,
-        backgroundColor: '#FFFFFF',
+        backgroundColor: getCardBackground(),
         alignItems: 'center',
         justifyContent: 'center',
         paddingHorizontal: 10,
@@ -1230,7 +1240,7 @@ const s = StyleSheet.create({
     ingredientCard: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: Colors.white,
+        backgroundColor: getCardBackground(),
         borderRadius: 12,
         padding: 16,
         gap: 12,
@@ -1248,13 +1258,13 @@ const s = StyleSheet.create({
     ingredientName: {
         fontFamily: 'Poppins-Medium',
         fontSize: 16,
-        color: '#1B1A1D',
+        color: getTextColor(),
         marginBottom: 4,
     },
     ingredientAmount: {
         fontFamily: 'Poppins',
         fontSize: 14,
-        color: '#6C7278',
+        color: getSecondaryTextColor(),
     },
     ingredientAddButton: {
         height: 34,
@@ -1262,26 +1272,26 @@ const s = StyleSheet.create({
         gap: 10,
         borderWidth: 1,
         padding: 10,
-        borderColor: '#EFF0F6',
+        borderColor: getBorderColor(),
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: Colors.white,
+        backgroundColor: getCardBackground(),
         marginRight: 8,
     },
     addButtonText: {
         fontFamily: 'Poppins',
         fontSize: 14,
         lineHeight: 16, // 100% of font size
-        color: '#6C7278',
+        color: getSecondaryTextColor(),
     },
     addButtonIcon: {
         width: 18,
         height: 18,
-        tintColor: '#6C7278',
+        tintColor: getSecondaryTextColor(),
     },
     ingredientAddedButton: {
-        backgroundColor: '#F6ECE2',
-        borderColor: '#F6ECE2',
+        backgroundColor: isDark ? '#374151' : '#F6ECE2',
+        borderColor: isDark ? '#374151' : '#F6ECE2',
     },
     addedButtonText: {
         color: '#C28040',
@@ -1379,7 +1389,7 @@ const s = StyleSheet.create({
     sectionTitle: {
         fontSize: 18,
         fontWeight: 'bold',
-        color: Colors.black,
+        color: getTextColor(),
     },
     seeAllText: {
         fontSize: 14,
@@ -1392,7 +1402,7 @@ const s = StyleSheet.create({
     },
     emptyStateText: {
         fontSize: 14,
-        color: Colors.grey,
+        color: getSecondaryTextColor(),
         textAlign: 'center',
     },
     recipesList: {},
@@ -1419,14 +1429,14 @@ const s = StyleSheet.create({
         backgroundColor: getBgColor(),
     },
     modalView: {
-        backgroundColor: Colors.white,
+        backgroundColor: getCardBackground(),
         borderRadius: 12,
         padding: 20,
         margin: 20,
     },
     modalText: {
         fontSize: 16,
-        color: Colors.black,
+        color: getTextColor(),
         marginBottom: 16,
         textAlign: 'center',
     },

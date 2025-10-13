@@ -11,8 +11,9 @@ import IngredientSearchInput from '@/components/IngredientSearchInput'
 import Measures from '@/components/modals/Measures'
 import { useAuth } from '@/contexts/authContext'
 import { useRecipe } from '@/contexts/recipeContext'
-import { getBgColor, isLight, theme } from '@/constants/Theme'
+import { getBgColor, isLight, theme, getCardBackground, getTextColor, getSecondaryTextColor, getBorderColor, getShadowColor } from '@/constants/Theme'
 import { Colors } from '@/constants/Colors'
+import { useTheme } from '@/contexts/themeContext'
 import { timeFromMinutes } from '@/services/datetime'
 import { fetchMeasures } from '@/services/fetches'
 import { get, post } from '@/services/apiRequests'
@@ -26,6 +27,53 @@ import Header from '@/components/Header'
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const _RNSearchableDropdown: any = require('react-native-searchable-dropdown')
 const SearchableDropdown: any = _RNSearchableDropdown?.default || _RNSearchableDropdown
+
+// Default styles for components that need them before main function
+const defaultStyles = StyleSheet.create({
+    ingredientRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 12,
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+        backgroundColor: '#fff',
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: '#e9ecef',
+    },
+    ingredientRowActive: {
+        borderColor: '#c3803a',
+    },
+    ingredientWrapper: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    ingredientText: {
+        flex: 1,
+        fontSize: 16,
+        color: '#2C1810',
+    },
+    measureText: {
+        fontSize: 14,
+        color: '#6C7278',
+        marginRight: 8,
+    },
+    removeButton: {
+        padding: 8,
+    },
+    quantityInput: {
+        width: 60,
+        marginRight: 8,
+    },
+    measureBtn: {
+        marginRight: 8,
+    },
+    trashIcon: {
+        width: 20,
+        height: 20,
+    },
+})
 
 interface SelectedMedia extends Asset {
     uuid?: string
@@ -104,7 +152,7 @@ function IngredientRow({
     }
 
     return (
-        <View style={[s.ingredientRow, isPopupOpen ? s.ingredientRowActive : undefined]}>
+        <View style={[defaultStyles.ingredientRow, isPopupOpen ? defaultStyles.ingredientRowActive : undefined]}>
             {displayModal && (
                 <Measures
                     isVisible={displayModal}
@@ -113,7 +161,7 @@ function IngredientRow({
                 />
             )}
 
-            <View style={s.ingredientWrapper}>
+            <View style={defaultStyles.ingredientWrapper}>
                 {ingredientInner ? (
                     <TextInput
                         readOnly
@@ -134,7 +182,7 @@ function IngredientRow({
 
             <TextInput
                 readOnly={!ingredientInner}
-                styleContainer={s.quantityInput}
+                styleContainer={defaultStyles.quantityInput}
                 styleTextInput={{ textAlign: 'center' }}
                 placeholder='0'
                 inputMode='numeric'
@@ -145,12 +193,12 @@ function IngredientRow({
                 text={measures.find((m) => m.id === measure)?.title}
                 shape='square'
                 disabled={!ingredientInner}
-                style={s.measureBtn}
+                style={defaultStyles.measureBtn}
                 onPress={handleDisplayModal}
             />
 
             <Pressable onPress={onDelete}>
-                <Image source={require('@/assets/icons/trash-can.png')} style={s.trashIcon} />
+                <Image source={require('@/assets/icons/trash-can.png')} style={defaultStyles.trashIcon} />
             </Pressable>
         </View>
     )
@@ -162,6 +210,9 @@ export default function CreateRecipePage() {
     const router = useRouter()
     const globQuery = useGlobalSearchParams()
     const { t } = useTranslation()
+    const { isDark } = useTheme()
+    
+    const s = createStyles(isDark)
 
     const [isLoaded, setIsLoaded] = useState<boolean>(false)
     const [media, setMedia] = useState<SelectedMedia[]>([])
@@ -1258,7 +1309,7 @@ export default function CreateRecipePage() {
     )
 }
 
-const s = StyleSheet.create({
+const createStyles = (isDark: boolean) => StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#F5F5F5',

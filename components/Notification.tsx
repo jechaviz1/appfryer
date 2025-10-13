@@ -10,6 +10,7 @@ import LinkToRecipe from '@/components/LinkToRecipe'
 import { timeSince } from '@/services/datetime'
 import { useAuth } from '@/contexts/authContext'
 import { Colors } from '@/constants/Colors'
+import { getBgColor } from '@/constants/Theme'
 
 export interface INotification {
     action: string
@@ -129,6 +130,7 @@ const s = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         gap: 12,
+        backgroundColor: getBgColor(),
     },
     newMark: {
         position: 'absolute',

@@ -16,7 +16,8 @@ import { get, post } from '@/services/apiRequests'
 import { useAuth } from '@/contexts/authContext'
 import { useSettings } from '@/contexts/settingsContext'
 import { useAppState } from '@/contexts/appStateContext'
-import { theme, getBgColor } from '@/constants/Theme'
+import { useTheme } from '@/contexts/themeContext'
+import { theme, getBgColor, getCardBackground, getSecondaryTextColor } from '@/constants/Theme'
 import { logError } from '@/services/utils'
 
 export default function TabLayout() {
@@ -25,7 +26,10 @@ export default function TabLayout() {
     const { user, setUser } = useAuth()
     const { setSettings } = useSettings()
     const { appState, setAppState } = useAppState()
+    const { isDark } = useTheme()
     const colorScheme = useColorScheme()
+    
+    const s = createStyles(isDark)
 
     const [isNeedToLogin, setIsNeedToLogin] = useState<boolean>(false)
 
@@ -220,7 +224,7 @@ export default function TabLayout() {
             <Tabs
                 screenOptions={{
                     tabBarActiveTintColor: Colors.mainColor,
-                    tabBarInactiveTintColor: '#6C7278',
+                    tabBarInactiveTintColor: getSecondaryTextColor(),
                     headerShown: false,
                     tabBarStyle: s.tabBar,
                     tabBarLabelStyle: s.tabBarLabel,
@@ -234,7 +238,7 @@ export default function TabLayout() {
                             <View style={s.iconContainer}>
                                 <Image
                                     source={focused ? TabBarIcons.HomeActiveIcon : TabBarIcons.HomeIcon}
-                                    style={[s.iconSize, { tintColor: focused ? Colors.mainColor : '#6C7278' }]}
+                                    style={[s.iconSize, { tintColor: focused ? Colors.mainColor : getSecondaryTextColor() }]}
                                 />
                             </View>
                         ),
@@ -248,7 +252,7 @@ export default function TabLayout() {
                             <View style={s.iconContainer}>
                                 <Image
                                     source={focused ? TabBarIcons.SearchActiveIcon : TabBarIcons.SearchIcon}
-                                    style={[s.iconSize, { tintColor: focused ? Colors.mainColor : '#6C7278' }]}
+                                    style={[s.iconSize, { tintColor: focused ? Colors.mainColor : getSecondaryTextColor() }]}
                                 />
                             </View>
                         ),
@@ -278,7 +282,7 @@ export default function TabLayout() {
                             <View style={s.iconContainer}>
                                 <Image
                                     source={focused ? TabBarIcons.BookActiveIcon : TabBarIcons.BookIcon}
-                                    style={[s.iconSize, { tintColor: focused ? Colors.mainColor : '#6C7278' }]}
+                                    style={[s.iconSize, { tintColor: focused ? Colors.mainColor : getSecondaryTextColor() }]}
                                 />
                             </View>
                         ),
@@ -292,7 +296,7 @@ export default function TabLayout() {
                             <View style={s.iconContainer}>
                                 <Image
                                     source={focused ? TabBarIcons.UserActiveIcon : TabBarIcons.UserIcon}
-                                    style={[s.iconSize, { tintColor: focused ? Colors.mainColor : '#6C7278' }]}
+                                    style={[s.iconSize, { tintColor: focused ? Colors.mainColor : getSecondaryTextColor() }]}
                                 />
                             </View>
                         ),
@@ -303,12 +307,12 @@ export default function TabLayout() {
     )
 }
 
-const s = StyleSheet.create({
+const createStyles = (isDark: boolean) => StyleSheet.create({
     tabBar: {
         height: 74,
         paddingTop: 14,
         paddingBottom: 14,
-        backgroundColor: '#FFFFFF',
+        backgroundColor: getCardBackground(),
     },
     tabBarLabel: {
         fontFamily: 'Poppins',

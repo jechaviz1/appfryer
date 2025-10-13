@@ -5,7 +5,8 @@ import { useRouter } from 'expo-router'
 import { Text, View } from '@/components/base/BaseComponents'
 import { useSavedRecipe } from '@/contexts/savedRecipeContext'
 import { Colors } from '@/constants/Colors'
-import { theme } from '@/constants/Theme'
+import { theme, getBgColor, getCardBackground, getTextColor, getSecondaryTextColor, getBorderColor, getShadowColor } from '@/constants/Theme'
+import { useTheme } from '@/contexts/themeContext'
 
 const window = Dimensions.get('window')
 
@@ -28,6 +29,9 @@ export default function RecipeCard({recipe, bookmarkedRecipes, toggleBookmark, d
     const { t } = useTranslation()
     const router = useRouter()
     const { showSavedRecipeModal } = useSavedRecipe()
+    const { isDark } = useTheme()
+    
+    const s = createStyles(isDark)
 
     const handleRecipePress = () => {
         router.push(`/(pages)/recipe/${recipe.id}`)
@@ -145,13 +149,21 @@ export default function RecipeCard({recipe, bookmarkedRecipes, toggleBookmark, d
     )
 }
 
-const s = StyleSheet.create({
+const createStyles = (isDark: boolean) => StyleSheet.create({
     // Recipe Card - EXACTLY same as explore page
     recipeCard: {
-        backgroundColor: Colors.white,
+        backgroundColor: getCardBackground(),
         borderRadius: 14,
         overflow: 'hidden',
         position: 'relative',
+        shadowColor: getShadowColor(),
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
     },
     recipeMark: {
         paddingVertical: 3,
@@ -222,11 +234,11 @@ const s = StyleSheet.create({
     recipeImage: {
         width: '100%',
         height: 450,
-        backgroundColor: '#f5f5f5',
+        backgroundColor: isDark ? Colors.dark.borderColor : '#f5f5f5',
         borderRadius: 10,
     },
     placeholderImage: {
-        backgroundColor: '#E0E0E0',
+        backgroundColor: isDark ? Colors.dark.borderColor : '#E0E0E0',
         justifyContent: 'center',
         alignItems: 'center',
     },
@@ -236,18 +248,20 @@ const s = StyleSheet.create({
         alignItems: 'center',
         paddingHorizontal: 16,
         paddingVertical: 12,
-        backgroundColor: Colors.white,
+        backgroundColor: getCardBackground(),
         borderRadius: 14,
     },
     footerSection: {
         flex: 1,
         justifyContent: 'center',
+        backgroundColor: 'transparent',
     },
     engagementMetrics: {
         flexDirection: 'row',
         gap: 16,
         alignItems: 'center',
         justifyContent: 'flex-start',
+        backgroundColor: 'transparent',
     },
     metricItem: {
         flexDirection: 'row',
@@ -261,13 +275,14 @@ const s = StyleSheet.create({
     metricText: {
         fontSize: 14,
         lineHeight: 18,
-        color: '#919191',
+        color: getSecondaryTextColor(),
         fontFamily: 'Poppins',
     },
     paginationDots: {
         flexDirection: 'row',
         justifyContent: 'center',
         gap: 4,
+        backgroundColor: 'transparent',
     },
     dot: {
         width: 8,
@@ -278,11 +293,11 @@ const s = StyleSheet.create({
         backgroundColor: Colors.mainColor,
     },
     dotInactive: {
-        backgroundColor: '#e0e0e0',
+        backgroundColor: isDark ? Colors.dark.borderColor : '#e0e0e0',
     },
     recipeTitle: {
         fontSize: 16,
-        color: Colors.black,
+        color: getTextColor(),
         marginBottom: 6,
         fontFamily: 'Poppins',
         paddingHorizontal: 16,
@@ -290,7 +305,7 @@ const s = StyleSheet.create({
     },
     recipeTime: {
         fontSize: 13,
-        color: '#919191',
+        color: getSecondaryTextColor(),
         fontFamily: 'Poppins',
         paddingHorizontal: 16,
         paddingBottom: 16,

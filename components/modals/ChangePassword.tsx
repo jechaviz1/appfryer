@@ -8,17 +8,21 @@ import { ModalTitle, Text, TextInput, View, Button } from "@/components/base/Bas
 import { validatePassword } from "@/services/validators"
 import { useAuth } from "@/contexts/authContext"
 import { post } from "@/services/apiRequests"
-import { theme, getBgColor } from "@/constants/Theme"
+import { theme, getBgColor, getCardBackground, getTextColor, getSecondaryTextColor, getBorderColor } from "@/constants/Theme"
+import { useTheme } from '@/contexts/themeContext'
 
 export default function ChangePassword({ isVisible, onHide }: { isVisible: boolean, onHide: () => void }) {
     const { user, setUser } = useAuth()
     const { t } = useTranslation()
+    const { isDark } = useTheme()
     
     const [oldPassword, setOldPassword] = useState<string>('')
     const [newPassword, setNewPassword] = useState<string>('')
     const [newPasswordError, setNewPasswordError] = useState<string>('')
     const [isButtonDisabled, setButtonDisabled] = useState<boolean>(false)
     const [saveError, setSaveError] = useState<string>('')
+
+    const s = createStyles(isDark)
     
     const onBlurNewPassword = () => {
         if (!validatePassword(newPassword)) {
@@ -104,7 +108,7 @@ export default function ChangePassword({ isVisible, onHide }: { isVisible: boole
     )
 }
 
-const s = StyleSheet.create({
+const createStyles = (isDark: boolean) => StyleSheet.create({
     passwordsFieldsContainer: {
         flexDirection: 'column',
         gap: 12,

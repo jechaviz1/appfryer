@@ -8,17 +8,21 @@ import { useAuth } from '@/contexts/authContext'
 import { Text, View } from "@/components/base/BaseComponents"
 import ProfileScreen from '@/components/ProfileScreen'
 import { get, post } from '@/services/apiRequests'
-import { theme, isLight, getBgColor } from '@/constants/Theme'
+import { theme, isLight, getBgColor, getCardBackground, getTextColor, getSecondaryTextColor, getBorderColor } from '@/constants/Theme'
 import IRecipe from '@/interfaces/Recipe'
 import { logError } from '@/services/utils'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { Colors } from '@/constants/Colors'
 import Header from '@/components/Header'
+import { useTheme } from '@/contexts/themeContext'
 
 export default function ProfileTabScreen() {
     const router = useRouter()
     const { user, setUser } = useAuth()
     const { t } = useTranslation()
+    const { isDark } = useTheme()
+    
+    const s = createStyles(isDark)
 
     const [showPersonalInfo, setShowPersonalInfo] = useState<boolean>(false)
     const [ownRecipes, setOwnRecipes] = useState<IRecipe[]>([])
@@ -39,7 +43,7 @@ export default function ProfileTabScreen() {
     }, []))
 
     return (
-        <View style={theme.container}>
+        <View style={[theme.container, { backgroundColor: getBgColor() }]}>
             <View style={theme.statusBarHeight} />
             {/* Dark Header */}
             <Header
@@ -55,7 +59,7 @@ export default function ProfileTabScreen() {
     )
 }
 
-const s = StyleSheet.create({
+const createStyles = (isDark: boolean) => StyleSheet.create({
     container: {
         backgroundColor: getBgColor()
     },

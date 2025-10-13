@@ -25,8 +25,9 @@ import {
     fetchWeeklyPlan,
     editWeeklyPlan
 } from '@/services/fetches'
-import { theme, isLight, getBgColor } from '@/constants/Theme'
+import { theme, isLight, getBgColor, getCardBackground, getTextColor, getSecondaryTextColor, getBorderColor, getShadowColor } from '@/constants/Theme'
 import { Colors } from '@/constants/Colors'
+import { useTheme } from '@/contexts/themeContext'
 import { MediaType } from '@/interfaces/Media'
 import { IShoppingListItemByRecipe } from '@/interfaces/ShoppingList'
 import IIngredinent, { IIngredientForShoppingList } from '@/interfaces/Ingredient'
@@ -44,6 +45,9 @@ export default function MySpaceScreen() {
     const { user } = useAuth()
     const router = useRouter()
     const { t } = useTranslation()
+    const { isDark } = useTheme()
+    
+    const s = createStyles(isDark)
 
     const [isSentReq, setSentReq] = useState<boolean>(false)
     const [showFolders, setShowFolders] = useState(false)
@@ -712,10 +716,10 @@ export default function MySpaceScreen() {
     )
 }
 
-const s = StyleSheet.create({
+const createStyles = (isDark: boolean) => StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#F8F5F0',
+        backgroundColor: getBgColor(),
     },
     headerContainer: {
         backgroundColor: '#4A3B30',
@@ -724,11 +728,11 @@ const s = StyleSheet.create({
     pillTabsContainer: {
         paddingHorizontal: 20,
         paddingVertical: 20,
-        backgroundColor: '#F8F5F0',
+        backgroundColor: getBgColor(),
     },
     pillTabs: {
         flexDirection: 'row',
-        backgroundColor: Colors.white,
+        backgroundColor: getCardBackground(),
         borderRadius: 30,
     },
     pillTab: {
@@ -754,7 +758,7 @@ const s = StyleSheet.create({
         color: Colors.white,
     },
     pillTabTextInactive: {
-        color: Colors.grey,
+        color: isDark ? Colors.dark.pillText : Colors.light.pillText,
     },
     contentContainer: {
         flex: 1,
@@ -768,19 +772,19 @@ const s = StyleSheet.create({
     categoryTitle: {
         fontSize: 18,
         fontWeight: 'bold',
-        color: '#2C1810',
+        color: isDark ? Colors.dark.emptyStateText : Colors.light.emptyStateText,
         marginBottom: 16,
         marginTop: 8,
     },
     shoppingItem: {
-        backgroundColor: 'white',
+        backgroundColor: getCardBackground(),
         borderRadius: 12,
         padding: 16,
         marginBottom: 12,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        shadowColor: '#000',
+        shadowColor: getShadowColor(),
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.08,
         shadowRadius: 4,
@@ -795,12 +799,12 @@ const s = StyleSheet.create({
         width: 40,
         height: 40,
         borderRadius: 10,
-        backgroundColor: 'white',
+        backgroundColor: getCardBackground(),
         alignItems: 'center',
         justifyContent: 'center',
         marginRight: 16,
         borderWidth: 1,
-        borderColor: '#F0F0F0',
+        borderColor: getBorderColor(),
     },
     itemEmoji: {
         fontSize: 20,
@@ -811,12 +815,12 @@ const s = StyleSheet.create({
     itemName: {
         fontSize: 16,
         fontWeight: 'bold',
-        color: '#2C1810',
+        color: isDark ? Colors.dark.emptyStateText : Colors.light.emptyStateText,
         marginBottom: 4,
     },
     itemQuantity: {
         fontSize: 14,
-        color: '#808080',
+        color: isDark ? Colors.dark.emptyStateSubtext : Colors.light.emptyStateSubtext,
         fontWeight: '400',
     },
     shoppingItemRight: {
@@ -832,10 +836,10 @@ const s = StyleSheet.create({
         height: 24,
         borderRadius: 12,
         borderWidth: 2,
-        borderColor: '#D0D0D0',
+        borderColor: isDark ? Colors.dark.checkboxBorder : Colors.light.checkboxBorder,
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: 'white',
+        backgroundColor: isDark ? Colors.dark.checkboxBackground : Colors.light.checkboxBackground,
     },
     checkboxChecked: {
         backgroundColor: '#C28040',
@@ -852,7 +856,7 @@ const s = StyleSheet.create({
         fontFamily: 'Poppins-Medium',
         fontSize: 16,
         letterSpacing: 0,
-        color: '#000000',
+        color: getTextColor(),
     },
     calendarLink: {
         fontSize: 14,
@@ -866,7 +870,7 @@ const s = StyleSheet.create({
     },
     dayItem: {
         alignItems: 'center',
-        backgroundColor: '#FFFFFF',
+        backgroundColor: getCardBackground(),
         borderRadius: 14,
         paddingHorizontal: 3,
         paddingVertical: 3,
@@ -889,14 +893,14 @@ const s = StyleSheet.create({
     dateText: {
         fontSize: 16,
         lineHeight: 22,
-        color: '#B5B5B5',
+        color: isDark ? Colors.dark.secondaryText : '#B5B5B5',
         fontFamily: 'Poppins-SemiBold',
         padding: 10,
         minWidth: 38,
         textAlign: 'center',
     },
     dateTextSelected: {
-        backgroundColor: Colors.white,
+        backgroundColor: isDark ? Colors.dark.cardBackground : Colors.white,
         color: Colors.mainColor,
         padding: 10,
         borderRadius: 12,
@@ -912,7 +916,7 @@ const s = StyleSheet.create({
         fontFamily: 'Poppins-Medium',
         fontSize: 16,
         letterSpacing: 0,
-        color: '#000000',
+        color: getTextColor(),
     },
     addToShoppingButton: {
         flexDirection: 'row',
@@ -939,7 +943,7 @@ const s = StyleSheet.create({
     },
     emptyMealsText: {
         fontSize: 16,
-        color: '#808080',
+        color: isDark ? Colors.dark.emptyStateSubtext : Colors.light.emptyStateSubtext,
         marginBottom: 20,
         textAlign: 'center',
     },
@@ -968,7 +972,7 @@ const s = StyleSheet.create({
     },
     calendarDayItem: {
         alignItems: 'center',
-        backgroundColor: '#FFFFFF',
+        backgroundColor: getCardBackground(),
         borderRadius: 14,
         paddingHorizontal: 3,
         paddingVertical: 3,
@@ -979,7 +983,7 @@ const s = StyleSheet.create({
         backgroundColor: Colors.mainColor,
     },
     calendarDayItemInactive: {
-        backgroundColor: '#FCEEE1',
+        backgroundColor: isDark ? Colors.dark.calendarInactive : Colors.light.calendarInactive,
     },
     calendarDayText: {
         fontSize: 12,
@@ -993,14 +997,14 @@ const s = StyleSheet.create({
     calendarDateText: {
         fontSize: 16,
         lineHeight: 22,
-        color: '#B5B5B5',
+        color: isDark ? Colors.dark.secondaryText : '#B5B5B5',
         fontFamily: 'Poppins-SemiBold',
         padding: 10,
         minWidth: 38,
         textAlign: 'center',
     },
     calendarDateTextSelected: {
-        backgroundColor: Colors.white,
+        backgroundColor: isDark ? Colors.dark.cardBackground : Colors.white,
         color: Colors.mainColor,
         padding: 10,
         borderRadius: 12,
@@ -1009,13 +1013,13 @@ const s = StyleSheet.create({
         color: '#B5B5B5',
     },
     recipeCard: {
-        backgroundColor: 'white',
+        backgroundColor: getCardBackground(),
         borderRadius: 12,
         padding: 16,
         marginBottom: 12,
         flexDirection: 'row',
         alignItems: 'center',
-        shadowColor: '#000',
+        shadowColor: getShadowColor(),
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
         shadowRadius: 4,
@@ -1025,7 +1029,7 @@ const s = StyleSheet.create({
         width: 60,
         height: 60,
         borderRadius: 8,
-        backgroundColor: '#F0F0F0',
+        backgroundColor: getBorderColor(),
         alignItems: 'center',
         justifyContent: 'center',
         marginRight: 16,
@@ -1055,12 +1059,12 @@ const s = StyleSheet.create({
     recipeName: {
         fontSize: 16,
         fontWeight: 'bold',
-        color: '#2C1810',
+        color: isDark ? Colors.dark.emptyStateText : Colors.light.emptyStateText,
         marginBottom: 4,
     },
     recipeDetails: {
         fontSize: 12,
-        color: '#666',
+        color: isDark ? Colors.dark.emptyStateSubtext : Colors.light.emptyStateSubtext,
     },
     recipeOptions: {
         padding: 8,
@@ -1079,7 +1083,7 @@ const s = StyleSheet.create({
         flexDirection: 'row',
         paddingHorizontal: 20,
         paddingVertical: 16,
-        backgroundColor: '#F8F5F0',
+        backgroundColor: getBgColor(),
         justifyContent: 'space-around',
     },
     footerButton: {
@@ -1107,13 +1111,13 @@ const s = StyleSheet.create({
     emptyStateText: {
         fontSize: 18,
         fontWeight: 'bold',
-        color: '#2C1810',
+        color: isDark ? Colors.dark.emptyStateText : Colors.light.emptyStateText,
         textAlign: 'center',
         marginBottom: 8,
     },
     emptyStateSubtext: {
         fontSize: 14,
-        color: '#808080',
+        color: isDark ? Colors.dark.emptyStateSubtext : Colors.light.emptyStateSubtext,
         textAlign: 'center',
         lineHeight: 20,
     },

@@ -6,8 +6,9 @@ import { useTranslation } from "react-i18next"
 
 import { Lines, Text, View } from "@/components/base/BaseComponents"
 import { useSettings } from "@/contexts/settingsContext"
-import { theme } from '@/constants/Theme'
+import { theme, getBgColor, getCardBackground, getTextColor, getSecondaryTextColor, getBorderColor } from '@/constants/Theme'
 import { Colors } from '@/constants/Colors'
+import { useTheme } from '@/contexts/themeContext'
 import { get } from "@/services/apiRequests"
 import { logError } from "@/services/utils"
 
@@ -23,6 +24,9 @@ export default function Onboarding() {
     const router = useRouter()
     const { t, i18n } = useTranslation()
     const { settings, setSettings } = useSettings()
+    const { isDark } = useTheme()
+    
+    const s = createStyles(isDark)
 
     const sliderRef = useRef<FlatList<ISlide>>(null)
     const [currentSlide, setCurrentSlide] = useState<number>(0)
@@ -136,7 +140,7 @@ export default function Onboarding() {
     )
 }
 
-const s = StyleSheet.create({
+const createStyles = (isDark: boolean) => StyleSheet.create({
     flatList: {
         flexDirection: 'row',
         flex: 1,

@@ -4,7 +4,8 @@ import { useTranslation } from "react-i18next"
 import Modal from "react-native-modal"
 
 import { Button, Text, View } from "@/components/base/BaseComponents"
-import { theme, getBgColor } from "@/constants/Theme"
+import { theme, getBgColor, getCardBackground, getTextColor, getSecondaryTextColor, getBorderColor } from "@/constants/Theme"
+import { useTheme } from '@/contexts/themeContext'
 
 interface Props {
     isVisible: boolean
@@ -13,6 +14,9 @@ interface Props {
 }
 export default function Languages({isVisible, onHide, languages}: Props) {
     const { i18n } = useTranslation()
+    const { isDark } = useTheme()
+
+    const s = createStyles(isDark)
 
     return <Modal
         isVisible={isVisible}
@@ -38,7 +42,7 @@ export default function Languages({isVisible, onHide, languages}: Props) {
     </Modal>
 }
 
-const s = StyleSheet.create({
+const createStyles = (isDark: boolean) => StyleSheet.create({
     modal: {
         marginTop: '140%',
         justifyContent: 'center',
@@ -47,11 +51,13 @@ const s = StyleSheet.create({
     modalLanguages: {
         gap: 16,
         width: '100%',
+        backgroundColor: getBgColor(),
     },
     languageItem: {
         textAlign: 'center',
         alignItems: 'center',
         alignContent: 'center',
         justifyContent: 'center',
+        backgroundColor: getCardBackground(),
     },
 })

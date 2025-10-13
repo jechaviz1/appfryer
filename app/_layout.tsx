@@ -5,6 +5,7 @@ import { Stack } from 'expo-router'
 import * as SplashScreen from 'expo-splash-screen'
 
 import Providers from '@/components/onLoad/Providers'
+import { ThemeProvider as CustomThemeProvider } from '@/contexts/themeContext'
 import { useColorScheme } from '@/hooks/useColorScheme'
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
@@ -49,20 +50,10 @@ export default function RootLayout() {
         '(pages)/feed',
         '(pages)/profile',
         '(pages)/quiz',
-        '(pages)/shopping-list',
         '(pages)/start-cooking',
         '(pages)/static-page',
         '(pages)/user-list',
-        '(pages)/weekly-plan',
         '(create)/new-recipe',
-        // '(create)/0-create',
-        // '(create)/1-upload-media',
-        // '(create)/2-title',
-        // '(create)/3-categories',
-        // '(create)/4-servings',
-        // '(create)/5-time',
-        // '(create)/6-ingredients',
-        // '(create)/7-instructions',
         '(settings)/activity-log',
         '(settings)/delete-account',
         '(settings)/languages',
@@ -71,15 +62,17 @@ export default function RootLayout() {
     ]
 
     return (
-        <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-            <Providers>
-                <Stack screenOptions={{ headerShown: false }}>
-                    {screens.map((name) => (
-                        <Stack.Screen key={name} name={name} />
-                    ))}
-                    <Stack.Screen name="+not-found" />
-                </Stack>
-            </Providers>
-        </ThemeProvider>
+        <CustomThemeProvider>
+            <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+                <Providers>
+                    <Stack screenOptions={{ headerShown: false }}>
+                        {screens.map((name) => (
+                            <Stack.Screen key={name} name={name} />
+                        ))}
+                        <Stack.Screen name="+not-found" />
+                    </Stack>
+                </Providers>
+            </ThemeProvider>
+        </CustomThemeProvider>
     )
 }

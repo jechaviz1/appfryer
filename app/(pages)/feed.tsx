@@ -6,10 +6,11 @@ import { ModalTitle, ScrollView, View } from "@/components/base/BaseComponents"
 import RecipeBrief from '@/components/RecipeBrief'
 import { prepareGlobQueryToUrl, post } from '@/services/apiRequests'
 import { useAuth } from '@/contexts/authContext'
-import { theme } from '@/constants/Theme'
+import { theme, getBgColor, getCardBackground, getTextColor, getSecondaryTextColor, getBorderColor } from '@/constants/Theme'
 import IRecipe from '@/interfaces/Recipe'
 import IFolder from '@/interfaces/Folder'
 import { logError } from '@/services/utils'
+import { useTheme } from '@/contexts/themeContext'
 
 interface FeedData {
     type?: string
@@ -26,6 +27,9 @@ export default function RecipesFeed() {
     const { user, setUser } = useAuth()
     const router = useRouter()
     const globQuery = useGlobalSearchParams()
+    const { isDark } = useTheme()
+    
+    const s = createStyles(isDark)
 
     const [title, setTitle] = useState<string>('')
     const [recipes, setRecipes] = useState<IRecipe[]>([])
@@ -93,7 +97,7 @@ export default function RecipesFeed() {
     )
 }
 
-const s = StyleSheet.create({
+const createStyles = (isDark: boolean) => StyleSheet.create({
     recipes: {
         gap: 8,
         marginBottom: 60,

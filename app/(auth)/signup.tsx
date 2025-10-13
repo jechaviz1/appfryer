@@ -13,14 +13,18 @@ import { useAppState } from '@/contexts/appStateContext'
 import { validateName, validateEmail, validatePassword } from '@/services/validators'
 import { post } from '@/services/apiRequests'
 import { fetchLanguages } from '@/services/fetches'
-import { theme, isLight } from '@/constants/Theme'
+import { theme, isLight, getBgColor, getCardBackground, getTextColor, getSecondaryTextColor, getBorderColor } from '@/constants/Theme'
 import { Colors } from '@/constants/Colors'
+import { useTheme } from '@/contexts/themeContext'
 
 export default function SignupScreen() {
     const router = useRouter()
     const { t, i18n } = useTranslation()
     const { setUser } = useAuth()
     const { appState, setAppState } = useAppState()
+    const { isDark } = useTheme()
+    
+    const s = createStyles(isDark)
 
     const [showLanguages, setShowLanguages] = useState<boolean>(false)
     const [languages, setLanguages] = useState<Record<string, string>>({})
@@ -282,7 +286,7 @@ export default function SignupScreen() {
     )
 }
 
-const s = StyleSheet.create({
+const createStyles = (isDark: boolean) => StyleSheet.create({
     termsContainer: {
         flexDirection: 'row',
         alignItems: 'center',

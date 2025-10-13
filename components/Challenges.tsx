@@ -3,8 +3,10 @@ import { Image, Pressable, StyleSheet } from 'react-native'
 import { useTranslation } from 'react-i18next'
 
 import { Text, View } from '@/components/base/BaseComponents'
-import { getBgColor } from '@/constants/Theme'
+import { getBgColor, getCardBackground, getTextColor, getSecondaryTextColor, getBorderColor } from '@/constants/Theme'
 import { Colors } from '@/constants/Colors'
+import { useTheme } from '@/contexts/themeContext'
+
 
 interface IChallenge {
 	id: number
@@ -27,18 +29,18 @@ const challengesFake: IChallenge[] = [
 	},
 ]
 
-function ChallengeCard({challenge}: {challenge: IChallenge}) {
+function ChallengeCard({challenge, styles}: {challenge: IChallenge, styles: any}) {
 	const { t } = useTranslation()
 
 	return (
-		<Pressable style={s.challengeCard} onPress={() => console.log('Open challenge', challenge.id)}>
-			<Image source={challenge.image} style={s.challengeCardImg}/>
-			<View style={s.challengeCardText}>
-				<Text style={s.challengeCardTitle}>{t(challenge.title)}</Text>
-				<Text style={s.challengeCardDescription}>{t(challenge.description)}</Text>
+		<Pressable style={styles.challengeCard} onPress={() => console.log('Open challenge', challenge.id)}>
+			<Image source={challenge.image} style={styles.challengeCardImg}/>
+			<View style={styles.challengeCardText}>
+				<Text style={styles.challengeCardTitle}>{t(challenge.title)}</Text>
+				<Text style={styles.challengeCardDescription}>{t(challenge.description)}</Text>
 			</View>
-			<View style={s.chevronCircle}>
-				<Image source={require('@/assets/icons/chevron-right-neutral-grey.png')} style={s.chevronIcon} />
+			<View style={styles.chevronCircle}>
+				<Image source={require('@/assets/icons/chevron-right-neutral-grey.png')} style={styles.chevronIcon} />
 			</View>
 		</Pressable>
 	)
@@ -47,6 +49,9 @@ function ChallengeCard({challenge}: {challenge: IChallenge}) {
 
 export default function Challenges({style}: {style?: any}) {
     const { t } = useTranslation()
+    const { isDark } = useTheme()
+    
+    const s = createStyles(isDark)
 
     const [challenges, setChallenges] = useState<IChallenge[]>([])
 
@@ -59,13 +64,13 @@ export default function Challenges({style}: {style?: any}) {
     return (
 		<View style={[style, s.container]}>
             {challenges.map((challenge) => (
-                <ChallengeCard key={challenge.id} challenge={challenge} />
+                <ChallengeCard key={challenge.id} challenge={challenge} styles={s} />
             ))}
 		</View>
     )
 }
 
-const s = StyleSheet.create({
+const createStyles = (isDark: boolean) => StyleSheet.create({
     container: {
         marginTop: 10,
         backgroundColor: getBgColor(),
@@ -75,7 +80,7 @@ const s = StyleSheet.create({
         alignItems: 'center',
         gap: 15,
         borderRadius: 16,
-        backgroundColor: Colors.white,
+        backgroundColor: getCardBackground(),
         marginTop: 10,
         paddingVertical: 22,
         paddingHorizontal: 10,
@@ -87,6 +92,7 @@ const s = StyleSheet.create({
     challengeCardText: {
         flex: 1,
         paddingRight: 12,
+        backgroundColor: getCardBackground(),
     },
     challengeCardTitle: {
         flexWrap: 'wrap',
@@ -95,7 +101,7 @@ const s = StyleSheet.create({
 		fontSize: 16,
 		lineHeight: 22,
 		letterSpacing: 0,
-		color: '#1B1A1D',
+		color: getTextColor(),
         marginBottom: 4,
     },
     challengeCardDescription: {
@@ -105,13 +111,13 @@ const s = StyleSheet.create({
 		fontSize: 14,
 		lineHeight: 19,
 		letterSpacing: 0,
-		color: '#6C7278',
+		color: getSecondaryTextColor(),
     },
     chevronCircle: {
         width: 44,
         height: 44,
         borderRadius: 22,
-        backgroundColor: '#ECD8C4',
+        backgroundColor: isDark ? '#374151' : '#ECD8C4',
         alignItems: 'center',
         justifyContent: 'center',
     },

@@ -8,8 +8,9 @@ import Notifications from '@/components/modals/Notifications'
 import Stories from '@/components/Stories'
 import Search from '@/components/Search'
 import RecipeBrief from '@/components/RecipeBrief'
-import { theme, isLight } from '@/constants/Theme'
+import { theme, isLight, getBgColor, getCardBackground, getTextColor, getShadowColor } from '@/constants/Theme'
 import { useAuth } from '@/contexts/authContext'
+import { useTheme } from '@/contexts/themeContext'
 import { useSearchFilters } from '@/contexts/searchFiltersContext'
 import { useAppState } from '@/contexts/appStateContext'
 import { get, post } from '@/services/apiRequests'
@@ -33,6 +34,9 @@ export default function CreateScreen() {
     const router = useRouter()
     const { t } = useTranslation()
     const { user } = useAuth()
+    const { isDark } = useTheme()
+    
+    const s = createStyles(isDark)
 
     const [createOptions] = useState([
         {title: 'Create Recipe', icon: require('@/assets/icons/recipe.png'), action: 'recipe'},
@@ -57,10 +61,10 @@ export default function CreateScreen() {
     }, [router])
 
     return (
-        <View style={theme.container}>
+        <View style={[theme.container, { backgroundColor: getBgColor() }]}>
             <View style={theme.statusBarHeight} />
-            <ScrollView style={theme.mainContainer}>
-                <View style={[theme.titleContainer, { marginBottom: 20 }]}>
+            <ScrollView style={[theme.mainContainer, { backgroundColor: getBgColor() }]}>
+                <View style={[s.titleContainer, { marginBottom: 20 }]}>
                     <Text type="subtitle">{t('Create')}</Text>
                 </View>
                 <View style={s.createOptions}>
@@ -82,18 +86,25 @@ export default function CreateScreen() {
     )
 }
 
-const s = StyleSheet.create({
+const createStyles = (isDark: boolean) => StyleSheet.create({
+    titleContainer: {
+        marginTop: 20,
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+        backgroundColor: 'transparent',
+    },
     createOptions: {
         gap: 20,
-        paddingHorizontal: 20,
+        backgroundColor: 'transparent',
     },
     createOption: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#FFFFFF',
+        backgroundColor: getCardBackground(),
         padding: 20,
         borderRadius: 12,
-        shadowColor: '#000',
+        shadowColor: getShadowColor(),
         shadowOffset: {
             width: 0,
             height: 2,
@@ -119,7 +130,7 @@ const s = StyleSheet.create({
     createOptionText: {
         fontSize: 16,
         fontWeight: '500',
-        color: '#1B1A1D',
+        color: getTextColor(),
         fontFamily: 'Poppins-Medium',
     },
 })

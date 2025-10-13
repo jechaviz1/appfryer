@@ -4,12 +4,16 @@ import { useTranslation } from 'react-i18next'
 
 import { BackButton, Button, Text, View } from '@/components/base/BaseComponents'
 import { Colors } from '@/constants/Colors'
-import { getBgColor, paddings, theme } from '@/constants/Theme'
+import { getBgColor, paddings, theme, getCardBackground, getTextColor, getSecondaryTextColor, getBorderColor } from '@/constants/Theme'
 import { router } from 'expo-router'
+import { useTheme } from '@/contexts/themeContext'
 
 export default function Premium() {
     const { t } = useTranslation()
+    const { isDark } = useTheme()
     const [selectedPeriod, setSelectedPeriod] = useState<0 | 1>(1)
+
+    const s = createStyles(isDark)
 
     const benefits = [
         'Premium recipes from exclusive chefs',
@@ -138,7 +142,7 @@ export default function Premium() {
     )
 }
 
-const s = StyleSheet.create({
+const createStyles = (isDark: boolean) => StyleSheet.create({
     mainContainer: {
         flex: 1,
         backgroundColor: getBgColor(),
@@ -211,7 +215,7 @@ const s = StyleSheet.create({
     },
     contentArea: {
         flex: 1,
-        backgroundColor: '#F9F5F2',
+        backgroundColor: getBgColor(),
         paddingHorizontal: 25,
     },
     featuresContainer: {
@@ -228,13 +232,14 @@ const s = StyleSheet.create({
         width: 24,
         height: 24,
         marginRight: 17,
+        tintColor: Colors.mainColor,
     },
     featureText: {
         fontFamily: 'Poppins-Medium',
         fontWeight: '500',
         fontSize: 16,
         lineHeight: 22,
-        color: '#1B1A1D',
+        color: getTextColor(),
         flex: 1,
     },
     subscriptionContainer: {
@@ -242,21 +247,21 @@ const s = StyleSheet.create({
         backgroundColor: getBgColor(),
     },
     subscriptionCard: {
-        backgroundColor: '#FFFFFF',
+        backgroundColor: getCardBackground(),
         marginBottom: 12,
         borderRadius: 10,
         height: 97,
     },
     subscriptionCardSelected: {
-        backgroundColor: '#F6ECE2',
+        backgroundColor: isDark ? '#374151' : '#F6ECE2',
         borderWidth: 1,
-        borderColor: '#FF8C42',
+        borderColor: Colors.mainColor,
         borderRadius: 10,
     },
     subscriptionCardUnselected: {
-        backgroundColor: '#FFFFFF',
+        backgroundColor: getCardBackground(),
         borderWidth: 1,
-        borderColor: '#FFFFFF',
+        borderColor: getBorderColor(),
         borderRadius: 10,
     },
     subscriptionContent: {
@@ -279,7 +284,7 @@ const s = StyleSheet.create({
         height: 20,
         borderRadius: 10,
         borderWidth: 2,
-        borderColor: '#919191',
+        borderColor: getSecondaryTextColor(),
         marginRight: 12,
         justifyContent: 'center',
         alignItems: 'center',
@@ -298,14 +303,14 @@ const s = StyleSheet.create({
         fontFamily: 'Poppins-SemiBold',
         fontWeight: '600',
         fontSize: 16,
-        color: '#1B1A1D',
+        color: getTextColor(),
         marginBottom: 2,
     },
     subscriptionSubtitle: {
         fontFamily: 'Poppins',
         fontSize: 14,
         lineHeight: 19,
-        color: '#6C7278',
+        color: getSecondaryTextColor(),
     },
     subscriptionRight: {
         backgroundColor: 'transparent',
@@ -315,26 +320,26 @@ const s = StyleSheet.create({
         fontFamily: 'Poppins-SemiBold',
         fontWeight: '600',
         fontSize: 16,
-        color: '#C28040',
+        color: Colors.mainColor,
         marginBottom: 9,
     },
     discountTag: {
-        backgroundColor: '#F6ECE2',
+        backgroundColor: isDark ? '#374151' : '#F6ECE2',
         paddingHorizontal: 10,
         paddingVertical: 2,
         borderRadius: 18,
     },
     discountTagSelected: {
-        backgroundColor: '#FFFFFF',
+        backgroundColor: getCardBackground(),
     },
     discountTagUnselected: {
-        backgroundColor: '#F6ECE2',
+        backgroundColor: isDark ? '#374151' : '#F6ECE2',
     },
     discountText: {
         fontFamily: 'Poppins-Medium',
         fontSize: 14,
         lineHeight: 19,
-        color: '#C28040',
+        color: Colors.mainColor,
         fontWeight: '500',
     },
     actionButtonsContainer: {
@@ -343,7 +348,7 @@ const s = StyleSheet.create({
         paddingBottom: 30,
     },
     premiumButton: {
-        backgroundColor: '#C28040',
+        backgroundColor: Colors.mainColor,
         height: 52,
         borderRadius: 11,
         marginBottom: 35,
@@ -355,7 +360,7 @@ const s = StyleSheet.create({
         fontFamily: 'Poppins-Medium',
     },
     restoreText: {
-        color: '#C28040',
+        color: Colors.mainColor,
         fontSize: 16,
         fontWeight: '500',
         fontFamily: 'Poppins-Medium',

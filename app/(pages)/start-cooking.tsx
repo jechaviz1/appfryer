@@ -4,11 +4,12 @@ import { useRouter } from 'expo-router'
 import { useTranslation } from 'react-i18next'
 
 import { Button, Lines, ScrollView, View, Text } from "@/components/base/BaseComponents"
-import { theme, paddings } from '@/constants/Theme'
+import { theme, paddings, getBgColor, getCardBackground, getTextColor, getSecondaryTextColor, getBorderColor } from '@/constants/Theme'
 import { useAppState } from '@/contexts/appStateContext'
 import IRecipe, { IRecipeStep } from '@/interfaces/Recipe'
 import { Colors } from '@/constants/Colors'
 import Header from '@/components/Header'
+import { useTheme } from '@/contexts/themeContext'
 
 import { fakeCookingSteps } from '@/services/fakeData'
 
@@ -21,10 +22,13 @@ export default function StartCooking() {
     const router = useRouter()
     const { appState, setAppState } = useAppState()
     const { t } = useTranslation()
+    const { isDark } = useTheme()
     
     const [recipe, setRecipe] = useState<IRecipe>()
     const [currentStep, setCurrentStep] = useState(0)
     const [timer, setTimer] = useState<{ timeInSec: number; isStarted: boolean }>({ timeInSec: 0, isStarted: false })
+
+    const s = createStyles(isDark)
     
     const onClose = () => {
         setAppState({ ...appState, actualRecipe: undefined })
@@ -201,10 +205,10 @@ export default function StartCooking() {
     )
 }
 
-const s = StyleSheet.create({
+const createStyles = (isDark: boolean) => StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#F9F5F2',
+        backgroundColor: getBgColor(),
     },
     header: {
         backgroundColor: '#8B4513',
@@ -212,12 +216,11 @@ const s = StyleSheet.create({
     },
     content: {
         flex: 1,
-        backgroundColor: '#F9F5F2',
+        backgroundColor: getBgColor(),
     },
     imageContainer: {
         position: 'relative',
         height: 275,
-        backgroundColor: '#F9F5F2',
     },
     recipeImage: {
         width: '100%',
@@ -237,13 +240,13 @@ const s = StyleSheet.create({
     progressBar: {
         flex: 1,
         height: 6,
-        backgroundColor: Colors.white,
+        backgroundColor: isDark ? '#374151' : Colors.white,
         borderRadius: 3,
         overflow: 'hidden',
     },
     progressFill: {
         height: '100%',
-        backgroundColor: '#C3803A',
+        backgroundColor: Colors.mainColor,
         borderRadius: 2,
     },
     stepCounter: {
@@ -252,29 +255,30 @@ const s = StyleSheet.create({
         fontSize: 16,
         letterSpacing: 0,
         textAlign: 'center',
-        color: '#FFFFFF',
+        color: Colors.white,
     },
     stepNavigation: {
         flexDirection: 'row',
         paddingHorizontal: 20,
         paddingVertical: 20,
         gap: 4,
+        backgroundColor: getBgColor(),
     },
     stepButton: {
         height: 32,
         borderRadius: 18,
         paddingHorizontal: 15,
         paddingVertical: 8,
-        backgroundColor: '#F9F2EC',
+        backgroundColor: isDark ? '#374151' : '#F9F2EC',
         alignItems: 'center',
         justifyContent: 'center',
         gap: 10,
     },
     stepButtonActive: {
-        backgroundColor: '#F6ECE2',
+        backgroundColor: isDark ? '#1f2937' : '#F6ECE2',
     },
     stepButtonInactive: {
-        backgroundColor: '#F9F2EC',
+        backgroundColor: isDark ? '#374151' : '#F9F2EC',
     },
     stepButtonText: {
         fontFamily: 'Poppins-Medium',
@@ -282,18 +286,19 @@ const s = StyleSheet.create({
         fontSize: 16,
         lineHeight: 19,
         letterSpacing: 0,
-        color: '#919191',
+        color: getSecondaryTextColor(),
     },
     stepButtonTextActive: {
-        color: '#C28040',
+        color: Colors.mainColor,
     },
     stepButtonTextInactive: {
-        color: '#919191',
+        color: getSecondaryTextColor(),
     },
     stepContent: {
         paddingHorizontal: 20,
         paddingVertical: 20,
         flex: 1,
+        backgroundColor: getBgColor(),
     },
     stepTitle: {
         fontFamily: 'Poppins-Medium',
@@ -301,7 +306,7 @@ const s = StyleSheet.create({
         fontSize: 16,
         lineHeight: 22,
         letterSpacing: 0,
-        color: '#000000',
+        color: getTextColor(),
         marginBottom: 12,
     },
     stepDescription: {
@@ -310,35 +315,36 @@ const s = StyleSheet.create({
         fontSize: 15,
         lineHeight: 22,
         letterSpacing: 0,
-        color: '#6C7278',
+        color: getSecondaryTextColor(),
         marginBottom: 30,
     },
     timerContainer: {
         alignItems: 'center',
         marginVertical: 20,
+        backgroundColor: getBgColor(),
     },
     timerCircle: {
         width: 140,
         height: 140,
         borderRadius: 70,
-        backgroundColor: '#FFFFFF',
+        backgroundColor: getCardBackground(),
         alignItems: 'center',
         justifyContent: 'center',
         position: 'relative',
         borderWidth: 8,
-        borderColor: '#E0E0E0',
+        borderColor: isDark ? '#374151' : '#E0E0E0',
     },
     timerText: {
         fontSize: 31,
         fontWeight: '700',
-        color: '#C3803A',
+        color: Colors.mainColor,
         lineHeight: 35,
     },
     timerButton: {
         width: 48,
         height: 48,
         borderRadius: 24,
-        backgroundColor: '#C3803A',
+        backgroundColor: Colors.mainColor,
         alignItems: 'center',
         justifyContent: 'center',
         marginTop: 10,
@@ -351,6 +357,7 @@ const s = StyleSheet.create({
     actionContainer: {
         paddingHorizontal: 62,
         paddingBottom: 28,
+        backgroundColor: getBgColor(),
     },
     actionButton: {
         height: 53,
@@ -359,7 +366,7 @@ const s = StyleSheet.create({
         paddingRight: 27,
         paddingBottom: 11,
         paddingLeft: 27,
-        backgroundColor: '#C28040',
+        backgroundColor: Colors.mainColor,
         gap: 11,
     },
     actionButtonText: {
@@ -369,6 +376,6 @@ const s = StyleSheet.create({
         lineHeight: 22.4, // 140% of 16px
         letterSpacing: -0.16, // -1% of 16px
         textAlign: 'center',
-        color: '#FFFFFF',
+        color: Colors.white,
     },
 })

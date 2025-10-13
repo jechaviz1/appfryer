@@ -5,22 +5,26 @@ import { useTranslation } from 'react-i18next'
 
 import { BackButton, ScrollView, Text, View } from "@/components/base/BaseComponents"
 import Header from '@/components/Header'
-import { theme, paddings, isLight, getBgColor } from '@/constants/Theme'
+import { theme, paddings, isLight, getBgColor, getCardBackground, getTextColor, getSecondaryTextColor, getBorderColor } from '@/constants/Theme'
 import { useAuth } from '@/contexts/authContext'
 import { get } from '@/services/apiRequests'
 import { Colors } from '@/constants/Colors'
 import { IIngredinentInfo } from '@/interfaces/Ingredient'
 import NutritionalValues from '@/components/NutritionalValues'
 import CustomTabBar from '@/components/CustomTabBar'
+import { useTheme } from '@/contexts/themeContext'
 
 export default function Ingredient() {
     const globQuery = useGlobalSearchParams()
     const { user } = useAuth()
     const { t } = useTranslation()
     const { width: windowWidth } = useWindowDimensions()
+    const { isDark } = useTheme()
 
     const [ingredient, setIngredient] = useState<IIngredinentInfo>()
     const [activeTab, setActiveTab] = useState(0)
+
+    const s = createStyles(isDark)
 
     useEffect(() => {
         get({ url: `/ingredient/${globQuery.id}`, token: user?.token })
@@ -119,7 +123,7 @@ export default function Ingredient() {
     ]
 
     return (
-        <View style={theme.container}>
+        <View style={[theme.container, { flex: 1,backgroundColor: getBgColor() }]}>
             <View style={theme.statusBarHeight} />
             <Header
                 title={t('Ingredient Details')}
@@ -152,7 +156,7 @@ export default function Ingredient() {
     )
 }
 
-const s = StyleSheet.create({
+const createStyles = (isDark: boolean) => StyleSheet.create({
     scrollView: {
         paddingBottom: 30,
     },
@@ -168,14 +172,14 @@ const s = StyleSheet.create({
         fontWeight: '600',
         fontSize: 20,
         letterSpacing: 0,
-        color: '#000000',
+        color: getTextColor(),
     },
     categoryLabel: {
         fontFamily: 'Poppins-Medium',
         fontWeight: '500',
         fontSize: 16,
         letterSpacing: 0,
-        color: '#1B1A1D',
+        color: getTextColor(),
     },
     ingredientDescriptionText: {
         fontFamily: 'Poppins',
@@ -183,7 +187,7 @@ const s = StyleSheet.create({
         fontSize: 16,
         lineHeight: 22,
         letterSpacing: 0,
-        color: Colors.greyTextColor,
+        color: getSecondaryTextColor(),
         marginTop: 6,
     },
     categoryRow: {
@@ -196,13 +200,14 @@ const s = StyleSheet.create({
         paddingHorizontal: 10,
         paddingVertical: 5,
         borderRadius: 18,
-        backgroundColor: '#F6ECE2',
+        backgroundColor: isDark ? '#374151' : '#F6ECE2',
     },
     categoryText: {
-        color: Colors.mainColor,
+        color: isDark ? '#f59e0b' : Colors.mainColor,
         fontSize: 12,
     },
     tabsContainer: {
+        backgroundColor: getBgColor(),
         paddingTop: 0,
     },
     infoWrapper: {
@@ -219,11 +224,11 @@ const s = StyleSheet.create({
     },
     detailWrapper: {
         alignItems: 'center',
-        backgroundColor: Colors.white,
+        backgroundColor: getCardBackground(),
         paddingVertical: 8,
         paddingHorizontal: 18,
         borderRadius: 12,
-        width: '31%',
+        width: '30%',
     },
     detailIconWrapper: {
         width: 40,
@@ -231,10 +236,12 @@ const s = StyleSheet.create({
         borderRadius: 20,
         alignItems: 'center',
         justifyContent: 'center',
+        backgroundColor: isDark ? '#1f2937' : '#f3f4f6',
     },
     detailIcon: {
         width: 20,
         height: 20,
+        tintColor: isDark ? '#f59e0b' : Colors.mainColor,
     },
     detailValue: {
         fontFamily: 'Poppins-Medium',
@@ -242,7 +249,7 @@ const s = StyleSheet.create({
         fontSize: 16,
         letterSpacing: 0,
         textAlign: 'center',
-        color: '#000000',
+        color: getTextColor(),
     },
     detailCaption: {
         fontFamily: 'Poppins',
@@ -250,7 +257,7 @@ const s = StyleSheet.create({
         fontSize: 13,
         letterSpacing: 0,
         textAlign: 'center',
-        color: Colors.greyTextColor,
+        color: getSecondaryTextColor(),
     },
     infoList: {
         gap: 10,
@@ -259,7 +266,7 @@ const s = StyleSheet.create({
     infoItem: {
         width: '100%',
         minHeight: 44,
-        backgroundColor: Colors.white,
+        backgroundColor: getCardBackground(),
         borderRadius: 12,
         paddingHorizontal: 14,
         alignItems: 'center',
@@ -271,7 +278,7 @@ const s = StyleSheet.create({
         fontWeight: '500',
         fontSize: 15,
         letterSpacing: 0,
-        color: '#1B1A1D',
+        color: getTextColor(),
     },
     infoValue: {
         fontFamily: 'Poppins',
@@ -279,12 +286,12 @@ const s = StyleSheet.create({
         fontSize: 15,
         letterSpacing: 0,
         textAlign: 'right',
-        color: Colors.greyTextColor,
+        color: getSecondaryTextColor(),
         maxWidth: '78%',
     },
     pillTabs: {
         flexDirection: 'row',
-        backgroundColor: Colors.white,
+        backgroundColor: getCardBackground(),
         marginTop: 20,
         marginBottom: 10,
         borderRadius: 30,
@@ -312,7 +319,7 @@ const s = StyleSheet.create({
         color: Colors.white,
     },
     pillTabTextInactive: {
-        color: Colors.grey,
+        color: getSecondaryTextColor(),
     },
     infoRow: {
         flexDirection: 'row',
@@ -323,17 +330,17 @@ const s = StyleSheet.create({
     },
     historyWrapper: {
         marginTop: 10,
-        backgroundColor: Colors.white,
+        backgroundColor: getCardBackground(),
         borderRadius: 12,
         padding: 15,
-        marginBottom: 115,
+        marginBottom: 100,
     },
     historyTitle: {
         fontFamily: 'Poppins-Medium',
         fontWeight: '500',
         fontSize: 16,
         letterSpacing: 0,
-        color: '#1B1A1D',
+        color: getTextColor(),
         marginBottom: 6,
     },
     historyText: {
@@ -342,6 +349,6 @@ const s = StyleSheet.create({
         fontSize: 16,
         lineHeight: 22,
         letterSpacing: 0,
-        color: Colors.greyTextColor,
+        color: getSecondaryTextColor(),
     },
 })

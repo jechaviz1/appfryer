@@ -8,8 +8,9 @@ import { Button, Text, View } from "@/components/base/BaseComponents"
 import { useAuth } from '@/contexts/authContext'
 import INutritional, { nutrientMap } from '@/interfaces/Nutritional'
 import IIngredinent from '@/interfaces/Ingredient'
-import { getBgColor, isLight, paddings, theme } from '@/constants/Theme'
+import { getBgColor, getCardBackground, getTextColor, getSecondaryTextColor, getBorderColor, isLight, paddings, theme } from '@/constants/Theme'
 import { Colors } from '@/constants/Colors'
+import { useTheme } from '@/contexts/themeContext'
 import { post } from '@/services/apiRequests'
 import { logError } from '@/services/utils'
 import IRecipe from '@/interfaces/Recipe'
@@ -42,6 +43,9 @@ const commonNutrients = [
 export default function NutritionalValues({ isPremium, recipe, nutrientsInit, setRecipe, onSaveLocal }: NutritionalValuesProps) {
     const { user } = useAuth()
     const { t } = useTranslation()
+    const { isDark } = useTheme()
+    
+    const s = createStyles(isDark)
 
     const [isSentReq, setSentReq] = useState<boolean>(false)
     const [isAdjustingMacros, setAdjustingMacros] = useState<Boolean>(false)
@@ -177,7 +181,7 @@ export default function NutritionalValues({ isPremium, recipe, nutrientsInit, se
             <View style={s.nutritionalCard}>
                 <View style={s.nutritionalItem}>
                     <Text style={s.nutritionalLabel}>{t('Total Fat')}</Text>
-                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: 'transparent' }}>
                         { isAdjustingMacros && <Text style={s.factorText}>{fatsFactor}x</Text>}
                         { isAdjustingMacros && fatsFactor > 0.5 ?
                         <Pressable disabled={isSentReq} onPress={() => changeMacros('fats', 'down')}>
@@ -208,7 +212,7 @@ export default function NutritionalValues({ isPremium, recipe, nutrientsInit, se
             <View style={s.nutritionalCard}>
                 <View style={s.nutritionalItem}>
                     <Text style={s.nutritionalLabel}>{t('Carbohydrates')}</Text>
-                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: 'transparent' }}>
                         { isAdjustingMacros && <Text style={s.factorText}>{carbsFactor}x</Text>}
                         { isAdjustingMacros && carbsFactor > 0.5 ?
                         <Pressable disabled={isSentReq} onPress={() => changeMacros('carbs', 'down')}>
@@ -235,7 +239,7 @@ export default function NutritionalValues({ isPremium, recipe, nutrientsInit, se
             <View style={s.nutritionalCard}>
                 <View style={s.nutritionalItem}>
                     <Text style={s.nutritionalLabel}>{t('Protein')}</Text>
-                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: 'transparent' }}>
                         { isAdjustingMacros && <Text style={s.factorText}>{proteinFactor}x</Text>}
                         { isAdjustingMacros && proteinFactor > 0.5 ?
                         <Pressable disabled={isSentReq} onPress={() => changeMacros('protein', 'down')}>
@@ -298,20 +302,20 @@ export default function NutritionalValues({ isPremium, recipe, nutrientsInit, se
                     containerStyle={{ paddingRight: 20 }}
                 /> : null }
                 <View style={[s.chartLegendWrap, {width: (windowWidth - paddings * 2) / 1.75}]}>
-                    <View style={[s.recordWrap, {gap: 8}]}>
+                    <View style={[s.recordWrap, {gap: 8, backgroundColor: 'transparent'}]}>
                         <Image source={require('@/assets/icons/carbohidrato.png')} style={s.chartLegendIcon}/>
-                        <Text style={[s.nutritionalSubValue, {flex: 1}]}>{t('Carbs')}</Text>
-                        <Text style={s.nutritionalSubLabel}>{tolalNutrVal === 0 ? '0' : Math.round((nutrients?.carbG ?? 0) / tolalNutrVal * 100)}%</Text>
+                        <Text style={[s.chartLegendText, {flex: 1}]}>{t('Carbs')}</Text>
+                        <Text style={s.chartLegendPercentage}>{tolalNutrVal === 0 ? '0' : Math.round((nutrients?.carbG ?? 0) / tolalNutrVal * 100)}%</Text>
                     </View>
-                    <View style={[s.recordWrap, {gap: 8}]}>
+                    <View style={[s.recordWrap, {gap: 8, backgroundColor: 'transparent'}]}>
                         <Image source={require('@/assets/icons/proteinas.png')} style={s.chartLegendIcon}/>
-                        <Text style={[s.nutritionalSubValue, {flex: 1}]}>{t('Protein')}</Text>
-                        <Text style={s.nutritionalSubLabel}>{tolalNutrVal === 0 ? '0' : Math.round((nutrients?.proteinG ?? 0) / tolalNutrVal * 100)}%</Text>
+                        <Text style={[s.chartLegendText, {flex: 1}]}>{t('Protein')}</Text>
+                        <Text style={s.chartLegendPercentage}>{tolalNutrVal === 0 ? '0' : Math.round((nutrients?.proteinG ?? 0) / tolalNutrVal * 100)}%</Text>
                     </View>
-                    <View style={[s.recordWrap, {gap: 8}]}>
+                    <View style={[s.recordWrap, {gap: 8, backgroundColor: 'transparent'}]}>
                         <Image source={require('@/assets/icons/trans-fats-free.png')} style={s.chartLegendIcon}/>
-                        <Text style={[s.nutritionalSubValue, {flex: 1}]}>{t('Fat')}</Text>
-                        <Text style={s.nutritionalSubLabel}>{tolalNutrVal === 0 ? '0' : Math.round((nutrients?.fatTotalG ?? 0) / tolalNutrVal * 100)}%</Text>
+                        <Text style={[s.chartLegendText, {flex: 1}]}>{t('Fat')}</Text>
+                        <Text style={s.chartLegendPercentage}>{tolalNutrVal === 0 ? '0' : Math.round((nutrients?.fatTotalG ?? 0) / tolalNutrVal * 100)}%</Text>
                     </View>
                 </View>
             </View>
@@ -338,7 +342,7 @@ export default function NutritionalValues({ isPremium, recipe, nutrientsInit, se
     )
 }
 
-const s = StyleSheet.create({
+const createStyles = (isDark: boolean) => StyleSheet.create({
     wrapper: {
         marginVertical: 20,
         backgroundColor: getBgColor(),
@@ -386,6 +390,7 @@ const s = StyleSheet.create({
     chevronImg: {
         width: 18,
         height: 18,
+        tintColor: getSecondaryTextColor(),
     },
     portionsWrap: {
 
@@ -420,14 +425,14 @@ const s = StyleSheet.create({
     sectionTitle: {
         fontSize: 18,
         fontWeight: 'bold',
-        color: Colors.black,
+        color: getTextColor(),
         marginBottom: 16,
     },
     nutritionalCard: {
         borderRadius: 10,
         borderWidth: 1,
-        borderColor: '#EDF1F3',
-        backgroundColor: '#ffffff',
+        borderColor: getBorderColor(),
+        backgroundColor: getCardBackground(),
         marginBottom: 5,
         paddingHorizontal: 12,
         paddingVertical: 15,
@@ -437,37 +442,39 @@ const s = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
+        backgroundColor: getCardBackground(),
     },
     nutritionalLabel: {
         fontFamily: 'Poppins',
         fontSize: 16,
         lineHeight: 22,
-        color: '#1B1A1D',
+        color: getTextColor(),
     },
     nutritionalValue: {
         fontFamily: 'Poppins-Medium',
         fontSize: 16,
         lineHeight: 22,
         textAlign: 'right',
-        color: '#1B1A1D',
+        color: getTextColor(),
     },
     nutritionalSubItem: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
         paddingTop: 13,
+        backgroundColor: getCardBackground(),
     },
     nutritionalSubLabel: {
         fontFamily: 'Poppins',
         fontSize: 16,
         lineHeight: 22,
-        color: Colors.grey,
+        color: getSecondaryTextColor(),
     },
     nutritionalSubValue: {
         fontFamily: 'Poppins-Medium',
         fontSize: 16,
         lineHeight: 22,
-        color: Colors.grey,
+        color: getSecondaryTextColor(),
     },
     
     // Vitamins Section Styles
@@ -477,8 +484,8 @@ const s = StyleSheet.create({
     vitaminCard: {
         borderRadius: 10,
         borderWidth: 1,
-        borderColor: '#EDF1F3',
-        backgroundColor: '#ffffff',
+        borderColor: getBorderColor(),
+        backgroundColor: getCardBackground(),
         marginBottom: 5,
         paddingHorizontal: 12,
         paddingVertical: 15,
@@ -489,23 +496,24 @@ const s = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'center',
         paddingVertical: 12,
+        backgroundColor: getCardBackground(),
     },
     vitaminLabel: {
         fontSize: 16,
-        color: Colors.black,
+        color: getTextColor(),
         fontWeight: '500',
         flex: 1,
     },
     vitaminValue: {
         fontSize: 16,
-        color: Colors.black,
+        color: getTextColor(),
         fontWeight: 'bold',
         marginRight: 8,
     },
     vitaminArrow: {
         width: 12,
         height: 19,
-        tintColor: Colors.mainColor,
+        tintColor: getSecondaryTextColor(),
     },
     
     // Donut Chart Styles
@@ -514,8 +522,8 @@ const s = StyleSheet.create({
         flexDirection: 'row',
         borderRadius: 10,
         borderWidth: 1,
-        borderColor: '#EDF1F3',
-        backgroundColor: '#ffffff',
+        borderColor: getBorderColor(),
+        backgroundColor: getCardBackground(),
         justifyContent: 'center',
         paddingVertical: 16,
         marginBottom: 17,
@@ -523,10 +531,23 @@ const s = StyleSheet.create({
     chartLegendWrap: {
         gap: 13,
         alignContent: 'center',
+        backgroundColor: getCardBackground(),
     },
     chartLegendIcon: {
         width: 16,
         height: 16,
+    },
+    chartLegendText: {
+        fontFamily: 'Poppins-Medium',
+        fontSize: 16,
+        lineHeight: 22,
+        color: getTextColor(),
+    },
+    chartLegendPercentage: {
+        fontFamily: 'Poppins-Medium',
+        fontSize: 16,
+        lineHeight: 22,
+        color: getTextColor(),
     },
     recordWrap: {
         flexDirection: 'row',

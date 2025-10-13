@@ -12,9 +12,10 @@ import { get, post } from "@/services/apiRequests"
 import IPrefItem from "@/interfaces/PrefItem"
 import IRecipe from "@/interfaces/Recipe"
 import { Colors } from "@/constants/Colors"
-import { theme, getBgColor, isLight } from "@/constants/Theme"
+import { theme, getBgColor, isLight, getCardBackground, getTextColor, getSecondaryTextColor, getBorderColor } from "@/constants/Theme"
 import { useSearchFilters } from "@/contexts/searchFiltersContext"
 import { logError, isNeedToUpdate } from "@/services/utils"
+import { useTheme } from '@/contexts/themeContext'
 
 interface IRating {
     title: string
@@ -59,6 +60,9 @@ export default function Filters({ isVisible, onHide, page, personId, onSubmit }:
     const { t } = useTranslation()
     const { user } = useAuth()
     const { searchFilters, setSearchFilters } = useSearchFilters()
+    const { isDark } = useTheme()
+
+    const s = createStyles(isDark)
 
     const [categories, setCategories] = useState<IPrefItem[]>([])
     const [diets, setDiets] = useState<IPrefItem[]>([])
@@ -262,17 +266,17 @@ export default function Filters({ isVisible, onHide, page, personId, onSubmit }:
     return (
         <Modal
             isVisible={isVisible}
-            style={[theme.modal, s.modalView, {backgroundColor: '#FFFFFF', marginTop: window.height * 0.15}]}
+            style={[theme.modal, s.modalView, {backgroundColor: getCardBackground(), marginTop: window.height * 0.15}]}
             onModalHide={hideAndClear}
             onBackdropPress={hideAndClear}
         >
-            <ScrollView>
-                <View style={{ width: '100%' }}>
+            <ScrollView style={{ backgroundColor: getCardBackground() }}>
+                <View style={{ backgroundColor: getCardBackground(), width: '100%' }}>
                     <Pressable onPress={hideAndClear} style={{ alignSelf: 'flex-end' }}>
-                        <Image source={xIcon} style={{ width: 18, height: 18 }} />
+                        <Image source={xIcon} style={{ width: 18, height: 18, tintColor: getTextColor() }} />
                     </Pressable>
                 </View>
-                <Text type="subtitle" style={{ alignSelf: 'flex-start' }}>{t('Filters')}</Text>
+                <Text type="subtitle" style={{ alignSelf: 'flex-start', color: getTextColor() }}>{t('Filters')}</Text>
 
                 {/* Categories */}
                 <View style={s.sections}>
@@ -295,10 +299,9 @@ export default function Filters({ isVisible, onHide, page, personId, onSubmit }:
                                     size="small"
                                     style={[
                                         s.itemBtn,
-                                        {backgroundColor: isLight() ? '#F5F5F5' : '#F5F5F510'},
                                         isSelected ? s.itemSelected : {}
                                     ]}
-                                    textStyle={isSelected ? s.itemTextSelected : {color: isLight() ? '#000000A6' : '#FFFFFFA6'}}
+                                    textStyle={isSelected ? s.itemTextSelected : s.itemTextUnselected}
                                     onPress={() => handleToggleCategory(category)}
                                 />
                             )}
@@ -373,7 +376,7 @@ export default function Filters({ isVisible, onHide, page, personId, onSubmit }:
                             thumbTintColor={Colors.white}
                             thumbStyle={s.thumbs}
                         />
-                        <Text>{filters?.preparationTime?.[0] || 0} - {filters?.preparationTime?.[1] || 120} {t('minutes')}</Text>
+                        <Text style={{ color: getTextColor() }}>{filters?.preparationTime?.[0] || 0} - {filters?.preparationTime?.[1] || 120} {t('minutes')}</Text>
                     </View>
 
                     {/* Rating */}
@@ -386,13 +389,12 @@ export default function Filters({ isVisible, onHide, page, personId, onSubmit }:
                                 size="small"
                                 style={[
                                     s.itemBtn,
-                                    {backgroundColor: isLight() ? '#F5F5F5' : '#F5F5F510'},
                                     !filters?.rating || filters?.rating?.length === 0 ? s.itemSelected : {}
                                 ]}
                                 textStyle={
                                     !filters?.rating || filters?.rating?.length === 0
                                         ? s.itemTextSelected
-                                        : { color: isLight() ? '#000000A6' : '#FFFFFFA6' }}
+                                        : s.itemTextUnselected}
                                 onPress={handleClearRating}
                             />
                             {ratings.map((rating, index) => {
@@ -406,10 +408,9 @@ export default function Filters({ isVisible, onHide, page, personId, onSubmit }:
                                         postIcon={starFill}
                                         style={[
                                             s.itemBtn,
-                                            {backgroundColor: isLight() ? '#F5F5F5' : '#F5F5F510'},
                                             isSelected ? s.itemSelected : {}
                                         ]}
-                                        textStyle={isSelected ? s.itemTextSelected : {color: isLight() ? '#000000A6' : '#FFFFFFA6'}}
+                                        textStyle={isSelected ? s.itemTextSelected : s.itemTextUnselected}
                                         onPress={() => handleToggleRating(rating)}
                                     />
                                 }
@@ -419,10 +420,10 @@ export default function Filters({ isVisible, onHide, page, personId, onSubmit }:
 
                     <View style={s.line}/>
 
-                    <View style={{ alignSelf: 'flex-end', flexDirection: 'row', gap: 8, alignItems: 'center' }}>
+                    <View style={{ backgroundColor: getCardBackground(), alignSelf: 'flex-end', flexDirection: 'row', gap: 8, alignItems: 'center' }}>
                         <Pressable onPress={handleClearFilters} style={s.clearBtn}>
-                            <Image source={xIcon} style={{ width: 13, height: 13 }} />
-                            <Text>{t('Clear filters')}</Text>
+                            <Image source={xIcon} style={{ width: 13, height: 13, tintColor: getTextColor() }} />
+                            <Text style={{ color: getTextColor() }}>{t('Clear filters')}</Text>
                         </Pressable>
                         
                         <Button
@@ -437,7 +438,7 @@ export default function Filters({ isVisible, onHide, page, personId, onSubmit }:
     )
 }
 
-const s = StyleSheet.create({
+const createStyles = (isDark: boolean) => StyleSheet.create({
     modalView: {
         marginTop: '25%',
         justifyContent: 'flex-start',
@@ -447,29 +448,41 @@ const s = StyleSheet.create({
         marginTop: 15,
         gap: 30,
         width: '100%',
+        backgroundColor: getCardBackground(),
     },
     ingredientsSection: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
         gap: 8,
+        backgroundColor: getCardBackground(),
     },
     section: {
-        
+        backgroundColor: getCardBackground(),
     },
     items: {
         flexDirection: 'row',
         flexWrap: 'wrap',
         marginTop: 8,
         gap: 8,
+        backgroundColor: getCardBackground(),
     },
     itemBtn: {
         paddingHorizontal: 15,
         width: 'auto',
+        backgroundColor: isDark ? '#374151' : '#F5F5F5',
+        borderRadius: 20,
+        borderWidth: 1,
+        borderColor: isDark ? '#4B5563' : '#E5E7EB',
     },
     itemTextSelected: {
         fontWeight: 500,
-        fontFamily: 'DMSans-Medium',
+        fontFamily: 'Poppins-Medium',
+        color: Colors.white,
+    },
+    itemTextUnselected: {
+        color: getTextColor(),
+        fontFamily: 'Poppins',
     },
     itemSelected: {
         backgroundColor: Colors.mainColor,
@@ -477,11 +490,13 @@ const s = StyleSheet.create({
     sectionTitle: {
         alignSelf: 'flex-start',
         fontSize: 15,
-        fontFamily: 'DMSans-Bold',
+        fontFamily: 'Poppins-Bold',
+        color: getTextColor(),
     },
     chevron: {
         width: 16,
         height: 16,
+        tintColor: getTextColor(),
     },
     thumbs: {
         shadowColor: "#000",
@@ -497,7 +512,7 @@ const s = StyleSheet.create({
         height: 1,
         width: '100%',
         marginTop: 20,
-        backgroundColor: Colors.lightGrey,
+        backgroundColor: getBorderColor(),
     },
     clearBtn: {
         flex: 1,

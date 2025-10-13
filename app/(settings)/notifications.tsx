@@ -8,9 +8,10 @@ import Header from '@/components/Header'
 import { useAuth } from '@/contexts/authContext'
 import { useSettings } from '@/contexts/settingsContext'
 import { get, post } from '@/services/apiRequests'
-import { theme, getBgColor } from '@/constants/Theme'
+import { theme, getBgColor, getCardBackground, getTextColor, getSecondaryTextColor, getBorderColor } from '@/constants/Theme'
 import { Colors } from '@/constants/Colors'
 import { logError } from '@/services/utils'
+import { useTheme } from '@/contexts/themeContext'
 
 interface IItem {
     email: boolean
@@ -64,11 +65,14 @@ export default function NotificationSettings() {
     const { user, setUser } = useAuth()
     const { settings } = useSettings()
     const { t } = useTranslation()
+    const { isDark } = useTheme()
 
     const [isLoaded, setIsLoaded] = useState(false)
     const [showBreakOptions, setShowBreakOptions] = useState(false)
     const [items, setItems] = useState<ISettings>()
     const [selectedNotificationType, setSelectedNotificationType] = useState<'email' | 'mobile'>('email')
+
+    const s = createStyles(isDark)
 
     const updateItems = useCallback((data: IAPI) => {
         setIsLoaded(true)
@@ -298,9 +302,10 @@ export default function NotificationSettings() {
     )
 }
 
-const s = StyleSheet.create({
+const createStyles = (isDark: boolean) => StyleSheet.create({
     container: {
         flex: 1,
+        backgroundColor: getBgColor(),
     },
     content: {
         flex: 1,
@@ -309,14 +314,14 @@ const s = StyleSheet.create({
         paddingTop: 20,
     },
     notificationCard: {
-        backgroundColor: '#ECD8C4',
+        backgroundColor: isDark ? '#374151' : '#ECD8C4',
         borderRadius: 13,
         height: 151,
         padding: 20,
         marginBottom: 20,
     },
     notificationCardContent: {
-        backgroundColor: '#ECD8C4',
+        backgroundColor: 'transparent',
         flexDirection: 'row',
     },
     notificationIcon: {
@@ -324,27 +329,27 @@ const s = StyleSheet.create({
         height: 24,
         marginTop: 5,
         marginRight: 20,
-        tintColor: '#C28040',
+        tintColor: Colors.mainColor,
     },
     notificationTextContainer: {
         flex: 1,
-        backgroundColor: '#ECD8C4',
+        backgroundColor: 'transparent',
     },
     notificationTitle: {
         fontFamily: 'Poppins-Medium',
         fontSize: 14,
         fontWeight: '500',
-        color: '#1B1A1D',
+        color: getTextColor(),
     },
     notificationSubtitle: {
         fontFamily: 'Poppins',
         fontSize: 13,
         fontWeight: '400',
-        color: '#6C7278',
+        color: getSecondaryTextColor(),
         lineHeight: 18,
     },
     configureButton: {
-        backgroundColor: '#C28040',
+        backgroundColor: Colors.mainColor,
         borderRadius: 11,
         paddingVertical: 11,
         paddingHorizontal: 27,
@@ -353,13 +358,13 @@ const s = StyleSheet.create({
         marginTop: 11,
     },
     configureButtonText: {
-        color: '#FFFFFF',
+        color: Colors.white,
         fontSize: 13,
         fontWeight: '600',
         fontFamily: 'Poppins-Medium',
     },
     breakSection: {
-        backgroundColor: '#FFFFFF',
+        backgroundColor: getCardBackground(),
         borderRadius: 10,
         paddingVertical: 14,
         paddingHorizontal: 24,
@@ -370,13 +375,14 @@ const s = StyleSheet.create({
     },
     breakContent: {
         flex: 1,
+        backgroundColor: getCardBackground(),
     },
     breakTitle: {
         fontFamily: 'Poppins-Medium',
         fontWeight: '500',
         fontSize: 14,
         letterSpacing: 0,
-        color: '#1B1A1D',
+        color: getTextColor(),
         marginBottom: 4,
     },
     breakSubtitle: {
@@ -385,11 +391,11 @@ const s = StyleSheet.create({
         fontSize: 13,
         lineHeight: 22,
         letterSpacing: 0,
-        color: '#919191',
+        color: getSecondaryTextColor(),
     },
     pillTabs: {
         flexDirection: 'row',
-        backgroundColor: Colors.white,
+        backgroundColor: getCardBackground(),
         borderRadius: 30,
         marginBottom: 20,
     },
@@ -416,7 +422,7 @@ const s = StyleSheet.create({
         color: Colors.white,
     },
     pillTabTextInactive: {
-        color: Colors.grey,
+        color: getSecondaryTextColor(),
     },
     notificationItems: {
         display: 'flex',
@@ -432,33 +438,35 @@ const s = StyleSheet.create({
         paddingHorizontal: 16,
         borderRadius: 10,
         borderWidth: 1,
-        borderColor: '#EDF1F3',
+        borderColor: getBorderColor(),
+        backgroundColor: getCardBackground(),
     },
     notificationItemContent: {
         flexDirection: 'row',
         alignItems: 'center',
         flex: 1,
+        backgroundColor: getCardBackground(),
     },
     itemIcon: {
         width: 20,
         height: 20,
         marginRight: 12,
-        tintColor: '#C28040',
+        tintColor: Colors.mainColor,
     },
     itemText: {
         fontFamily: 'Poppins',
         fontSize: 13,
         lineHeight: 17,
         fontWeight: '400',
-        color: '#919191',
+        color: getTextColor(),
         flex: 1,
     },
     breakOptionsCard: {
         width: 362,
-        backgroundColor: '#F6ECE2',
+        backgroundColor: isDark ? '#374151' : '#F6ECE2',
         borderRadius: 10,
         borderWidth: 1,
-        borderColor: '#C28040',
+        borderColor: Colors.mainColor,
         marginTop: 25,
         paddingVertical: 23,
         paddingHorizontal: 24,
@@ -469,23 +477,23 @@ const s = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'center',
         marginBottom: 8,
-        backgroundColor: '#F6ECE2',
+        backgroundColor: 'transparent',
     },
     breakOptionsTitle: {
         fontFamily: 'Poppins-Medium',
         fontWeight: '500',
         fontSize: 16,
         letterSpacing: 0,
-        color: '#1B1A1D',
+        color: getTextColor(),
         flex: 1,
     },
     closeButton: {
-        backgroundColor: '#F6ECE2',
+        backgroundColor: 'transparent',
     },
     closeIcon: {
         width: 15,
         height: 15,
-        tintColor: '#C28040',
+        tintColor: Colors.mainColor,
     },
     breakOptionsText: {
         fontFamily: 'Poppins',
@@ -493,11 +501,11 @@ const s = StyleSheet.create({
         fontSize: 14,
         lineHeight: 20,
         letterSpacing: 0,
-        color: '#6C7278',
+        color: getSecondaryTextColor(),
         marginBottom: 16,
     },
     breakOptionsButtons: {
-        backgroundColor: '#F6ECE2',
+        backgroundColor: 'transparent',
         flexDirection: 'row',
         gap: 10,
         justifyContent: 'space-between',
@@ -505,13 +513,13 @@ const s = StyleSheet.create({
     breakOptionButton: {
         width: 96,
         height: 40,
-        backgroundColor: '#FFFFFF',
+        backgroundColor: getCardBackground(),
         borderRadius: 30,
         padding: 10,
         alignItems: 'center',
         justifyContent: 'center',
         borderWidth: 1,
-        borderColor: '#EFF0F6',
+        borderColor: getBorderColor(),
     },
     breakOptionButtonText: {
         fontFamily: 'Poppins',
@@ -519,7 +527,7 @@ const s = StyleSheet.create({
         fontSize: 14,
         lineHeight: 18,
         letterSpacing: 0,
-        color: '#6C7278',
+        color: getTextColor(),
         textAlign: 'center',
     },
 })

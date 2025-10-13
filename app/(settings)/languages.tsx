@@ -4,21 +4,25 @@ import { useRouter } from 'expo-router'
 import { useTranslation } from 'react-i18next'
 
 import { Button, ModalTitle, ScrollView, Text, View } from "@/components/base/BaseComponents"
-import { getBgColor, theme } from '@/constants/Theme'
+import { getBgColor, theme, getCardBackground, getTextColor, getSecondaryTextColor, getBorderColor } from '@/constants/Theme'
 import { Colors } from '@/constants/Colors'
 import { useAuth } from '@/contexts/authContext'
 import { get, post } from '@/services/apiRequests'
 import { logError } from '@/services/utils'
 import { fetchLanguages } from '@/services/fetches'
 import AsyncStorage from '@react-native-async-storage/async-storage'
+import { useTheme } from '@/contexts/themeContext'
 
 export default function Languages() {
     const { user, setUser } = useAuth()
     const { i18n, t } = useTranslation()
     const router = useRouter()
+    const { isDark } = useTheme()
 
     const [languages, setLanguages] = useState<Record<string, string>>({})
     const [currentLang, setCurrentLang] = useState<string>(user?.language ?? languages[i18n.language])
+
+    const s = createStyles(isDark)
 
     useEffect(() => {
         fetchLanguages(setLanguages)
@@ -40,13 +44,13 @@ export default function Languages() {
     }, [currentLang])
 
     return (
-        <View style={theme.container}>
+        <View style={[theme.container, { backgroundColor: getBgColor() }]}>
             <View style={theme.statusBarHeight} />
-            <View style={theme.mainContainer}>
+            <View style={[theme.mainContainer, { backgroundColor: getBgColor() }]}>
                 <ModalTitle title={t('Language')} onHide={() => router.canGoBack() ? router.back() : router.navigate('/(settings)/settings')} />
                 <ScrollView style={{ maxHeight: '85%' }}>
                     <View style={s.langs}>
-                        <View style={theme.section}>
+                        <View style={[{ padding: 15, borderRadius: 12, backgroundColor: getCardBackground() }]}>
                             {Object.keys(languages).map((l) => (
                             <Pressable key={l} onPress={() => changeLanguage(l)}>
                                 <View style={s.langTextWrapper}>
@@ -63,6 +67,7 @@ export default function Languages() {
                             text={t('Apply changes')}
                             onPress={applyLanguage}
                             disabled={currentLang === user?.language}
+                            style={s.applyButton}
                         />
                     </View>
                 </ScrollView>
@@ -71,7 +76,7 @@ export default function Languages() {
     )
 }
 
-const s = StyleSheet.create({
+const createStyles = (isDark: boolean) => StyleSheet.create({
     langs: {
         gap: 16,
         backgroundColor: getBgColor(),
@@ -79,7 +84,7 @@ const s = StyleSheet.create({
     line: {
         width: '100%',
         height: 1,
-        backgroundColor: Colors.lightGrey,
+        backgroundColor: getBorderColor(),
     },
     langTextWrapper: {
         flexDirection: 'row',
@@ -87,11 +92,14 @@ const s = StyleSheet.create({
         marginVertical: 12,
         alignItems: 'center',
         justifyContent: 'space-between',
+        backgroundColor: 'transparent',
     },
     langText: {
         alignContent: 'center',
         alignItems: 'center',
         justifyContent: 'center',
+        color: getTextColor(),
+        fontFamily: 'Poppins-Medium',
     },
     checkmarkWrapper: {
         width: 20,
@@ -104,9 +112,14 @@ const s = StyleSheet.create({
     checkmark: {
         width: 16,
         height: 16,
+        tintColor: Colors.white,
+    },
+    applyButton: {
+        backgroundColor: Colors.mainColor,
+        marginTop: 8,
     },
     createdAt: {
         fontSize: 11,
-        color: Colors.neutralGrey,
+        color: getSecondaryTextColor(),
     },
 })

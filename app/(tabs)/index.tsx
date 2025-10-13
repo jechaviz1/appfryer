@@ -8,10 +8,11 @@ import Notifications from '@/components/modals/Notifications'
 import Search from '@/components/Search'
 import Categories from '@/components/Categories'
 import RecipeCard, { IRecipeCard } from '@/components/RecipeCard'
-import { theme, isLight, getBgColor } from '@/constants/Theme'
+import { theme, isLight, getBgColor, getCardBackground, getTextColor, getSecondaryTextColor, getBorderColor, getShadowColor } from '@/constants/Theme'
 import { useAuth } from '@/contexts/authContext'
 import { useSearchFilters } from '@/contexts/searchFiltersContext'
 import { useAppState } from '@/contexts/appStateContext'
+import { useTheme } from '@/contexts/themeContext'
 import { get, post } from '@/services/apiRequests'
 import { logError } from '@/services/utils'
 import IRecipe from '@/interfaces/Recipe'
@@ -53,6 +54,9 @@ export default function HomeScreen() {
     const { user, setUser } = useAuth()
     const { searchFilters, setSearchFilters } = useSearchFilters()
     const { appState, setAppState } = useAppState()
+    const { isDark } = useTheme()
+    
+    const s = createStyles(isDark)
 
     const [avatar, setAvatar] = useState<any>()
     const [showNotifications, setShowNotifications] = useState<boolean>(false)
@@ -262,15 +266,15 @@ export default function HomeScreen() {
     )
 
     return (
-        <View style={theme.container}>
+        <View style={s.container}>
             <View style={theme.statusBarHeight} />
             <ScrollView>
                 <Notifications isVisible={showNotifications} onHide={() => setShowNotifications(false)} />
-                <View style={theme.mainContainer}>
+                <View style={s.mainContainer}>
                     {/* Header Section */}
                     <View style={s.header}>
                         <View style={s.greetingSection}>
-                            <Text style={[s.greeting, { color: isLight() ? Colors.grey : Colors.lightGrey }]}>{t('Hello,')}</Text>
+                            <Text style={s.greeting}>{t('Hello,')}</Text>
                             <Text style={s.userName}>{user?.fullname || t('User')}</Text>
                         </View>
                         <Pressable onPress={handleNotificationPress}>
@@ -417,7 +421,18 @@ export default function HomeScreen() {
     )
 }
 
-const s = StyleSheet.create({
+const createStyles = (isDark: boolean) => StyleSheet.create({
+    // Container
+    container: {
+        flex: 1,
+        backgroundColor: getBgColor(),
+    },
+    mainContainer: {
+        flex: 1,
+        backgroundColor: getBgColor(),
+        paddingHorizontal: 24,
+        paddingTop: 20,
+    },
     // Header Section
     header: {
         flexDirection: 'row',
@@ -433,14 +448,14 @@ const s = StyleSheet.create({
     greeting: {
         fontSize: 15,
         lineHeight: 22,
-        color: Colors.grey,
+        color: getSecondaryTextColor(),
         fontFamily: 'Poppins',
         marginBottom: 8,
     },
     userName: {
         fontSize: 20,
         fontWeight: 'bold',
-        color: Colors.black,
+        color: getTextColor(),
         fontFamily: 'Poppins-SemiBold',
         lineHeight: 20,
     },
@@ -466,6 +481,7 @@ const s = StyleSheet.create({
 
     // Categories Section
     categoriesSection: {
+        marginTop: 20,
         marginBottom: 16,
         backgroundColor: getBgColor(),
     },
@@ -476,7 +492,7 @@ const s = StyleSheet.create({
     },
     emptyStateText: {
         fontSize: 16,
-        color: Colors.grey,
+        color: isDark ? Colors.dark.emptyStateSubtext : Colors.light.emptyStateSubtext,
         fontFamily: 'Poppins-Medium',
         textAlign: 'center',
     },
@@ -553,7 +569,7 @@ const s = StyleSheet.create({
     sectionTitle: {
         fontSize: 18,
         fontWeight: 'bold',
-        color: Colors.black,
+        color: getTextColor(),
         fontFamily: 'Poppins-Bold',
         backgroundColor: getBgColor(),
     },
@@ -585,7 +601,7 @@ const s = StyleSheet.create({
         backgroundColor: Colors.mainColor,
     },
     dotInactive: {
-        backgroundColor: '#e0e0e0',
+        backgroundColor: isDark ? Colors.dark.borderColor : '#e0e0e0',
     },
 
     // Weekly Plan
@@ -594,7 +610,7 @@ const s = StyleSheet.create({
     },
     dayItem: {
         alignItems: 'center',
-        backgroundColor: '#FFFFFF',
+        backgroundColor: getCardBackground(),
         borderRadius: 14,
         paddingHorizontal: 3,
         paddingVertical: 3,
@@ -605,7 +621,7 @@ const s = StyleSheet.create({
     },
     dayText: {
         fontSize: 12,
-        color: '#B5B5B5',
+        color: isDark ? Colors.dark.secondaryText : '#B5B5B5',
         fontFamily: 'Poppins-Medium',
         paddingVertical: 7,
     },
@@ -615,14 +631,14 @@ const s = StyleSheet.create({
     dateText: {
         fontSize: 16,
         lineHeight: 22,
-        color: '#B5B5B5',
+        color: isDark ? Colors.dark.secondaryText : '#B5B5B5',
         fontFamily: 'Poppins-SemiBold',
         padding: 10,
         minWidth: 38,
         textAlign: 'center',
     },
     dateTextSelected: {
-        backgroundColor: Colors.white,
+        backgroundColor: isDark ? Colors.dark.cardBackground : Colors.white,
         color: Colors.mainColor,
         padding: 10,
         borderRadius: 12,

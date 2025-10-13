@@ -16,8 +16,9 @@ import { useSettings } from '@/contexts/settingsContext'
 import { useAppState } from '@/contexts/appStateContext'
 import { fetchLanguages } from '@/services/fetches'
 import { logError } from '@/services/utils'
-import { theme, isLight } from '@/constants/Theme'
+import { theme, isLight, getBgColor, getCardBackground, getTextColor, getSecondaryTextColor, getBorderColor } from '@/constants/Theme'
 import { Colors } from '@/constants/Colors'
+import { useTheme } from '@/contexts/themeContext'
 
 export default function LoginScreen() {
     const router = useRouter()
@@ -25,6 +26,9 @@ export default function LoginScreen() {
     const { setUser } = useAuth()
     const { settings, setSettings } = useSettings()
     const { appState, setAppState } = useAppState()
+    const { isDark } = useTheme()
+    
+    const s = createStyles(isDark)
 
     const [loaded, setLoaded] = useState<boolean>(false)
     const [showLanguages, setShowLanguages] = useState<boolean>(false)
@@ -369,7 +373,7 @@ export default function LoginScreen() {
     )
 }
 
-const s = StyleSheet.create({
+const createStyles = (isDark: boolean) => StyleSheet.create({
     rememberForgotContainer: {
         flexDirection: 'row',
         justifyContent: 'space-between',
